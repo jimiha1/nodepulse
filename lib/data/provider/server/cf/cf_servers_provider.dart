@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:fl_lib/fl_lib.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:server_box/data/model/cf/cf_history.dart';
 import 'package:server_box/data/model/cf/cf_server.dart';
 import 'package:server_box/data/provider/server/cf/cf_api.dart';
 import 'package:server_box/data/provider/server/cf/cf_credentials.dart';
@@ -95,7 +96,9 @@ class CfServers extends _$CfServers {
     await api.ready;
     // Watched, not read: a changed site URL rebuilds the API, and this state
     // must then become the new site's, not keep the old one's snapshot.
-    return api.fetchServers();
+    final snapshot = await api.fetchServers();
+    _pushLiveBuffer(snapshot);
+    return snapshot;
   }
 
   /// Pulls once, now. A failure is state, not an exception: the poll also
@@ -106,6 +109,9 @@ class CfServers extends _$CfServers {
     await api.ready;
     final snapshot = await AsyncValue.guard(api.fetchServers);
     if (!ref.mounted) return;
+    if (snapshot.value case final data?) {
+      _pushLiveBuffer(data);
+    }
     state = snapshot;
   }
 
@@ -141,6 +147,48 @@ class CfServers extends _$CfServers {
   StreamSubscription<void> watchWs() =>
       const Stream<void>.empty().listen((_) {});
 
+  /// Rolling live history buffer per server id (in-memory, up to ~120 samples).
+  final Map<String, List<CfHistoryRow>> _liveBuffers = {};
+
+  List<CfHistoryRow> getLiveBuffer(String serverId) =>
+      _liveBuffers[serverId] ?? const [];
+
+  void _pushLiveBuffer(CfServersSnapshot snapshot) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final s in snapshot.servers) {
+      final list = _liveBuffers.putIfAbsent(s.id, () => []);
+      list.add(
+        CfHistoryRow(
+          timestamp: now,
+          cpu: s.cpu,
+          ramUsed: s.ramUsed,
+          ramTotal: s.ramTotal,
+          diskUsed: s.diskUsed,
+          diskTotal: s.diskTotal,
+          netInSpeed: s.netInSpeed,
+          netOutSpeed: s.netOutSpeed,
+          tcpConn: s.tcpConn,
+          udpConn: s.udpConn,
+          processes: s.processes,
+          diskReadBps: 0,
+          diskWriteBps: 0,
+          swapUsed: s.swapUsed,
+          swapTotal: s.swapTotal,
+          loadAvg: '${s.load1} ${s.load5} ${s.load15}',
+          pingCt: s.pingCt,
+          pingCu: s.pingCu,
+          pingCm: s.pingCm,
+          lossCt: s.lossCt,
+          lossCu: s.lossCu,
+          lossCm: s.lossCm,
+        ),
+      );
+      if (list.length > 120) {
+        list.removeAt(0);
+      }
+    }
+  }
+
   void _stopAutoRefresh() {
     _generation++;
     _timer?.cancel();
@@ -156,3 +204,16 @@ class CfServers extends _$CfServers {
     return Duration(seconds: seconds);
   }
 }
+
+/// Fetches history rows for [id] over [hours].
+@riverpod
+Future<List<CfHistoryRow>> cfHistory(
+  Ref ref, {
+  required String id,
+  required double hours,
+}) async {
+  final api = ref.watch(cfApiProvider);
+  await api.ready;
+  return api.fetchHistory(id: id, hours: hours);
+}
+

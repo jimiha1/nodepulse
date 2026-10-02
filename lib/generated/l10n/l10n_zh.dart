@@ -5058,6 +5058,54 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cfExpire => '到期';
+
+  @override
+  String get cfRangeLive => '实时';
+
+  @override
+  String get cfRangeM30 => '30分钟';
+
+  @override
+  String get cfRangeH1 => '1小时';
+
+  @override
+  String get cfRangeH6 => '6小时';
+
+  @override
+  String get cfRangeD1 => '1天';
+
+  @override
+  String get cfRangeD2 => '2天';
+
+  @override
+  String get cfRangeD7 => '7天';
+
+  @override
+  String get cfChartCpu => 'CPU 使用率';
+
+  @override
+  String get cfChartMem => '内存与 Swap';
+
+  @override
+  String get cfChartDisk => '磁盘使用';
+
+  @override
+  String get cfChartNet => '网络速率';
+
+  @override
+  String get cfChartLoad => '系统负载';
+
+  @override
+  String get cfChartDiskIo => '磁盘 IO';
+
+  @override
+  String get cfChartConn => '连接数';
+
+  @override
+  String get cfChartProcess => '进程数';
+
+  @override
+  String get cfChartPing => '三网 Ping 延迟';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).

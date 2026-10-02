@@ -118,7 +118,7 @@ final class CfServersProvider
   CfServers create() => CfServers();
 }
 
-String _$cfServersHash() => r'99aa2c831153f3401c4219c6cf57dc10ae9825c2';
+String _$cfServersHash() => r'b5023329541edb7bb0d3750ff5c935109b261195';
 
 /// The node list of the CF site, polled; the state the CF pages read.
 
@@ -139,4 +139,94 @@ abstract class _$CfServers extends $AsyncNotifier<CfServersSnapshot> {
             >;
     return element.handleCreate(ref, build);
   }
+}
+
+/// Fetches history rows for [id] over [hours].
+
+@ProviderFor(cfHistory)
+final cfHistoryProvider = CfHistoryFamily._();
+
+/// Fetches history rows for [id] over [hours].
+
+final class CfHistoryProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<CfHistoryRow>>,
+          List<CfHistoryRow>,
+          FutureOr<List<CfHistoryRow>>
+        >
+    with
+        $FutureModifier<List<CfHistoryRow>>,
+        $FutureProvider<List<CfHistoryRow>> {
+  /// Fetches history rows for [id] over [hours].
+  CfHistoryProvider._({
+    required CfHistoryFamily super.from,
+    required ({String id, double hours}) super.argument,
+  }) : super(
+         retry: null,
+         name: r'cfHistoryProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$cfHistoryHash();
+
+  @override
+  String toString() {
+    return r'cfHistoryProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<CfHistoryRow>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<CfHistoryRow>> create(Ref ref) {
+    final argument = this.argument as ({String id, double hours});
+    return cfHistory(ref, id: argument.id, hours: argument.hours);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is CfHistoryProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$cfHistoryHash() => r'5d9748a683df793e800d4e0f1b765a9c8b297862';
+
+/// Fetches history rows for [id] over [hours].
+
+final class CfHistoryFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<List<CfHistoryRow>>,
+          ({String id, double hours})
+        > {
+  CfHistoryFamily._()
+    : super(
+        retry: null,
+        name: r'cfHistoryProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Fetches history rows for [id] over [hours].
+
+  CfHistoryProvider call({required String id, required double hours}) =>
+      CfHistoryProvider._(argument: (id: id, hours: hours), from: this);
+
+  @override
+  String toString() => r'cfHistoryProvider';
 }

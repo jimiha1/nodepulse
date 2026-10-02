@@ -1519,5 +1519,21 @@
   "cfOverviewBandwidth": "总带宽",
   "cfLoad": "负载",
   "cfTrafficRemaining": "剩余流量",
-  "cfExpire": "到期"
+  "cfExpire": "到期",
+  "cfRangeLive": "实时",
+  "cfRangeM30": "30分钟",
+  "cfRangeH1": "1小时",
+  "cfRangeH6": "6小时",
+  "cfRangeD1": "1天",
+  "cfRangeD2": "2天",
+  "cfRangeD7": "7天",
+  "cfChartCpu": "CPU 使用率",
+  "cfChartMem": "内存与 Swap",
+  "cfChartDisk": "磁盘使用",
+  "cfChartNet": "网络速率",
+  "cfChartLoad": "系统负载",
+  "cfChartDiskIo": "磁盘 IO",
+  "cfChartConn": "连接数",
+  "cfChartProcess": "进程数",
+  "cfChartPing": "三网 Ping 延迟"
 }

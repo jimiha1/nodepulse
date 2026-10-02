@@ -7023,5 +7023,69 @@
   "cfExpire": "Expires",
   "@cfExpire": {
     "description": "Label of a CF node's expiry date."
+  },
+  "cfRangeLive": "Live",
+  "@cfRangeLive": {
+    "description": "CF server history live range"
+  },
+  "cfRangeM30": "30m",
+  "@cfRangeM30": {
+    "description": "CF server history 30 minutes range"
+  },
+  "cfRangeH1": "1h",
+  "@cfRangeH1": {
+    "description": "CF server history 1 hour range"
+  },
+  "cfRangeH6": "6h",
+  "@cfRangeH6": {
+    "description": "CF server history 6 hours range"
+  },
+  "cfRangeD1": "1d",
+  "@cfRangeD1": {
+    "description": "CF server history 1 day range"
+  },
+  "cfRangeD2": "2d",
+  "@cfRangeD2": {
+    "description": "CF server history 2 days range"
+  },
+  "cfRangeD7": "7d",
+  "@cfRangeD7": {
+    "description": "CF server history 7 days range"
+  },
+  "cfChartCpu": "CPU Usage",
+  "@cfChartCpu": {
+    "description": "CF server detail CPU chart title"
+  },
+  "cfChartMem": "Memory & Swap",
+  "@cfChartMem": {
+    "description": "CF server detail memory and swap chart title"
+  },
+  "cfChartDisk": "Disk Used",
+  "@cfChartDisk": {
+    "description": "CF server detail disk used chart title"
+  },
+  "cfChartNet": "Network Speed",
+  "@cfChartNet": {
+    "description": "CF server detail network speed chart title"
+  },
+  "cfChartLoad": "System Load",
+  "@cfChartLoad": {
+    "description": "CF server detail system load chart title"
+  },
+  "cfChartDiskIo": "Disk IO",
+  "@cfChartDiskIo": {
+    "description": "CF server detail disk IO chart title"
+  },
+  "cfChartConn": "Connections",
+  "@cfChartConn": {
+    "description": "CF server detail connections chart title"
+  },
+  "cfChartProcess": "Processes",
+  "@cfChartProcess": {
+    "description": "CF server detail processes chart title"
+  },
+  "cfChartPing": "Ping Latency",
+  "@cfChartPing": {
+    "description": "CF server detail ping latency chart title"
   }
 }

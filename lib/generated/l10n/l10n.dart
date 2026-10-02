@@ -9254,6 +9254,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Expires'**
   String get cfExpire;
+
+  /// CF server history live range
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get cfRangeLive;
+
+  /// CF server history 30 minutes range
+  ///
+  /// In en, this message translates to:
+  /// **'30m'**
+  String get cfRangeM30;
+
+  /// CF server history 1 hour range
+  ///
+  /// In en, this message translates to:
+  /// **'1h'**
+  String get cfRangeH1;
+
+  /// CF server history 6 hours range
+  ///
+  /// In en, this message translates to:
+  /// **'6h'**
+  String get cfRangeH6;
+
+  /// CF server history 1 day range
+  ///
+  /// In en, this message translates to:
+  /// **'1d'**
+  String get cfRangeD1;
+
+  /// CF server history 2 days range
+  ///
+  /// In en, this message translates to:
+  /// **'2d'**
+  String get cfRangeD2;
+
+  /// CF server history 7 days range
+  ///
+  /// In en, this message translates to:
+  /// **'7d'**
+  String get cfRangeD7;
+
+  /// CF server detail CPU chart title
+  ///
+  /// In en, this message translates to:
+  /// **'CPU Usage'**
+  String get cfChartCpu;
+
+  /// CF server detail memory and swap chart title
+  ///
+  /// In en, this message translates to:
+  /// **'Memory & Swap'**
+  String get cfChartMem;
+
+  /// CF server detail disk used chart title
+  ///
+  /// In en, this message translates to:
+  /// **'Disk Used'**
+  String get cfChartDisk;
+
+  /// CF server detail network speed chart title
+  ///
+  /// In en, this message translates to:
+  /// **'Network Speed'**
+  String get cfChartNet;
+
+  /// CF server detail system load chart title
+  ///
+  /// In en, this message translates to:
+  /// **'System Load'**
+  String get cfChartLoad;
+
+  /// CF server detail disk IO chart title
+  ///
+  /// In en, this message translates to:
+  /// **'Disk IO'**
+  String get cfChartDiskIo;
+
+  /// CF server detail connections chart title
+  ///
+  /// In en, this message translates to:
+  /// **'Connections'**
+  String get cfChartConn;
+
+  /// CF server detail processes chart title
+  ///
+  /// In en, this message translates to:
+  /// **'Processes'**
+  String get cfChartProcess;
+
+  /// CF server detail ping latency chart title
+  ///
+  /// In en, this message translates to:
+  /// **'Ping Latency'**
+  String get cfChartPing;
 }
 
 class _AppLocalizationsDelegate

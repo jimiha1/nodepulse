@@ -5442,4 +5442,52 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get cfExpire => 'Expires';
+
+  @override
+  String get cfRangeLive => 'Live';
+
+  @override
+  String get cfRangeM30 => '30m';
+
+  @override
+  String get cfRangeH1 => '1h';
+
+  @override
+  String get cfRangeH6 => '6h';
+
+  @override
+  String get cfRangeD1 => '1d';
+
+  @override
+  String get cfRangeD2 => '2d';
+
+  @override
+  String get cfRangeD7 => '7d';
+
+  @override
+  String get cfChartCpu => 'CPU Usage';
+
+  @override
+  String get cfChartMem => 'Memory & Swap';
+
+  @override
+  String get cfChartDisk => 'Disk Used';
+
+  @override
+  String get cfChartNet => 'Network Speed';
+
+  @override
+  String get cfChartLoad => 'System Load';
+
+  @override
+  String get cfChartDiskIo => 'Disk IO';
+
+  @override
+  String get cfChartConn => 'Connections';
+
+  @override
+  String get cfChartProcess => 'Processes';
+
+  @override
+  String get cfChartPing => 'Ping Latency';
 }
