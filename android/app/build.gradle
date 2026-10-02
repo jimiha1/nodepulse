@@ -144,7 +144,11 @@ android {
         
         ndk {
             if(!splits.abi.enable) { // abiFilters cannot be present when splits abi filters are set
-                abiFilters 'arm64-v8a', 'armeabi-v7a'
+                // -PsbEmulator=true adds x86_64 so an x86_64 AVD can run the app;
+                // release artifacts stay arm64+v7a.
+                def abis = ['arm64-v8a', 'armeabi-v7a']
+                if (project.hasProperty('sbEmulator')) abis << 'x86_64'
+                abiFilters(*abis)
             }
 
         }
