@@ -5043,6 +5043,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cfTestFail => '连接失败';
+
+  @override
+  String get cfOverviewOnline => '在线';
+
+  @override
+  String get cfOverviewBandwidth => '总带宽';
+
+  @override
+  String get cfLoad => '负载';
+
+  @override
+  String get cfTrafficRemaining => '剩余流量';
+
+  @override
+  String get cfExpire => '到期';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).

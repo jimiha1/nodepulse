@@ -5449,4 +5449,19 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get cfTestFail => 'Connection failed';
+
+  @override
+  String get cfOverviewOnline => 'Online';
+
+  @override
+  String get cfOverviewBandwidth => 'Bandwidth';
+
+  @override
+  String get cfLoad => 'Load';
+
+  @override
+  String get cfTrafficRemaining => 'Traffic left';
+
+  @override
+  String get cfExpire => 'Expires';
 }

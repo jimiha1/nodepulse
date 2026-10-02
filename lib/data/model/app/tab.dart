@@ -66,7 +66,12 @@ enum AppTab {
   /// its own tabs (schema step m030 adds this one only where a PVE host was
   /// configured); one never arranged is this list, read at launch, so it gets
   /// the tab like a fresh install does.
-  static const defaultOrder = [server, ssh, file, agent, virt];
+  ///
+  /// The trim to a CF-Server-Monitor front end narrows a fresh bar to one:
+  /// the CF list is the app's first screen. The other tabs stay reachable —
+  /// through the settings' arrangement page and their own routes — and grow
+  /// back here as later tasks of the trim wire their replacements.
+  static const defaultOrder = [server];
 
   /// The tabs not in [enabled], in declaration order — what "more" holds.
   ///

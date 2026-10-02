@@ -1514,5 +1514,10 @@
   "cfPassword": "密码",
   "cfTestConnection": "测试连接",
   "cfTestOk": "连接成功，{n} 台服务器",
-  "cfTestFail": "连接失败"
+  "cfTestFail": "连接失败",
+  "cfOverviewOnline": "在线",
+  "cfOverviewBandwidth": "总带宽",
+  "cfLoad": "负载",
+  "cfTrafficRemaining": "剩余流量",
+  "cfExpire": "到期"
 }

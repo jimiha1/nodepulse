@@ -5,9 +5,10 @@ part of '../entry.dart';
 ///
 /// Its own page rather than rows in the server group's settings, because what
 /// it configures is not this app but another one — a site this build talks to.
-/// The URL is saved as it is submitted; the credentials are not saved as they
-/// are typed but with the connection test, which is the only moment a token
-/// exists to store beside them.
+/// The URL is saved as it is submitted; the credentials are saved as they are
+/// submitted too, and the same submit logs in, because an API instance can
+/// only carry a token it minted itself. The connection test does both again
+/// and adds the one read that says the site answers.
 final class CfSiteSettingsPage extends ConsumerStatefulWidget {
   const CfSiteSettingsPage({super.key});
 
@@ -63,10 +64,10 @@ final class _CfSiteSettingsPageState extends ConsumerState<CfSiteSettingsPage> {
 
   /// Log in as needed, then read the node list once, and say which happened.
   ///
-  /// This is also where typed credentials are persisted: [CfApi.performLogin]
-  /// returns the token, and only with one does the credentials store have a
-  /// complete set to keep — which is why the inputs above are not saved as
-  /// they are typed.
+  /// This is also where typed credentials are persisted *with* their token:
+  /// [CfApi.performLogin] returns it, and the set is complete only with one —
+  /// which is why [_saveCredentials] logs in as well when it stores the pair
+  /// alone.
   Future<void> _test() async {
     if (_testing) return;
     setState(() => _testing = true);
@@ -96,6 +97,36 @@ final class _CfSiteSettingsPageState extends ConsumerState<CfSiteSettingsPage> {
       await context.showRoundDialog(title: l10n.cfTestFail, child: Text('$e'));
     } finally {
       if (mounted) setState(() => _testing = false);
+    }
+  }
+
+  /// Persists the typed credentials as they are submitted, and logs in with
+  /// them when nothing has yet: a stored pair alone becomes a session only
+  /// through a login — the same one the launch restore runs — so saving it
+  /// without minting a token would leave this session reading anonymously
+  /// (and failing, on a private site) until the app restarted.
+  ///
+  /// A refused login is logged and otherwise swallowed: the credentials are
+  /// kept regardless — a site that is down this minute is not a reason to
+  /// make anyone retype a password — and the connection test is where a
+  /// failure is said out loud.
+  Future<void> _saveCredentials(String _) async {
+    final username = _userCtrl.text.trim();
+    final password = _pwdCtrl.text;
+    if (!Stores.setting.cfAuthEnabled.fetch() ||
+        username.isEmpty ||
+        password.isEmpty) {
+      return;
+    }
+    try {
+      final credentials = ref.read(cfCredentialsProvider);
+      await credentials.saveCredentials(username: username, password: password);
+      final token = await ref
+          .read(cfApiProvider)
+          .performLogin(username, password);
+      await credentials.saveToken(token);
+    } catch (e, s) {
+      Loggers.app.warning('CF credential submit failed', e, s);
     }
   }
 
@@ -133,6 +164,7 @@ final class _CfSiteSettingsPageState extends ConsumerState<CfSiteSettingsPage> {
                           controller: _userCtrl,
                           label: l10n.cfUsername,
                           icon: Icons.person_outline,
+                          onSubmitted: _saveCredentials,
                         ),
                       ),
                       CardX(
@@ -141,6 +173,7 @@ final class _CfSiteSettingsPageState extends ConsumerState<CfSiteSettingsPage> {
                           label: l10n.cfPassword,
                           icon: Icons.password_outlined,
                           obscureText: true,
+                          onSubmitted: _saveCredentials,
                         ),
                       ),
                     ],

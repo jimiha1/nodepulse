@@ -40,6 +40,17 @@ class CfCredentials {
     await saveToken(token);
   }
 
+  /// [save] without a token, for the settings page's submit: the pair is
+  /// worth keeping as it is entered, before any login has minted a token to
+  /// keep beside it. The next launch's restore logs in with these.
+  Future<void> saveCredentials({
+    required String username,
+    required String password,
+  }) async {
+    await _storage.write(key: _kUsername, value: username);
+    await _storage.write(key: _kPassword, value: password);
+  }
+
   /// Persists [token] together with the expiry parsed from its `exp` claim,
   /// which is what schedules the next silent re-login.
   Future<void> saveToken(String token) async {

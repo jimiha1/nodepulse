@@ -49,8 +49,13 @@ CfApi cfApi(Ref ref) {
   // still fresh cannot simply be handed to it. Best-effort — a refused login
   // (a password rotated server-side, say) leaves the anonymous path, and the
   // first poll surfaces whatever a read without a session gets.
+  //
+  // The future is handed to the API as it starts ([CfApi.ready]), so the
+  // first fetch waits it out instead of racing it: without that, a read sent
+  // before the login landed goes out tokenless and comes back a 401 that
+  // pins the page as an error for a whole interval.
   if (auth.fetch()) {
-    unawaited(_restore(api, credentials));
+    api.attachRestore(_restore(api, credentials));
   }
   return api;
 }
@@ -82,20 +87,24 @@ class CfServers extends _$CfServers {
   int _generation = 0;
 
   @override
-  Future<CfServersSnapshot> build() {
+  Future<CfServersSnapshot> build() async {
     ref.onDispose(_stopAutoRefresh);
+    final api = ref.watch(cfApiProvider);
+    // A private site's restore login starts the moment the API exists, and
+    // this first fetch is the read it must not race — see [CfApi.ready].
+    await api.ready;
     // Watched, not read: a changed site URL rebuilds the API, and this state
     // must then become the new site's, not keep the old one's snapshot.
-    return ref.watch(cfApiProvider).fetchServers();
+    return api.fetchServers();
   }
 
   /// Pulls once, now. A failure is state, not an exception: the poll also
   /// runs on a timer nobody is awaiting, and an error a reader can render is
   /// worth more than a log line.
   Future<void> refresh() async {
-    final snapshot = await AsyncValue.guard(
-      () => ref.read(cfApiProvider).fetchServers(),
-    );
+    final api = ref.read(cfApiProvider);
+    await api.ready;
+    final snapshot = await AsyncValue.guard(api.fetchServers);
     if (!ref.mounted) return;
     state = snapshot;
   }

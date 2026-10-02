@@ -149,6 +149,16 @@ class CfServer {
     return (used / limitBytes).clamp(0.0, 1.0);
   }
 
+  /// The monthly quota in bytes, 0 when the node has none — the parsed form
+  /// of the free-text `trafficLimit`, for a reader that shows what is left
+  /// rather than the share [trafficUsedRatio] answers.
+  int get trafficLimitBytes => _limitToBytes(trafficLimit);
+
+  /// What this node has counted against [trafficLimitBytes] this month, by
+  /// the same rule [trafficUsedRatio] follows.
+  int get trafficUsedBytes =>
+      _usedBytes(trafficCalcType, netRxMonthly, netTxMonthly);
+
   static bool _isOnline(Map<String, dynamic> j) =>
       DateTime.now().millisecondsSinceEpoch - _int(j['last_updated']) < 90_000;
 

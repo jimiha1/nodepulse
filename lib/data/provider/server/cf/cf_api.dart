@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:server_box/data/model/cf/cf_history.dart';
 import 'package:server_box/data/model/cf/cf_server.dart';
@@ -76,6 +78,26 @@ class CfApi {
   String? _token;
   String? _username;
   String? _password;
+
+  /// Set by [attachRestore] when the provider that constructed this instance
+  /// launches its restore login; null on the public path, where there is no
+  /// session to wait for.
+  Completer<void>? _restoreGate;
+
+  /// Completes when the restore login this instance started at construction
+  /// has settled — immediately when it has none. The first read awaits this
+  /// rather than racing the login with a tokenless request, which the site
+  /// would answer with a 401 the page then pins as its state.
+  Future<void> get ready => _restoreGate?.future ?? Future.value();
+
+  /// Hands over the future of the launch restore, so a first read can wait
+  /// it out through [ready]. The future runs on regardless; nothing here is
+  /// what starts it.
+  void attachRestore(Future<void> restore) {
+    final gate = Completer<void>();
+    _restoreGate = gate;
+    unawaited(restore.whenComplete(gate.complete));
+  }
 
   /// The current token: what an injected provider supplies, else what the
   /// last [login] / silent re-login obtained. `null` on the public path.

@@ -7003,5 +7003,25 @@
   "cfTestFail": "Connection failed",
   "@cfTestFail": {
     "description": "Shown when the CF site connection test failed."
+  },
+  "cfOverviewOnline": "Online",
+  "@cfOverviewOnline": {
+    "description": "Label of the CF home overview's online-count cell."
+  },
+  "cfOverviewBandwidth": "Bandwidth",
+  "@cfOverviewBandwidth": {
+    "description": "Label of the CF home overview's total-bandwidth cell."
+  },
+  "cfLoad": "Load",
+  "@cfLoad": {
+    "description": "Label of a CF node card's one-minute load average."
+  },
+  "cfTrafficRemaining": "Traffic left",
+  "@cfTrafficRemaining": {
+    "description": "Label of what is left of a CF node's monthly traffic quota."
+  },
+  "cfExpire": "Expires",
+  "@cfExpire": {
+    "description": "Label of a CF node's expiry date."
   }
 }

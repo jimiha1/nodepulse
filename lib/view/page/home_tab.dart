@@ -8,7 +8,7 @@ import 'package:server_box/data/res/store.dart';
 import 'package:server_box/view/page/agent/agent.dart';
 import 'package:server_box/view/page/benchmark/tab.dart';
 import 'package:server_box/view/page/remote_desktop/tab.dart';
-import 'package:server_box/view/page/server/tab/tab.dart';
+import 'package:server_box/view/page/server/cf_tab.dart';
 import 'package:server_box/view/page/snippet/list.dart';
 import 'package:server_box/view/page/ssh/tab.dart';
 import 'package:server_box/view/page/storage/tab.dart';
@@ -20,7 +20,10 @@ import 'package:server_box/view/widget/nav_rail.dart';
 extension AppTabViewX on AppTab {
   Widget get page {
     return switch (this) {
-      AppTab.server => const ServerPage(),
+      // The CF site's list is what this app now opens on; the old SSH fleet
+      // tab stays built — its page still compiles, its route still exists —
+      // until the trim's last task removes it.
+      AppTab.server => const CfHomePage(),
       AppTab.ssh => const SSHTabPage(),
       AppTab.file => const FileTabPage(),
       AppTab.snippet => const SnippetListPage(),

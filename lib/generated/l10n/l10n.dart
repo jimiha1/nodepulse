@@ -9224,6 +9224,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connection failed'**
   String get cfTestFail;
+
+  /// Label of the CF home overview's online-count cell.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get cfOverviewOnline;
+
+  /// Label of the CF home overview's total-bandwidth cell.
+  ///
+  /// In en, this message translates to:
+  /// **'Bandwidth'**
+  String get cfOverviewBandwidth;
+
+  /// Label of a CF node card's one-minute load average.
+  ///
+  /// In en, this message translates to:
+  /// **'Load'**
+  String get cfLoad;
+
+  /// Label of what is left of a CF node's monthly traffic quota.
+  ///
+  /// In en, this message translates to:
+  /// **'Traffic left'**
+  String get cfTrafficRemaining;
+
+  /// Label of a CF node's expiry date.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires'**
+  String get cfExpire;
 }
 
 class _AppLocalizationsDelegate

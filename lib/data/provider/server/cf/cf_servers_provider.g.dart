@@ -88,7 +88,7 @@ final class CfApiProvider extends $FunctionalProvider<CfApi, CfApi, CfApi>
   }
 }
 
-String _$cfApiHash() => r'4e33bc101ddf2d056fe9348245b57deab5c23ca5';
+String _$cfApiHash() => r'ae9d860d5dbe7c6970c3d5bee50018fd23dc6ea0';
 
 /// The node list of the CF site, polled; the state the CF pages read.
 
@@ -118,7 +118,7 @@ final class CfServersProvider
   CfServers create() => CfServers();
 }
 
-String _$cfServersHash() => r'62865432b7f606711408b54ca2e3fa24bd0950e6';
+String _$cfServersHash() => r'99aa2c831153f3401c4219c6cf57dc10ae9825c2';
 
 /// The node list of the CF site, polled; the state the CF pages read.
 
