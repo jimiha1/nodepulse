@@ -92,6 +92,15 @@ class CfCredentials {
     await _storage.deleteAll();
   }
 
+  /// The stored credentials, for a caller that has to put a session into the
+  /// API itself: [CfApi] carries only a token it minted through its own
+  /// login, so a stored-but-still-fresh one cannot be handed to it and the
+  /// caller logs in with these instead. Null when nothing is stored.
+  Future<String?> get username => _storage.read(key: _kUsername);
+
+  /// See [username].
+  Future<String?> get password => _storage.read(key: _kPassword);
+
   Future<DateTime?> _exp() async {
     final raw = await _storage.read(key: _kTokenExp);
     final seconds = raw == null ? null : int.tryParse(raw);

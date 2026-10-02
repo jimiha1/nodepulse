@@ -6966,5 +6966,42 @@
   "firewallInvalidForwardPort": "Use port=80:proto=tcp:toport=8080, with toport, toaddr or both.",
   "@firewallInvalidForwardPort": {
     "description": "Validation error for a firewalld forwarded port."
+  },
+  "cfSite": "CF Monitor Site",
+  "@cfSite": {
+    "description": "The settings entry and page title for the CF-Server-Monitor site."
+  },
+  "cfSiteUrlHint": "https://status.example.com",
+  "@cfSiteUrlHint": {
+    "description": "Placeholder of the input for the CF site's address."
+  },
+  "cfAuth": "Login required",
+  "@cfAuth": {
+    "description": "Whether the CF site's read endpoints need a login."
+  },
+  "cfUsername": "Username",
+  "@cfUsername": {
+    "description": "Label of the CF site's login username input."
+  },
+  "cfPassword": "Password",
+  "@cfPassword": {
+    "description": "Label of the CF site's login password input."
+  },
+  "cfTestConnection": "Test connection",
+  "@cfTestConnection": {
+    "description": "Button: log in to the CF site as needed and read its node list once."
+  },
+  "cfTestOk": "Connected, {n} servers",
+  "@cfTestOk": {
+    "description": "Shown when the CF site connection test succeeded.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "cfTestFail": "Connection failed",
+  "@cfTestFail": {
+    "description": "Shown when the CF site connection test failed."
   }
 }

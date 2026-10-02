@@ -47,6 +47,20 @@ class SettingStore extends SqliteStore with ThemeSettings {
     Defaults.updateInterval,
   );
 
+  /// The CF-Server-Monitor site the CF pages read, see
+  /// `lib/data/provider/server/cf/`. Empty means none is configured.
+  late final cfSiteUrl = propertyDefault('cfSiteUrl', '');
+
+  /// Seconds between two polls of that site's node list.
+  late final cfUpdateInterval = propertyDefault('cfUpdateInterval', 10);
+
+  /// Whether that site needs a login, i.e. its read endpoints are private.
+  ///
+  /// The credentials themselves are not a setting: this store is SQLite in
+  /// plaintext, so they live in `CfCredentials` — the platform keystore —
+  /// instead.
+  late final cfAuthEnabled = propertyDefault('cfAuthEnabled', false);
+
   // Maximum number of server connection retries.
   late final maxRetryCount = propertyDefault('maxRetryCount', 2);
 

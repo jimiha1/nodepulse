@@ -1506,5 +1506,13 @@
   "firewallStoppedNote": "firewalld 已停止。改动会保存，启动后生效。",
   "firewallInvalidSource": "来源无效。请填写地址、网段（如 192.168.1.0/24）、ipset:名称 或 MAC 地址。",
   "firewallInvalidRichRule": "rich rule 必须以 \"rule\" 开头，且只能有一行。",
-  "firewallInvalidForwardPort": "格式为 port=80:proto=tcp:toport=8080，需包含 toport、toaddr 或两者。"
+  "firewallInvalidForwardPort": "格式为 port=80:proto=tcp:toport=8080，需包含 toport、toaddr 或两者。",
+  "cfSite": "CF 监控站点",
+  "cfSiteUrlHint": "https://status.example.com",
+  "cfAuth": "站点需要登录",
+  "cfUsername": "用户名",
+  "cfPassword": "密码",
+  "cfTestConnection": "测试连接",
+  "cfTestOk": "连接成功，{n} 台服务器",
+  "cfTestFail": "连接失败"
 }

@@ -80,6 +80,15 @@ List<SettingsNode> _buildNodes() {
           ),
       ],
     ),
+    // Above the server group, because what it configures is not this app's
+    // servers but another site entirely — a CF-Server-Monitor the CF pages
+    // read. A leaf rather than a branch: its one page holds all of it.
+    SettingsNode.leaf(
+      id: 'cfSite',
+      title: l10n.cfSite,
+      icon: Icons.monitor_heart_outlined,
+      page: () => const CfSiteSettingsPage(),
+    ),
     SettingsNode.branch(
       id: 'server',
       title: libL10n.server,

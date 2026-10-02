@@ -5103,4 +5103,30 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get firewallInvalidForwardPort =>
       'port=80:proto=tcp:toport=8080 の形式で、toport、toaddr、またはその両方を指定してください。';
+
+  @override
+  String get cfSite => 'CF Monitor Site';
+
+  @override
+  String get cfSiteUrlHint => 'https://status.example.com';
+
+  @override
+  String get cfAuth => 'Login required';
+
+  @override
+  String get cfUsername => 'Username';
+
+  @override
+  String get cfPassword => 'Password';
+
+  @override
+  String get cfTestConnection => 'Test connection';
+
+  @override
+  String cfTestOk(int n) {
+    return 'Connected, $n servers';
+  }
+
+  @override
+  String get cfTestFail => 'Connection failed';
 }

@@ -5017,6 +5017,32 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get firewallInvalidForwardPort =>
       '格式为 port=80:proto=tcp:toport=8080，需包含 toport、toaddr 或两者。';
+
+  @override
+  String get cfSite => 'CF 监控站点';
+
+  @override
+  String get cfSiteUrlHint => 'https://status.example.com';
+
+  @override
+  String get cfAuth => '站点需要登录';
+
+  @override
+  String get cfUsername => '用户名';
+
+  @override
+  String get cfPassword => '密码';
+
+  @override
+  String get cfTestConnection => '测试连接';
+
+  @override
+  String cfTestOk(int n) {
+    return '连接成功，$n 台服务器';
+  }
+
+  @override
+  String get cfTestFail => '连接失败';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).

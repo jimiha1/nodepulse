@@ -9176,6 +9176,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use port=80:proto=tcp:toport=8080, with toport, toaddr or both.'**
   String get firewallInvalidForwardPort;
+
+  /// The settings entry and page title for the CF-Server-Monitor site.
+  ///
+  /// In en, this message translates to:
+  /// **'CF Monitor Site'**
+  String get cfSite;
+
+  /// Placeholder of the input for the CF site's address.
+  ///
+  /// In en, this message translates to:
+  /// **'https://status.example.com'**
+  String get cfSiteUrlHint;
+
+  /// Whether the CF site's read endpoints need a login.
+  ///
+  /// In en, this message translates to:
+  /// **'Login required'**
+  String get cfAuth;
+
+  /// Label of the CF site's login username input.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get cfUsername;
+
+  /// Label of the CF site's login password input.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get cfPassword;
+
+  /// Button: log in to the CF site as needed and read its node list once.
+  ///
+  /// In en, this message translates to:
+  /// **'Test connection'**
+  String get cfTestConnection;
+
+  /// Shown when the CF site connection test succeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected, {n} servers'**
+  String cfTestOk(int n);
+
+  /// Shown when the CF site connection test failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection failed'**
+  String get cfTestFail;
 }
 
 class _AppLocalizationsDelegate
