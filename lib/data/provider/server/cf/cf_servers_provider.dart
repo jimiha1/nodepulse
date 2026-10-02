@@ -197,8 +197,9 @@ class CfServers extends _$CfServers {
         servers: updatedServers,
         total: current.total,
         online: updatedServers.where((s) => s.online).length,
-        globalSpeedIn: current.globalSpeedIn,
-        globalSpeedOut: current.globalSpeedOut,
+        // Recompute fleet speed sums from updated servers so header reflects live spikes
+        globalSpeedIn: updatedServers.fold<double>(0, (sum, s) => sum + s.netInSpeed),
+        globalSpeedOut: updatedServers.fold<double>(0, (sum, s) => sum + s.netOutSpeed),
         globalNetRx: current.globalNetRx,
         globalNetTx: current.globalNetTx,
         showExpire: current.showExpire,
