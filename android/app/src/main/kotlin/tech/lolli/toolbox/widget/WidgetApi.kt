@@ -10,7 +10,10 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.cert.X509Certificate
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
@@ -19,10 +22,6 @@ import javax.net.ssl.X509TrustManager
 
 /**
  * Fetches CF-Server-Monitor endpoints directly for home widgets.
- *
- * Calls:
- * - GET {siteUrl}/api/servers (find server matching server.id)
- * - GET {siteUrl}/api/history/all?id={id}&hours=24 (for 4x2 chart history)
  */
 object WidgetApi {
     class InsecureException : IOException("HTTPS required")
@@ -33,7 +32,7 @@ object WidgetApi {
 
     class RejectedTokenException : IOException("Credential rejected")
 
-    /** One reading, reduced to what a widget shows. */
+    /** One reading, supporting all custom WidgetField options. */
     data class Reading(
         val name: String,
         val cpu: Double?,
@@ -42,6 +41,16 @@ object WidgetApi {
         val memText: String,
         val diskText: String,
         val netText: String,
+        val loadText: String = "",
+        val netTotalText: String = "",
+        val trafficLeftText: String = "",
+        val connText: String = "",
+        val pingText: String = "",
+        val uptimeText: String = "",
+        val expireText: String = "",
+        val load1: Double = 0.0,
+        val diskIoText: String = "",
+        val procText: String = "",
     )
 
     /** One bucket of history, oldest first. */
@@ -51,6 +60,10 @@ object WidgetApi {
         val disk: Double,
         val netRx: Double,
         val netTx: Double,
+        val load: Double = 0.0,
+        val io: Double = 0.0,
+        val conn: Double = 0.0,
+        val proc: Double = 0.0,
     )
 
     private const val TIMEOUT_MS = 8_000
@@ -144,6 +157,67 @@ object WidgetApi {
         val diskUsedBytes = diskUsed * 1024.0 * 1024.0
         val diskTotalBytes = diskTotal * 1024.0 * 1024.0
 
+        // Parse load_avg
+        val loadAvgRaw = o.opt("load_avg")
+        val loads = parseLoads(loadAvgRaw)
+        val loadText = if (loads.isNotEmpty()) {
+            loads.joinToString(" ") { String.format(Locale.US, "%.2f", it) }
+        } else "--"
+
+        // Traffic totals and limits
+        val netRx = o.optDoubleOrNull("net_rx") ?: 0.0
+        val netTx = o.optDoubleOrNull("net_tx") ?: 0.0
+        val netTotalText = "${formatBytes(netRx)} / ${formatBytes(netTx)}"
+
+        val trafficLimit = o.opt("traffic_limit")
+        val trafficCalcType = o.optString("traffic_calc_type")
+        val netRxMonthly = o.optDoubleOrNull("net_rx_monthly") ?: 0.0
+        val netTxMonthly = o.optDoubleOrNull("net_tx_monthly") ?: 0.0
+        val limitBytes = parseTrafficLimitToBytes(trafficLimit)
+        val usedMonthly = calcUsedMonthly(trafficCalcType, netRxMonthly, netTxMonthly)
+        val trafficLeftText = if (limitBytes > 0) {
+            "${formatBytes(usedMonthly)} / ${formatBytes(limitBytes.toDouble())}"
+        } else {
+            "${formatBytes(usedMonthly)} / ∞"
+        }
+
+        // Connections
+        val tcpConn = o.optIntOrNull("tcp_conn")
+        val udpConn = o.optIntOrNull("udp_conn")
+        val connText = when {
+            tcpConn != null && udpConn != null -> "T:$tcpConn U:$udpConn"
+            tcpConn != null -> "$tcpConn"
+            udpConn != null -> "$udpConn"
+            else -> "--"
+        }
+
+        // Ping
+        val pingCt = o.optDoubleOrNull("ping_ct")
+        val pingCu = o.optDoubleOrNull("ping_cu")
+        val pingCm = o.optDoubleOrNull("ping_cm")
+        val pingText = if (pingCt != null || pingCu != null || pingCm != null) {
+            val ct = pingCt?.let { "${it.toInt()}" } ?: "-"
+            val cu = pingCu?.let { "${it.toInt()}" } ?: "-"
+            val cm = pingCm?.let { "${it.toInt()}" } ?: "-"
+            "$ct/$cu/${cm}ms"
+        } else "--"
+
+        // Uptime
+        val bootTime = o.optDoubleOrNull("boot_time")
+        val uptimeText = if (bootTime != null && bootTime > 0) {
+            val bootSec = if (bootTime >= 1e11) (bootTime / 1000).toLong() else bootTime.toLong()
+            val nowSec = System.currentTimeMillis() / 1000
+            val upSec = (nowSec - bootSec).coerceAtLeast(0)
+            formatUptime(upSec)
+        } else "--"
+
+        // Expire
+        val expireRaw = o.optString("expire_date")
+        val expireText = if (expireRaw.isNotEmpty()) expireRaw else "--"
+
+        val proc = o.optIntOrNull("processes")
+        val procText = proc?.toString() ?: "--"
+
         return Reading(
             name = o.optString("name").ifEmpty { server.name },
             cpu = cpu,
@@ -151,7 +225,17 @@ object WidgetApi {
             disk = diskPercent,
             memText = "${formatBytes(ramUsedBytes)} / ${formatBytes(ramTotalBytes)}",
             diskText = "${formatBytes(diskUsedBytes)} / ${formatBytes(diskTotalBytes)}",
-            netText = "${formatBytes(netInSpeed)}/s / ${formatBytes(netOutSpeed)}/s",
+            netText = "↑${formatBytes(netOutSpeed)}/s ↓${formatBytes(netInSpeed)}/s",
+            loadText = loadText,
+            netTotalText = netTotalText,
+            trafficLeftText = trafficLeftText,
+            connText = connText,
+            pingText = pingText,
+            uptimeText = uptimeText,
+            expireText = expireText,
+            load1 = loads.firstOrNull() ?: 0.0,
+            diskIoText = "--",
+            procText = procText,
         )
     }
 
@@ -167,13 +251,73 @@ object WidgetApi {
             val diskUsed = o.optDoubleOrNull("disk_used") ?: 0.0
             val diskPercent = if (diskTotal > 0) (diskUsed / diskTotal * 100.0) else 0.0
 
+            val loadAvg = parseLoads(o.opt("load_avg")).firstOrNull() ?: 0.0
+            val diskR = o.optDoubleOrNull("disk_read_bps") ?: 0.0
+            val diskW = o.optDoubleOrNull("disk_write_bps") ?: 0.0
+            val tcpConn = o.optDoubleOrNull("tcp_conn") ?: 0.0
+            val udpConn = o.optDoubleOrNull("udp_conn") ?: 0.0
+            val proc = o.optDoubleOrNull("processes") ?: 0.0
+
             HistoryPoint(
                 cpu = o.optDouble("cpu", 0.0),
                 memory = memPercent,
                 disk = diskPercent,
                 netRx = o.optDouble("net_in_speed", 0.0),
                 netTx = o.optDouble("net_out_speed", 0.0),
+                load = loadAvg,
+                io = diskR + diskW,
+                conn = tcpConn + udpConn,
+                proc = proc,
             )
+        }
+    }
+
+    private fun parseLoads(v: Any?): List<Double> {
+        if (v == null) return emptyList()
+        val str = v.toString().trim()
+        if (str.isEmpty()) return emptyList()
+        return str.split(Regex("\\s+")).mapNotNull { it.toDoubleOrNull() }
+    }
+
+    private fun calcUsedMonthly(calcType: String?, rxMonthly: Double, txMonthly: Double): Double {
+        return when ((calcType ?: "").trim().lowercase(Locale.ROOT)) {
+            "ul", "up" -> txMonthly
+            "dl", "down" -> rxMonthly
+            "total", "sum" -> rxMonthly + txMonthly
+            "min" -> if (rxMonthly < txMonthly) rxMonthly else txMonthly
+            else -> if (rxMonthly > txMonthly) rxMonthly else txMonthly
+        }
+    }
+
+    private fun parseTrafficLimitToBytes(v: Any?): Long {
+        if (v == null) return 0L
+        if (v is Number) return if (v.toDouble() > 0) (v.toDouble() * 1024 * 1024 * 1024).toLong() else 0L
+        val str = v.toString().trim()
+        if (str.isEmpty()) return 0L
+        val match = Regex("""^([\d.]+)\s*(b|kb|mb|gb|tb|pb)?$""", RegexOption.IGNORE_CASE).find(str)
+            ?: return (str.toDoubleOrNull() ?: 0.0).toLong()
+        val num = match.groupValues[1].toDoubleOrNull() ?: return 0L
+        val unit = match.groupValues.getOrNull(2)?.lowercase(Locale.ROOT) ?: "gb"
+        val multiplier = when (unit) {
+            "b" -> 1L
+            "kb" -> 1024L
+            "mb" -> 1024L * 1024
+            "gb" -> 1024L * 1024 * 1024
+            "tb" -> 1024L * 1024 * 1024 * 1024
+            "pb" -> 1024L * 1024 * 1024 * 1024 * 1024
+            else -> 1024L * 1024 * 1024
+        }
+        return (num * multiplier).toLong()
+    }
+
+    fun formatUptime(seconds: Long): String {
+        val days = seconds / 86400
+        val hours = (seconds % 86400) / 3600
+        val mins = (seconds % 3600) / 60
+        return when {
+            days > 0 -> "${days}d ${hours}h"
+            hours > 0 -> "${hours}h ${mins}m"
+            else -> "${mins}m"
         }
     }
 
@@ -183,6 +327,16 @@ object WidgetApi {
             when (v) {
                 is Number -> v.toDouble()
                 is String -> v.toDoubleOrNull()
+                else -> null
+            }
+        } else null
+
+    private fun JSONObject.optIntOrNull(key: String): Int? =
+        if (has(key) && !isNull(key)) {
+            val v = opt(key)
+            when (v) {
+                is Number -> v.toInt()
+                is String -> v.toIntOrNull()
                 else -> null
             }
         } else null

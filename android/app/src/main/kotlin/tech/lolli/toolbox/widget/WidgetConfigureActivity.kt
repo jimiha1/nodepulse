@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
@@ -15,30 +16,30 @@ import android.widget.TextView
 import tech.lolli.toolbox.R
 
 /**
- * What a widget shows: which server, and which metric leads.
- *
- * Serves both providers. Which one is being configured comes from the id, not
- * from an extra: the launcher hands over an `appWidgetId` and the system knows
- * what it belongs to. What each one *draws* is not configurable — that is the
- * point of there being two of them.
- *
- * The servers are the ones the app published (`WidgetStore`), not an address
- * typed in here. There is no free-text field any more and that is deliberate:
- * the widget reads the agent's authenticated API, so an address on its own is
- * useless — reaching one needs a login, and a login typed into a widget
- * configuration dialog would be a second place credentials live, worse in
- * every way than adding the server in the app.
+ * What a widget shows: which server, mode (for MEDIUM), and metrics/fields.
  */
 class WidgetConfigureActivity : Activity() {
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
     private var servers: List<WidgetStore.WidgetServer> = emptyList()
+    private var kind: WidgetKind = WidgetKind.SMALL
+
+    companion object {
+        val CHART_METRICS = listOf(
+            "cpu",
+            "mem",
+            "disk",
+            "net",
+            "load",
+            "io",
+            "conn",
+            "proc",
+        )
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.widget_configure)
 
-        // In case the user backs out before finishing: the system removes a
-        // widget whose configuration activity did not answer RESULT_OK.
         setResult(RESULT_CANCELED)
 
         appWidgetId = intent.extras?.getInt(
@@ -50,7 +51,9 @@ class WidgetConfigureActivity : Activity() {
             return
         }
 
+        kind = HomeWidget.kindOf(applicationContext, appWidgetId) ?: WidgetKind.SMALL
         servers = WidgetStore.servers(applicationContext)
+
         val form = findViewById<LinearLayout>(R.id.config_form)
         val emptyHint = findViewById<TextView>(R.id.empty_hint)
         if (servers.isEmpty()) {
@@ -59,25 +62,165 @@ class WidgetConfigureActivity : Activity() {
             return
         }
 
-        val existing = WidgetConfig.load(applicationContext, appWidgetId)
+        val existing = WidgetConfig.load(applicationContext, appWidgetId, kind)
         val serverGroup = buildServerList(existing)
-        val metricSpinner = buildMetricSpinner(existing)
+
+        val mediumModeContainer = findViewById<LinearLayout>(R.id.medium_mode_container)
+        val modeGroup = findViewById<RadioGroup>(R.id.mode_group)
+        val chartContainer = findViewById<LinearLayout>(R.id.chart_container)
+        val chartLabel = findViewById<TextView>(R.id.chart_label)
+        val metricSpinner = findViewById<Spinner>(R.id.metric_spinner)
+        val chart2Container = findViewById<LinearLayout>(R.id.chart2_container)
+        val chart2Spinner = findViewById<Spinner>(R.id.chart2_spinner)
+        val fieldsContainer = findViewById<LinearLayout>(R.id.fields_container)
+        val fieldsCapHint = findViewById<TextView>(R.id.fields_cap_hint)
+        val fieldChecks = findViewById<LinearLayout>(R.id.field_checks)
+
+        // Setup Spinners for Charts
+        val metricLabels = CHART_METRICS.map { metricLabel(it) }
+        val spinnerAdapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_dropdown_item,
+            metricLabels,
+        )
+        metricSpinner.adapter = spinnerAdapter
+        chart2Spinner.adapter = spinnerAdapter
+
+        val initialChartIndex = CHART_METRICS.indexOf(existing.chart).coerceAtLeast(0)
+        metricSpinner.setSelection(initialChartIndex)
+        val initialChart2Index = CHART_METRICS.indexOf(existing.chart2).coerceAtLeast(0)
+        chart2Spinner.setSelection(initialChart2Index)
+
+        // Setup Field Checkboxes
+        val checkBoxes = mutableMapOf<WidgetField, CheckBox>()
+        fieldChecks.removeAllViews()
+        for (field in WidgetField.entries) {
+            val cb = CheckBox(this).apply {
+                text = fieldLabel(field)
+                isChecked = existing.fields.contains(field)
+            }
+            checkBoxes[field] = cb
+            fieldChecks.addView(cb)
+        }
+
+        fun updateUI() {
+            if (kind == WidgetKind.SMALL) {
+                mediumModeContainer.visibility = View.GONE
+                chartContainer.visibility = View.GONE
+                chart2Container.visibility = View.GONE
+                fieldsContainer.visibility = View.VISIBLE
+                fieldsCapHint.text = "(Max ${WidgetConfig.CAP_SMALL_FIELDS})"
+            } else {
+                mediumModeContainer.visibility = View.VISIBLE
+                val selectedMode = when (modeGroup.checkedRadioButtonId) {
+                    R.id.mode_reading -> MediumMode.READING
+                    R.id.mode_combined -> MediumMode.COMBINED
+                    else -> MediumMode.CHART
+                }
+                when (selectedMode) {
+                    MediumMode.CHART -> {
+                        chartContainer.visibility = View.VISIBLE
+                        chartLabel.text = getString(R.string.widget_configure_metric)
+                        chart2Container.visibility = View.GONE
+                        fieldsContainer.visibility = View.GONE
+                    }
+                    MediumMode.READING -> {
+                        chartContainer.visibility = View.GONE
+                        chart2Container.visibility = View.GONE
+                        fieldsContainer.visibility = View.VISIBLE
+                        fieldsCapHint.text = "(Max ${WidgetConfig.CAP_MEDIUM_READING_FIELDS})"
+                    }
+                    MediumMode.COMBINED -> {
+                        chartContainer.visibility = View.VISIBLE
+                        chartLabel.text = getString(R.string.widget_chart_1)
+                        chart2Container.visibility = View.VISIBLE
+                        fieldsContainer.visibility = View.VISIBLE
+                        fieldsCapHint.text = "(Max ${WidgetConfig.CAP_COMBINED_FIELDS})"
+                    }
+                }
+            }
+        }
+
+        // Limit checkbox selection based on current cap
+        fun setupCheckboxListeners() {
+            for ((field, cb) in checkBoxes) {
+                cb.setOnCheckedChangeListener { _, isChecked ->
+                    if (isChecked) {
+                        val cap = if (kind == WidgetKind.SMALL) {
+                            WidgetConfig.CAP_SMALL_FIELDS
+                        } else {
+                            val selectedMode = when (modeGroup.checkedRadioButtonId) {
+                                R.id.mode_reading -> MediumMode.READING
+                                R.id.mode_combined -> MediumMode.COMBINED
+                                else -> MediumMode.CHART
+                            }
+                            if (selectedMode == MediumMode.COMBINED) WidgetConfig.CAP_COMBINED_FIELDS
+                            else WidgetConfig.CAP_MEDIUM_READING_FIELDS
+                        }
+                        val currentlyChecked = checkBoxes.values.count { it.isChecked }
+                        if (currentlyChecked > cap) {
+                            cb.isChecked = false
+                        }
+                    }
+                }
+            }
+        }
+
+        if (kind == WidgetKind.MEDIUM) {
+            when (existing.mode) {
+                MediumMode.CHART -> modeGroup.check(R.id.mode_chart)
+                MediumMode.READING -> modeGroup.check(R.id.mode_reading)
+                MediumMode.COMBINED -> modeGroup.check(R.id.mode_combined)
+            }
+            modeGroup.setOnCheckedChangeListener { _, _ ->
+                updateUI()
+            }
+        }
+
+        setupCheckboxListeners()
+        updateUI()
 
         findViewById<Button>(R.id.save_button).setOnClickListener {
             val index = serverGroup.checkedRadioButtonId
             if (index !in servers.indices) return@setOnClickListener
+
+            val selectedMode = if (kind == WidgetKind.SMALL) {
+                MediumMode.CHART
+            } else {
+                when (modeGroup.checkedRadioButtonId) {
+                    R.id.mode_reading -> MediumMode.READING
+                    R.id.mode_combined -> MediumMode.COMBINED
+                    else -> MediumMode.CHART
+                }
+            }
+
+            val cap = when {
+                kind == WidgetKind.SMALL -> WidgetConfig.CAP_SMALL_FIELDS
+                selectedMode == MediumMode.READING -> WidgetConfig.CAP_MEDIUM_READING_FIELDS
+                selectedMode == MediumMode.COMBINED -> WidgetConfig.CAP_COMBINED_FIELDS
+                else -> 0
+            }
+
+            val selectedFields = WidgetField.entries
+                .filter { checkBoxes[it]?.isChecked == true }
+                .take(cap)
+
+            val chart1 = CHART_METRICS.getOrNull(metricSpinner.selectedItemPosition) ?: WidgetConfig.DEFAULT_CHART
+            val chart2 = CHART_METRICS.getOrNull(chart2Spinner.selectedItemPosition) ?: WidgetConfig.DEFAULT_CHART2
 
             WidgetConfig.save(
                 applicationContext,
                 appWidgetId,
                 WidgetConfig(
                     serverId = servers[index].id,
-                    metric = WidgetMetric.entries[metricSpinner.selectedItemPosition],
+                    kind = kind,
+                    mode = selectedMode,
+                    fields = selectedFields,
+                    chart = chart1,
+                    chart2 = chart2,
                 ),
             )
 
-            // Targeted at this widget, and at its own provider: reconfiguring
-            // one must not make every other widget on the screen refetch.
             val provider = AppWidgetManager.getInstance(applicationContext)
                 .getAppWidgetInfo(appWidgetId)?.provider
             if (provider != null) {
@@ -97,13 +240,6 @@ class WidgetConfigureActivity : Activity() {
         }
     }
 
-    /**
-     * The radio button ids are indices into [servers].
-     *
-     * A server id is a string and `RadioGroup` keys by int, so the mapping has
-     * to exist somewhere; an index into the list this screen was built from is
-     * the one that cannot drift while the screen is open.
-     */
     private fun buildServerList(existing: WidgetConfig): RadioGroup {
         val group = findViewById<RadioGroup>(R.id.server_group)
         servers.forEachIndexed { index, server ->
@@ -119,33 +255,33 @@ class WidgetConfigureActivity : Activity() {
                 }
             )
         }
-        // Nothing picked yet, or the previous choice was deleted in the app.
         if (group.checkedRadioButtonId !in servers.indices) group.check(0)
         return group
     }
 
-    // Labels derived from the enum rather than listed beside it, so
-    // reordering a case cannot leave the spinner offering the wrong words for
-    // the right positions — which is silent, and stored by name, so it would
-    // only show up as widgets drawing something nobody asked for.
-    private fun buildMetricSpinner(existing: WidgetConfig): Spinner {
-        val labels = WidgetMetric.entries.map {
-            getString(
-                when (it) {
-                    WidgetMetric.CPU -> R.string.widget_metric_cpu
-                    WidgetMetric.MEMORY -> R.string.widget_metric_memory
-                    WidgetMetric.DISK -> R.string.widget_metric_disk
-                    WidgetMetric.NETWORK -> R.string.widget_metric_network
-                }
-            )
-        }
-        return findViewById<Spinner>(R.id.metric_spinner).apply {
-            adapter = ArrayAdapter(
-                this@WidgetConfigureActivity,
-                android.R.layout.simple_spinner_dropdown_item,
-                labels,
-            )
-            setSelection(WidgetMetric.entries.indexOf(existing.metric).coerceAtLeast(0))
-        }
+    private fun metricLabel(metric: String): String = when (metric) {
+        "cpu" -> getString(R.string.widget_metric_cpu)
+        "mem" -> getString(R.string.widget_metric_memory)
+        "disk" -> getString(R.string.widget_metric_disk)
+        "net" -> getString(R.string.widget_metric_network)
+        "load" -> getString(R.string.widget_metric_load)
+        "io" -> getString(R.string.widget_metric_io)
+        "conn" -> getString(R.string.widget_metric_conn)
+        "proc" -> getString(R.string.widget_metric_proc)
+        else -> metric.uppercase()
+    }
+
+    private fun fieldLabel(field: WidgetField): String = when (field) {
+        WidgetField.CPU -> getString(R.string.widget_field_cpu)
+        WidgetField.MEM -> getString(R.string.widget_field_mem)
+        WidgetField.DISK -> getString(R.string.widget_field_disk)
+        WidgetField.LOAD -> getString(R.string.widget_field_load)
+        WidgetField.NET_SPEED -> getString(R.string.widget_field_net)
+        WidgetField.NET_TOTAL -> getString(R.string.widget_field_total)
+        WidgetField.TRAFFIC_LEFT -> getString(R.string.widget_field_quota)
+        WidgetField.CONN -> getString(R.string.widget_field_conn)
+        WidgetField.PING -> getString(R.string.widget_field_ping)
+        WidgetField.UPTIME -> getString(R.string.widget_field_uptime)
+        WidgetField.EXPIRE -> getString(R.string.widget_field_expire)
     }
 }

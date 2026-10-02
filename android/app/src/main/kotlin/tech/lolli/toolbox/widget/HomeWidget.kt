@@ -29,17 +29,6 @@ import kotlin.math.roundToInt
 
 /**
  * The home-screen widget.
- *
- * Reads the agent's `/api/v1` endpoints with the scoped, read-only token the
- * app published — see `WidgetStore`. It used to fetch the unauthenticated
- * compat endpoint from a URL typed by hand into the configuration screen,
- * which answered preformatted strings and no history, so the widget could
- * never draw a trend and configuring it meant retyping an address the app
- * already knew (#951).
- *
- * An `AppWidgetProvider` is a `BroadcastReceiver` in the app's own process, so
- * everything it needs is readable without a channel hop — which is the thing
- * iOS needs a shared Keychain group to arrange.
  */
 abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
     companion object {
@@ -75,36 +64,10 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
 
         private const val TAG = "HomeWidget"
 
-        /**
-         * Longer than the request timeout, so a slow answer still lands. A
-         * broadcast receiver is not given long; overrunning means being killed
-         * mid-update with the loading state left on screen.
-         */
         private const val COROUTINE_TIMEOUT = 20_000L
 
         private val activeUpdates = ConcurrentHashMap<Int, Boolean>()
 
-        /**
-         * What `home_widget.xml` takes before the chart gets any room, in dp.
-         *
-         * Read off that file and has to stay in step with it. Nothing here can
-         * measure the `ImageView` — a `RemoteViews` is a description, not a
-         * view tree — so the chart's box is the reported size minus this.
-         * Being a little out only costs a margin now that the image scales
-         * uniformly; it used to be the whole distortion, because the two axes
-         * were out by different amounts and `fitXY` turned that into a
-         * stretch.
-         */
-        /**
-         * The chrome around the content, per widget rather than per cell count.
-         *
-         * It used to be decided by how many cells the launcher reported, which
-         * was a guess standing in for a question now answered outright: the two
-         * widgets are fixed sizes and each knows what it draws. The readings
-         * one can afford room around its text — that is most of what iOS's
-         * container margins buy it — while the chart one spends the same space
-         * on the charts, which is the whole reason to choose it.
-         */
         private const val CHART_PADDING_DP = 10f
         private const val CHART_MARGIN_DP = 6f
         private const val CHART_HEADER_SP = 14f
@@ -113,10 +76,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         private const val READINGS_CHART_MARGIN_DP = 6f
         private const val READINGS_HEADER_SP = 13f
 
-        /** The time, on its own line at the bottom. */
         private const val FOOTER_DP = 13f
-
-        /** A single line of text takes about this much more than its size. */
         private const val HEADER_LINE_RATIO = 1.45f
     }
 
@@ -124,11 +84,6 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         for (id in appWidgetIds) update(context, manager, id)
     }
 
-    /**
-     * Neither widget resizes, but a launcher may still report a different box
-     * for one — a home screen with a different grid, or a fold opening. The
-     * bitmap is drawn to that box, so it has to be drawn again.
-     */
     override fun onAppWidgetOptionsChanged(
         context: Context,
         manager: AppWidgetManager,
@@ -138,14 +93,11 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         update(context, manager, appWidgetId)
     }
 
-    /** A widget dragged off the home screen must not leave its choices behind. */
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
         for (id in appWidgetIds) WidgetConfig.forget(context, id)
     }
 
     private fun update(context: Context, manager: AppWidgetManager, appWidgetId: Int) {
-        // Two updates for one widget would race each other onto the screen,
-        // and the loser's `updateAppWidget` is the one that sticks.
         if (activeUpdates.putIfAbsent(appWidgetId, true) == true) {
             Log.d(TAG, "Widget $appWidgetId is already updating, skipping")
             return
@@ -154,20 +106,15 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         val views = RemoteViews(context.packageName, R.layout.home_widget)
         setupClickIntent(context, views, appWidgetId)
 
-        val config = WidgetConfig.load(context, appWidgetId)
+        val config = WidgetConfig.load(context, appWidgetId, kind)
         val server = config.serverId.takeIf { it.isNotEmpty() }
             ?.let { WidgetStore.server(context, it) }
         if (server == null) {
-            // Either nothing has been picked, or the server was deleted in the
-            // app after this widget was pointed at it. Both are fixed in the
-            // same place, which is where tapping the widget goes.
             showError(context, views, manager, appWidgetId, R.string.widget_err_not_configured)
             activeUpdates.remove(appWidgetId)
             return
         }
 
-        // Before anything is drawn, because the padding and the header size are
-        // part of the same arithmetic that decides how much room the chart has.
         val bounds = boundsOf(context, manager, appWidgetId)
         views.setViewPadding(
             R.id.widget_container,
@@ -182,13 +129,6 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         showLoading(views, manager, appWidgetId, server.name)
 
         CoroutineScope(Dispatchers.IO).launch {
-            // The guard is released here and nowhere else. Releasing it at the
-            // end of the body instead made it depend on the body reaching the
-            // end: anything thrown past these handlers — a cancellation, an
-            // Error — left `activeUpdates` holding this id for the life of the
-            // process, and every later update, refresh tap and publish was
-            // skipped with "already updating". The widget then sits on its
-            // loading state until the app is killed.
             try {
                 withTimeoutOrNull(COROUTINE_TIMEOUT) {
                     try {
@@ -197,9 +137,6 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
                             showData(context, views, manager, appWidgetId, config, reading, history, bounds)
                         }
                     } catch (e: CancellationException) {
-                        // Belongs to `withTimeoutOrNull`, which is watching for it.
-                        // Caught as an `Exception` below it would be swallowed, and
-                        // the timeout branch would never run.
                         throw e
                     } catch (e: Exception) {
                         Log.w(TAG, "Widget $appWidgetId update failed: ${e.message}")
@@ -229,26 +166,18 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         }
     }
 
-    /** The widget's size in grid cells, the chart area, and the chrome around it. */
     private data class Bounds(
         val columns: Int,
         val rows: Int,
         val widthPx: Int,
         val heightPx: Int,
         val density: Float,
-        /** Applied to the container, so this and [heightPx] cannot disagree. */
         val paddingPx: Int,
         val headerSp: Float,
     )
 
     private fun boundsOf(context: Context, manager: AppWidgetManager, appWidgetId: Int): Bounds {
         val options = manager.getAppWidgetOptions(appWidgetId)
-        // The launcher reports a *range*, and which end describes the view
-        // depends on the orientation: in portrait the widget is at its minimum
-        // width and its maximum height, in landscape the other way round.
-        // Taking the minimum of both — which reads as the safe choice — gave a
-        // box far shorter than the real one in portrait, and the image sat
-        // letterboxed with a band of empty card above and below it.
         val portrait = context.resources.configuration.orientation ==
             Configuration.ORIENTATION_PORTRAIT
         val widthKey = if (portrait) {
@@ -269,8 +198,6 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
                 .takeIf { it > 0 } ?: 110
         val density = context.resources.displayMetrics.density
 
-        // The launcher's own cell arithmetic, near enough: a cell is roughly
-        // 70dp wide with 30dp of margin between.
         val columns = ((widthDp + 30) / 70).coerceAtLeast(1)
         val rows = ((heightDp + 30) / 70).coerceAtLeast(1)
 
@@ -297,8 +224,6 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
     private fun setupClickIntent(context: Context, views: RemoteViews, appWidgetId: Int) {
         val intent = Intent(context, WidgetConfigureActivity::class.java).apply {
             putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-            // Without this the reused activity keeps the first widget's extras
-            // and every widget reconfigures the same one.
             data = android.net.Uri.parse("sbm://widget/$appWidgetId")
         }
         val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -311,17 +236,6 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             PendingIntent.getActivity(context, appWidgetId, intent, flag),
         )
 
-        // A broadcast back to this same provider, naming this one widget, which
-        // `AppWidgetProvider.onReceive` turns into an `onUpdate` for it. The
-        // receiver is not exported and does not need to be: a `PendingIntent`
-        // is sent with the identity of the app that created it, and that is
-        // this app.
-        //
-        // The `data` is what keeps the widgets apart. Two refresh intents differ
-        // only in an extra, `filterEquals` does not look at extras, and the
-        // flags say `FLAG_UPDATE_CURRENT` — so without it the second widget's
-        // `PendingIntent` would rewrite the first one's target id and both
-        // buttons would refresh the same widget.
         val refresh = Intent(context, javaClass).apply {
             action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
             putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(appWidgetId))
@@ -341,13 +255,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         appWidgetId: Int,
         name: String,
     ) {
-        // The server's own name, not "Loading...": the name is already known
-        // and is what identifies the widget among several on one screen.
         views.setTextViewText(R.id.widget_name, name)
-        // The footer says the reading's time, so during a fetch it has nothing
-        // true to say. It is also the only acknowledgement the refresh button
-        // gets — a `RemoteViews` cannot animate, and a tap that changes nothing
-        // on screen reads as a tap that missed.
         views.setTextViewText(R.id.widget_time, "…")
         views.setViewVisibility(R.id.error_message, View.GONE)
         manager.updateAppWidget(appWidgetId, views)
@@ -370,70 +278,140 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         )
         views.setViewVisibility(R.id.error_message, View.GONE)
 
-        // No layout check and no "too small" state: the size and what it shows
-        // are one decision, made when the widget was picked from the launcher,
-        // and neither provider resizes.
-        if (!kind.drawsCharts) {
+        if (kind == WidgetKind.SMALL) {
+            // SMALL: up to 4 fields
+            views.setViewVisibility(R.id.widget_charts_container, View.GONE)
             views.setViewVisibility(R.id.widget_chart, View.GONE)
+            views.setViewVisibility(R.id.widget_chart2, View.GONE)
             views.setViewVisibility(R.id.widget_content, View.VISIBLE)
-            showReadings(views, reading)
+            showFieldRows(context, views, config.fields.take(WidgetConfig.CAP_SMALL_FIELDS), reading)
         } else {
-            val bitmap = WidgetChart.render(
-                context = context,
-                series = config.metric.following(WidgetKind.CHART_COUNT)
-                    .map { seriesFor(context, it, reading, history) },
-                widthPx = bounds.widthPx,
-                heightPx = bounds.heightPx,
-                density = bounds.density,
-            )
-            if (bitmap != null) {
-                views.setImageViewBitmap(R.id.widget_chart, bitmap)
-                views.setViewVisibility(R.id.widget_chart, View.VISIBLE)
-                views.setViewVisibility(R.id.widget_content, View.GONE)
-            } else {
-                views.setViewVisibility(R.id.widget_chart, View.GONE)
-                views.setViewVisibility(R.id.widget_content, View.VISIBLE)
-                showReadings(views, reading)
+            // MEDIUM: 3 modes (CHART, READING, COMBINED)
+            when (config.mode) {
+                MediumMode.CHART -> {
+                    views.setViewVisibility(R.id.widget_content, View.GONE)
+                    views.setViewVisibility(R.id.widget_charts_container, View.VISIBLE)
+                    views.setViewVisibility(R.id.widget_chart, View.VISIBLE)
+                    views.setViewVisibility(R.id.widget_chart2, View.GONE)
+
+                    val seriesList = listOf(seriesForNamedMetric(context, config.chart, reading, history))
+                    val bitmap = WidgetChart.render(
+                        context = context,
+                        series = seriesList,
+                        widthPx = bounds.widthPx,
+                        heightPx = bounds.heightPx,
+                        density = bounds.density,
+                    )
+                    if (bitmap != null) {
+                        views.setImageViewBitmap(R.id.widget_chart, bitmap)
+                    }
+                }
+                MediumMode.READING -> {
+                    views.setViewVisibility(R.id.widget_charts_container, View.GONE)
+                    views.setViewVisibility(R.id.widget_chart, View.GONE)
+                    views.setViewVisibility(R.id.widget_chart2, View.GONE)
+                    views.setViewVisibility(R.id.widget_content, View.VISIBLE)
+                    showFieldRows(context, views, config.fields.take(WidgetConfig.CAP_MEDIUM_READING_FIELDS), reading)
+                }
+                MediumMode.COMBINED -> {
+                    views.setViewVisibility(R.id.widget_charts_container, View.VISIBLE)
+                    views.setViewVisibility(R.id.widget_chart, View.VISIBLE)
+                    views.setViewVisibility(R.id.widget_chart2, View.VISIBLE)
+                    views.setViewVisibility(R.id.widget_content, View.VISIBLE)
+
+                    // Render mini charts side by side
+                    val halfWidth = (bounds.widthPx / 2).coerceAtLeast(1)
+                    val halfHeight = (bounds.heightPx * 0.55f).roundToInt().coerceAtLeast(1)
+
+                    val s1 = listOf(seriesForNamedMetric(context, config.chart, reading, history))
+                    val b1 = WidgetChart.render(context, s1, halfWidth, halfHeight, bounds.density)
+                    if (b1 != null) views.setImageViewBitmap(R.id.widget_chart, b1)
+
+                    val s2 = listOf(seriesForNamedMetric(context, config.chart2, reading, history))
+                    val b2 = WidgetChart.render(context, s2, halfWidth, halfHeight, bounds.density)
+                    if (b2 != null) views.setImageViewBitmap(R.id.widget_chart2, b2)
+
+                    showFieldRows(context, views, config.fields.take(WidgetConfig.CAP_COMBINED_FIELDS), reading)
+                }
             }
         }
         manager.updateAppWidget(appWidgetId, views)
     }
 
-    /**
-     * All four readings, which is the whole of what the small widget is for.
-     *
-     * It used to show two of them, on the theory that four rows do not fit in
-     * something the size of an app icon. They do — and once the medium widget
-     * became charts-only there was no size left where the other two would ever
-     * appear, since this is only ever called for [WidgetKind.SMALL] at 2x2.
-     *
-     * Percentages rather than the "4.2g / 8.0g" forms: fifteen monospace
-     * characters do not fit a row about 94dp wide, and a truncated pair of
-     * numbers says less than one whole one. Network has no percentage, so it
-     * gets the shortened byte counts.
-     */
-    private fun showReadings(views: RemoteViews, reading: WidgetApi.Reading) {
-        views.setTextViewText(R.id.widget_cpu, percentText(reading.cpu))
-        views.setTextViewText(R.id.widget_mem, percentText(reading.mem))
-        views.setTextViewText(R.id.widget_disk, percentText(reading.disk))
-        views.setTextViewText(R.id.widget_net, shortNet(reading.netText))
-        for (row in listOf(
-            R.id.widget_cpu_label,
-            R.id.widget_mem_label,
-            R.id.widget_disk_label,
-            R.id.widget_net_label,
-        )) {
-            views.setViewVisibility(row, View.VISIBLE)
+    private val rowLayoutIds = listOf(
+        R.id.widget_row_1,
+        R.id.widget_row_2,
+        R.id.widget_row_3,
+        R.id.widget_row_4,
+        R.id.widget_row_5,
+        R.id.widget_row_6,
+    )
+    private val rowLabelIds = listOf(
+        R.id.widget_row_1_label,
+        R.id.widget_row_2_label,
+        R.id.widget_row_3_label,
+        R.id.widget_row_4_label,
+        R.id.widget_row_5_label,
+        R.id.widget_row_6_label,
+    )
+    private val rowValueIds = listOf(
+        R.id.widget_row_1_value,
+        R.id.widget_row_2_value,
+        R.id.widget_row_3_value,
+        R.id.widget_row_4_value,
+        R.id.widget_row_5_value,
+        R.id.widget_row_6_value,
+    )
+
+    private fun showFieldRows(
+        context: Context,
+        views: RemoteViews,
+        fields: List<WidgetField>,
+        reading: WidgetApi.Reading,
+    ) {
+        for (i in 0 until 6) {
+            val rowId = rowLayoutIds[i]
+            val labelId = rowLabelIds[i]
+            val valueId = rowValueIds[i]
+            if (i < fields.size) {
+                val field = fields[i]
+                views.setTextViewText(labelId, fieldShortLabel(context, field))
+                views.setTextViewText(valueId, fieldValueText(field, reading))
+                views.setViewVisibility(rowId, View.VISIBLE)
+            } else {
+                views.setViewVisibility(rowId, View.GONE)
+            }
         }
     }
 
-    /**
-     * "93.2m / 75.3m" -> "93m/75m".
-     *
-     * Six characters back, which is the difference between fitting a narrow
-     * row and not. Used by the readings widget and as the chart panel's last
-     * resort when the full form will not fit beside its label.
-     */
+    private fun fieldShortLabel(context: Context, field: WidgetField): String = when (field) {
+        WidgetField.CPU -> "CPU"
+        WidgetField.MEM -> "Mem"
+        WidgetField.DISK -> "Disk"
+        WidgetField.LOAD -> "Load"
+        WidgetField.NET_SPEED -> "Net"
+        WidgetField.NET_TOTAL -> "Total"
+        WidgetField.TRAFFIC_LEFT -> "Quota"
+        WidgetField.CONN -> "Conn"
+        WidgetField.PING -> "Ping"
+        WidgetField.UPTIME -> "Uptime"
+        WidgetField.EXPIRE -> "Expire"
+    }
+
+    private fun fieldValueText(field: WidgetField, reading: WidgetApi.Reading): String = when (field) {
+        WidgetField.CPU -> percentText(reading.cpu)
+        WidgetField.MEM -> percentText(reading.mem)
+        WidgetField.DISK -> percentText(reading.disk)
+        WidgetField.LOAD -> reading.loadText
+        WidgetField.NET_SPEED -> shortNet(reading.netText)
+        WidgetField.NET_TOTAL -> reading.netTotalText
+        WidgetField.TRAFFIC_LEFT -> reading.trafficLeftText
+        WidgetField.CONN -> reading.connText
+        WidgetField.PING -> reading.pingText
+        WidgetField.UPTIME -> reading.uptimeText
+        WidgetField.EXPIRE -> reading.expireText
+    }
+
     private fun shortNet(netText: String): String =
         netText.replace(" / ", "/").replace(Regex("\\.[0-9]"), "")
 
@@ -449,11 +427,9 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         views.setTextViewText(R.id.error_message, context.getString(messageRes))
         views.setViewVisibility(R.id.error_message, View.VISIBLE)
         views.setViewVisibility(R.id.widget_content, View.GONE)
+        views.setViewVisibility(R.id.widget_charts_container, View.GONE)
         views.setViewVisibility(R.id.widget_chart, View.GONE)
-        // It dates a reading, and there is none. Left alone it would still be
-        // showing the ellipsis `showLoading` put there, which claims a fetch is
-        // in flight when one has just failed. The refresh button stays: this is
-        // the state it is most use in.
+        views.setViewVisibility(R.id.widget_chart2, View.GONE)
         views.setViewVisibility(R.id.widget_time, View.GONE)
         manager.updateAppWidget(appWidgetId, views)
     }
@@ -463,13 +439,13 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
     private fun percentText(value: Double?): String =
         value?.let { String.format(java.util.Locale.US, "%.0f%%", it) } ?: "--"
 
-    private fun seriesFor(
+    private fun seriesForNamedMetric(
         context: Context,
-        metric: WidgetMetric,
+        metric: String,
         reading: WidgetApi.Reading,
         history: List<WidgetApi.HistoryPoint>,
     ): WidgetChart.Series = when (metric) {
-        WidgetMetric.CPU -> WidgetChart.Series(
+        "cpu" -> WidgetChart.Series(
             label = context.getString(R.string.widget_metric_cpu),
             values = history.map { it.cpu },
             secondary = emptyList(),
@@ -478,7 +454,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             valueShort = percentText(reading.cpu),
             color = Color.parseColor("#34C759"),
         )
-        WidgetMetric.MEMORY -> WidgetChart.Series(
+        "mem" -> WidgetChart.Series(
             label = context.getString(R.string.widget_metric_memory),
             values = history.map { it.memory },
             secondary = emptyList(),
@@ -487,7 +463,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             valueShort = percentText(reading.mem),
             color = Color.parseColor("#0A84FF"),
         )
-        WidgetMetric.DISK -> WidgetChart.Series(
+        "disk" -> WidgetChart.Series(
             label = context.getString(R.string.widget_metric_disk),
             values = history.map { it.disk },
             secondary = emptyList(),
@@ -496,9 +472,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             valueShort = percentText(reading.disk),
             color = Color.parseColor("#FF9F0A"),
         )
-        // A rate has no ceiling to be a percentage of, so the scale is drawn
-        // from the data and the reading is shown as bytes.
-        WidgetMetric.NETWORK -> WidgetChart.Series(
+        "net" -> WidgetChart.Series(
             label = context.getString(R.string.widget_metric_network),
             values = history.map { it.netRx },
             secondary = history.map { it.netTx },
@@ -506,6 +480,51 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             valueText = reading.netText,
             valueShort = shortNet(reading.netText),
             color = Color.parseColor("#BF5AF2"),
+        )
+        "load" -> WidgetChart.Series(
+            label = context.getString(R.string.widget_metric_load),
+            values = history.map { it.load },
+            secondary = emptyList(),
+            isPercent = false,
+            valueText = reading.loadText,
+            valueShort = String.format(java.util.Locale.US, "%.1f", reading.load1),
+            color = Color.parseColor("#FF375F"),
+        )
+        "io" -> WidgetChart.Series(
+            label = context.getString(R.string.widget_metric_io),
+            values = history.map { it.io },
+            secondary = emptyList(),
+            isPercent = false,
+            valueText = reading.diskIoText,
+            valueShort = reading.diskIoText,
+            color = Color.parseColor("#64D2FF"),
+        )
+        "conn" -> WidgetChart.Series(
+            label = context.getString(R.string.widget_metric_conn),
+            values = history.map { it.conn },
+            secondary = emptyList(),
+            isPercent = false,
+            valueText = reading.connText,
+            valueShort = reading.connText,
+            color = Color.parseColor("#5E5CE6"),
+        )
+        "proc" -> WidgetChart.Series(
+            label = context.getString(R.string.widget_metric_proc),
+            values = history.map { it.proc },
+            secondary = emptyList(),
+            isPercent = false,
+            valueText = reading.procText,
+            valueShort = reading.procText,
+            color = Color.parseColor("#FFD60A"),
+        )
+        else -> WidgetChart.Series(
+            label = metric.uppercase(),
+            values = history.map { it.cpu },
+            secondary = emptyList(),
+            isPercent = true,
+            valueText = "--",
+            valueShort = "--",
+            color = Color.GRAY,
         )
     }
 }

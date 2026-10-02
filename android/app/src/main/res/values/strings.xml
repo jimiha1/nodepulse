@@ -36,6 +36,29 @@
     <string name="widget_metric_memory">Memory</string>
     <string name="widget_metric_disk">Disk</string>
     <string name="widget_metric_network">Network</string>
+    <string name="widget_metric_load">Load</string>
+    <string name="widget_metric_io">Disk I/O</string>
+    <string name="widget_metric_conn">Connections</string>
+    <string name="widget_metric_proc">Processes</string>
+
+    <string name="widget_mode_chart">Chart</string>
+    <string name="widget_mode_reading">Reading</string>
+    <string name="widget_mode_combined">Combined</string>
+    <string name="widget_chart_1">Chart 1</string>
+    <string name="widget_chart_2">Chart 2</string>
+    <string name="widget_fields_title">Display Fields</string>
+
+    <string name="widget_field_cpu">CPU</string>
+    <string name="widget_field_mem">Memory</string>
+    <string name="widget_field_disk">Disk</string>
+    <string name="widget_field_load">Load</string>
+    <string name="widget_field_net">Net Speed</string>
+    <string name="widget_field_total">Net Total</string>
+    <string name="widget_field_quota">Traffic Left</string>
+    <string name="widget_field_conn">Connections</string>
+    <string name="widget_field_ping">Ping</string>
+    <string name="widget_field_uptime">Uptime</string>
+    <string name="widget_field_expire">Expire Date</string>
 
     <string name="widget_err_not_configured">Tap to pick a server</string>
     <string name="widget_err_no_token">No credential — open ServerBox</string>

@@ -1,12 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    One layout for every size, with rows and the chart shown or hidden per
-    update. `RemoteViews` cannot hold a custom view, so the charts are a single
-    `ImageView` that Kotlin draws every panel into — see `WidgetChart`. That is
-    also why there is one image rather than four: four bitmaps in one
-    `RemoteViews` is four times the binder payload, and the transaction has a
-    hard limit that a widget cannot recover from.
--->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/widget_container"
@@ -16,7 +8,7 @@
     android:orientation="vertical"
     android:padding="12dp">
 
-    <!-- Name and a refresh button; the time is the footer, as on iOS. -->
+    <!-- Name and a refresh button -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -36,13 +28,6 @@
             android:textStyle="bold"
             tools:text="Server Name" />
 
-        <!--
-            Its own tap target, and a child of the container that carries the
-            "open the settings" one — a click on a child wins over the parent's
-            in a `RemoteViews`, so the two do not fight. Padded rather than
-            sized up: 14dp of icon is what matches the rows, and the padding is
-            what makes it reachable with a thumb.
-        -->
         <ImageView
             android:id="@+id/widget_refresh"
             android:layout_width="26dp"
@@ -53,32 +38,38 @@
             android:src="@drawable/refresh_24" />
     </LinearLayout>
 
-    <!-- The charts, all of them, as one bitmap. -->
-    <!--
-        `fitCenter`, never `fitXY`. Nothing here can measure this view, so the
-        bitmap's size is computed from the size the launcher reports minus what
-        this layout takes — an estimate, and one that was wrong by different
-        amounts on each axis. `fitXY` turns any such mismatch into a non-uniform
-        scale, which is text stretched one way and squashed the other. Uniform
-        scaling can only ever leave a little unused margin.
-    -->
-    <ImageView
-        android:id="@+id/widget_chart"
+    <!-- Chart container holding chart 1 and chart 2 -->
+    <LinearLayout
+        android:id="@+id/widget_charts_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="6dp"
         android:layout_weight="1"
-        android:contentDescription="@string/widget_chart_desc"
-        android:scaleType="fitCenter"
-        android:visibility="gone" />
+        android:baselineAligned="false"
+        android:orientation="horizontal"
+        android:visibility="gone">
 
-    <!--
-        Weighted like the chart above it, and only ever one of the two is
-        visible: whichever it is takes the space the header leaves. Without a
-        weight here the readings sat against the top of the card with the rest
-        of it blank, because a `GONE` view contributes no weight and nothing
-        else was asking for the room.
-    -->
+        <ImageView
+            android:id="@+id/widget_chart"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:contentDescription="@string/widget_chart_desc"
+            android:scaleType="fitCenter"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/widget_chart2"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:contentDescription="@string/widget_chart_desc"
+            android:scaleType="fitCenter"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- Readings container with up to 6 reusable rows -->
     <LinearLayout
         android:id="@+id/widget_content"
         android:layout_width="match_parent"
@@ -86,34 +77,31 @@
         android:layout_marginTop="6dp"
         android:layout_weight="1"
         android:gravity="center_vertical"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:visibility="gone">
 
+        <!-- Row 1 -->
         <LinearLayout
-            android:id="@+id/widget_cpu_label"
+            android:id="@+id/widget_row_1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="5dp"
+            android:layout_marginBottom="4dp"
             android:baselineAligned="false"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:layout_width="14dp"
-                android:layout_height="14dp"
-                android:contentDescription="@string/widget_cpu_desc"
-                android:src="@drawable/speed_24" />
+            android:orientation="horizontal"
+            android:visibility="gone">
 
             <TextView
+                android:id="@+id/widget_row_1_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
                 android:fontFamily="monospace"
-                android:text="@string/widget_row_cpu"
                 android:textColor="@color/widgetSummaryText"
-                android:textSize="10sp" />
+                android:textSize="10sp"
+                tools:text="CPU" />
 
             <TextView
-                android:id="@+id/widget_cpu"
+                android:id="@+id/widget_row_1_value"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
@@ -128,32 +116,28 @@
                 tools:text="25%" />
         </LinearLayout>
 
+        <!-- Row 2 -->
         <LinearLayout
-            android:id="@+id/widget_mem_label"
+            android:id="@+id/widget_row_2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="5dp"
+            android:layout_marginBottom="4dp"
             android:baselineAligned="false"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:layout_width="14dp"
-                android:layout_height="14dp"
-                android:contentDescription="@string/widget_mem_desc"
-                android:src="@drawable/memory_24" />
+            android:orientation="horizontal"
+            android:visibility="gone">
 
             <TextView
+                android:id="@+id/widget_row_2_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
                 android:fontFamily="monospace"
-                android:text="@string/widget_row_mem"
                 android:textColor="@color/widgetSummaryText"
-                android:textSize="10sp" />
+                android:textSize="10sp"
+                tools:text="Mem" />
 
             <TextView
-                android:id="@+id/widget_mem"
+                android:id="@+id/widget_row_2_value"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
@@ -165,35 +149,31 @@
                 android:textColor="@color/widgetText"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                tools:text="25%" />
+                tools:text="50%" />
         </LinearLayout>
 
+        <!-- Row 3 -->
         <LinearLayout
-            android:id="@+id/widget_disk_label"
+            android:id="@+id/widget_row_3"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="5dp"
+            android:layout_marginBottom="4dp"
             android:baselineAligned="false"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:layout_width="14dp"
-                android:layout_height="14dp"
-                android:contentDescription="@string/widget_disk_desc"
-                android:src="@drawable/storage_24" />
+            android:orientation="horizontal"
+            android:visibility="gone">
 
             <TextView
+                android:id="@+id/widget_row_3_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
                 android:fontFamily="monospace"
-                android:text="@string/widget_row_disk"
                 android:textColor="@color/widgetSummaryText"
-                android:textSize="10sp" />
+                android:textSize="10sp"
+                tools:text="Disk" />
 
             <TextView
-                android:id="@+id/widget_disk"
+                android:id="@+id/widget_row_3_value"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
@@ -205,34 +185,31 @@
                 android:textColor="@color/widgetText"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                tools:text="25%" />
+                tools:text="75%" />
         </LinearLayout>
 
+        <!-- Row 4 -->
         <LinearLayout
-            android:id="@+id/widget_net_label"
+            android:id="@+id/widget_row_4"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
             android:baselineAligned="false"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:layout_width="14dp"
-                android:layout_height="14dp"
-                android:contentDescription="@string/widget_net_desc"
-                android:src="@drawable/net_24" />
+            android:orientation="horizontal"
+            android:visibility="gone">
 
             <TextView
+                android:id="@+id/widget_row_4_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
                 android:fontFamily="monospace"
-                android:text="@string/widget_row_net"
                 android:textColor="@color/widgetSummaryText"
-                android:textSize="10sp" />
+                android:textSize="10sp"
+                tools:text="Net" />
 
             <TextView
-                android:id="@+id/widget_net"
+                android:id="@+id/widget_row_4_value"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
@@ -244,7 +221,79 @@
                 android:textColor="@color/widgetText"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                tools:text="25%" />
+                tools:text="100k/s" />
+        </LinearLayout>
+
+        <!-- Row 5 -->
+        <LinearLayout
+            android:id="@+id/widget_row_5"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/widget_row_5_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textColor="@color/widgetSummaryText"
+                android:textSize="10sp"
+                tools:text="Conn" />
+
+            <TextView
+                android:id="@+id/widget_row_5_value"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:fontFamily="monospace"
+                android:gravity="end"
+                android:singleLine="true"
+                android:textColor="@color/widgetText"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                tools:text="128" />
+        </LinearLayout>
+
+        <!-- Row 6 -->
+        <LinearLayout
+            android:id="@+id/widget_row_6"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/widget_row_6_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textColor="@color/widgetSummaryText"
+                android:textSize="10sp"
+                tools:text="Ping" />
+
+            <TextView
+                android:id="@+id/widget_row_6_value"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:fontFamily="monospace"
+                android:gravity="end"
+                android:singleLine="true"
+                android:textColor="@color/widgetText"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                tools:text="45ms" />
         </LinearLayout>
     </LinearLayout>
 
