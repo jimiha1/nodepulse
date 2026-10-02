@@ -204,6 +204,10 @@ android {
         }
     }
 
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+
     dependenciesInfo {
         // Disables dependency metadata when building APKs.
         includeInApk = false
@@ -226,6 +230,7 @@ dependencies {
     // JVM unit tests only (`./gradlew :app:testDebugUnitTest`); nothing here
     // reaches the APK.
     testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20231013'
 }
 
 ext.abiCodes = ["x86_64": 1, "armeabi-v7a": 2, "arm64-v8a": 3]

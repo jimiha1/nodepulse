@@ -19,7 +19,6 @@ import 'package:server_box/core/service/crash_report.dart';
 import 'package:server_box/core/service/diagnostics_upload.dart';
 import 'package:server_box/core/service/native_exit.dart';
 import 'package:server_box/core/service/theme_host.dart';
-import 'package:server_box/core/service/watch_sync.dart';
 import 'package:server_box/core/service/widget_sync.dart';
 import 'package:server_box/core/sync.dart';
 import 'package:server_box/core/utils/rootfs.dart';
@@ -197,7 +196,7 @@ Future<void> _initApp(ProviderContainer container) async {
   await AppMotion.init();
   await _initWindow();
 
-  await _doPlatformRelated();
+  await _doPlatformRelated(container);
 
   // Initialize platform session notifications and Live Activities.
   await TermSessionManager.init();
@@ -330,7 +329,7 @@ void _setupDebug() {
   );
 }
 
-Future<void> _doPlatformRelated() async {
+Future<void> _doPlatformRelated(ProviderContainer container) async {
   if (isAndroid) {
     // try switch to highest refresh rate
     try {
@@ -406,21 +405,6 @@ Future<void> _doPlatformRelated() async {
     );
   }
 
-  // The watch app used to learn about servers only while the user sat on the
-  // iOS settings page. Pushing at launch is what makes a freshly installed or
-  // restored watch configure itself.
-  if (isIOS) {
-    unawaited(
-      (() async {
-        try {
-          await WatchSync.instance.init();
-        } catch (e, s) {
-          Loggers.app.warning('WatchSync init failed', e, s);
-        }
-      })(),
-    );
-  }
-
   // Same reasoning, for the home-screen widgets: the list they offer on their
   // configuration screen is whatever this last published, and the container
   // holding it goes away with the app — so a reinstall has to re-publish
@@ -429,7 +413,7 @@ Future<void> _doPlatformRelated() async {
     unawaited(
       (() async {
         try {
-          await WidgetSync.instance.init();
+          await WidgetSync.instance.init(container);
         } catch (e, s) {
           Loggers.app.warning('WidgetSync init failed', e, s);
         }

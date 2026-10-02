@@ -5,8 +5,6 @@ import 'package:flutter/foundation.dart' show listEquals;
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:server_box/core/llm/scope.dart';
-import 'package:server_box/core/service/scoped_token.dart';
-import 'package:server_box/core/service/watch_sync.dart';
 import 'package:server_box/core/service/widget_sync.dart';
 import 'package:server_box/core/sync.dart';
 import 'package:server_box/core/utils/refresh_interval.dart';
@@ -376,8 +374,6 @@ class ServersNotifier extends _$ServersNotifier {
     // value already in hand, so the request carries the old credential
     // whatever the store does next, and a rebuild after the row is gone has
     // nothing to mint for.
-    unawaited(WatchSync.instance.revokeServer(deleting));
-    unawaited(WidgetSync.instance.revokeServer(deleting));
     await _clearServerData(id);
     final newServers = Map<String, Spi>.from(state.servers);
     newServers.remove(id);
@@ -402,7 +398,6 @@ class ServersNotifier extends _$ServersNotifier {
     await _clearSudoPasswordOverrideBestEffort(id);
 
     // Now that the row is gone, so the rebuilt lists cannot contain it.
-    await WatchSync.instance.push();
     await WidgetSync.instance.push();
 
     // Deselect if the deleted server was selected, and invalidate its provider
@@ -560,10 +555,7 @@ class ServersNotifier extends _$ServersNotifier {
       // ignored for as long as the old agent took to not answer.
       //
       // Nothing below depends on the result, `old` is a value this closure
-      // holds rather than something re-read from the store, and the call
-      // already swallows its own failures — see its own doc comment for why
-      // a token that outlives the edit is the accepted worst case.
-      unawaited(revokeScopedTokensLeftBehind(old, newSpi));
+      // holds rather than something re-read from the store.
 
       // Only reconnect if neccessary
       if (newSpi.shouldReconnect(old)) {

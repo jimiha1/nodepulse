@@ -110,12 +110,10 @@ class WidgetConfigureActivity : Activity() {
             group.addView(
                 RadioButton(this).apply {
                     id = index
-                    text = if (server.name == WidgetApi.displayHost(server.addr)) {
-                        server.name
+                    text = if (server.region != null && server.region.isNotEmpty()) {
+                        "${server.name}  ·  ${server.region}"
                     } else {
-                        // Two servers can share a name; the host is what tells
-                        // them apart.
-                        "${server.name}  ·  ${WidgetApi.displayHost(server.addr)}"
+                        server.name
                     }
                     isChecked = server.id == existing.serverId
                 }
