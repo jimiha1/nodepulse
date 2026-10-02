@@ -5106,6 +5106,23 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cfChartPing => '三网 Ping 延迟';
+
+  @override
+  String get cfAlerts => '节点告警通知';
+
+  @override
+  String get cfAlertsTip => '后台定时轮询检测流量使用率与节点到期时间';
+
+  @override
+  String get cfAlertTrafficPct => '流量告警阈值';
+
+  @override
+  String get cfAlertExpiryDays => '到期提前通知天数';
+
+  @override
+  String cfAlertDaysFmt(int days) {
+    return '$days 天';
+  }
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).

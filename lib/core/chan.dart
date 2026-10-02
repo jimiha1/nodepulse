@@ -66,6 +66,18 @@ abstract final class MethodChans {
     await _channel.invokeMethod('publishWidgetServers', payload);
   }
 
+  /// Publishes CF-Server-Monitor alert settings to the native side (Android WorkManager).
+  /// Payload JSON format:
+  /// `{"enabled":bool, "trafficPct":int, "expiryDays":int, "siteUrl":str, "token":str?, "tokenExpiresAt":long}`
+  static Future<void> publishAlertSettings(String payload) async {
+    if (!isAndroid) return;
+    try {
+      await _channel.invokeMethod('publishAlertSettings', payload);
+    } catch (e, s) {
+      Loggers.app.warning('Failed to publish alert settings', e, s);
+    }
+  }
+
   /// Which servers the native side currently holds a widget token for, and
   /// until when — as JSON, `[{"id","endpoint","expiresAt"}]`.
   ///

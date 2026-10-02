@@ -227,6 +227,8 @@ flutter {
 }
 
 dependencies {
+    implementation 'androidx.work:work-runtime-ktx:2.10.0'
+
     // JVM unit tests only (`./gradlew :app:testDebugUnitTest`); nothing here
     // reaches the APK.
     testImplementation 'junit:junit:4.13.2'

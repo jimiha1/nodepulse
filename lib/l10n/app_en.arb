@@ -7087,5 +7087,30 @@
   "cfChartPing": "Ping Latency",
   "@cfChartPing": {
     "description": "CF server detail ping latency chart title"
+  },
+  "cfAlerts": "Node alerts",
+  "@cfAlerts": {
+    "description": "CF node alerts toggle title"
+  },
+  "cfAlertsTip": "Periodic checks for traffic usage and node expiration",
+  "@cfAlertsTip": {
+    "description": "CF node alerts toggle description"
+  },
+  "cfAlertTrafficPct": "Traffic alert threshold",
+  "@cfAlertTrafficPct": {
+    "description": "Threshold percentage of monthly traffic to trigger an alert"
+  },
+  "cfAlertExpiryDays": "Advance expiration notice",
+  "@cfAlertExpiryDays": {
+    "description": "Days before expiration to trigger an alert"
+  },
+  "cfAlertDaysFmt": "{days} days",
+  "@cfAlertDaysFmt": {
+    "description": "Days format for alert settings",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
   }
 }

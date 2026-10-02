@@ -1535,5 +1535,10 @@
   "cfChartDiskIo": "磁盘 IO",
   "cfChartConn": "连接数",
   "cfChartProcess": "进程数",
-  "cfChartPing": "三网 Ping 延迟"
+  "cfChartPing": "三网 Ping 延迟",
+  "cfAlerts": "节点告警通知",
+  "cfAlertsTip": "后台定时轮询检测流量使用率与节点到期时间",
+  "cfAlertTrafficPct": "流量告警阈值",
+  "cfAlertExpiryDays": "到期提前通知天数",
+  "cfAlertDaysFmt": "{days} 天"
 }

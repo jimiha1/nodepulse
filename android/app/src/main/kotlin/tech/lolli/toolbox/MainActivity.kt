@@ -18,6 +18,8 @@ import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import android.appwidget.AppWidgetManager
+import tech.lolli.toolbox.alert.AlertSettings
+import tech.lolli.toolbox.alert.AlertWorker
 import tech.lolli.toolbox.linux.LinuxDocumentsProvider
 import tech.lolli.toolbox.widget.HomeWidget
 import tech.lolli.toolbox.widget.WidgetStore
@@ -254,6 +256,27 @@ class MainActivity: FlutterFragmentActivity() {
                     "updateHomeWidget" -> {
                         HomeWidget.broadcastUpdate(applicationContext)
                         result.success(null)
+                    }
+                    "publishAlertSettings" -> {
+                        val payload = method.arguments as? String
+                        if (payload == null) {
+                            result.success(null)
+                            return@setMethodCallHandler
+                        }
+                        val settings = AlertSettings.parsePayload(payload)
+                        if (settings != null) {
+                            AlertSettings.save(applicationContext, settings)
+                            if (settings.enabled) {
+                                requestNotificationPermissionOnce()
+                                AlertWorker.createNotificationChannel(applicationContext)
+                                AlertWorker.schedule(applicationContext)
+                            } else {
+                                AlertWorker.cancel(applicationContext)
+                            }
+                            result.success(true)
+                        } else {
+                            result.error("PARSE_ERROR", "Invalid alert settings payload", null)
+                        }
                     }
                     "publishWidgetServers" -> {
                         val payload = method.arguments as? String

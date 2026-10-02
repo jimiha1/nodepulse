@@ -5192,4 +5192,22 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get cfChartPing => 'Ping Latency';
+
+  @override
+  String get cfAlerts => 'Node alerts';
+
+  @override
+  String get cfAlertsTip =>
+      'Periodic checks for traffic usage and node expiration';
+
+  @override
+  String get cfAlertTrafficPct => 'Traffic alert threshold';
+
+  @override
+  String get cfAlertExpiryDays => 'Advance expiration notice';
+
+  @override
+  String cfAlertDaysFmt(int days) {
+    return '$days days';
+  }
 }

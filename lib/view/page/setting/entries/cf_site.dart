@@ -21,6 +21,7 @@ final class _CfSiteSettingsPageState extends ConsumerState<CfSiteSettingsPage> {
   final _urlCtrl = TextEditingController();
   final _userCtrl = TextEditingController();
   final _pwdCtrl = TextEditingController();
+  final _expiryDaysCtrl = TextEditingController();
 
   /// Re-entry guard for the test below: a slow site and an impatient finger
   /// would otherwise stack two logins and two reads.
@@ -51,6 +52,7 @@ final class _CfSiteSettingsPageState extends ConsumerState<CfSiteSettingsPage> {
     _urlCtrl.dispose();
     _userCtrl.dispose();
     _pwdCtrl.dispose();
+    _expiryDaysCtrl.dispose();
     super.dispose();
   }
 
@@ -193,6 +195,99 @@ final class _CfSiteSettingsPageState extends ConsumerState<CfSiteSettingsPage> {
               onTap: _test,
             ),
           ),
+          if (isAndroid) ...[
+            const SizedBox(height: 12),
+            CardX(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.notifications_active_outlined),
+                    title: TipText(l10n.cfAlerts, l10n.cfAlertsTip),
+                    trailing: StoreSwitch(
+                      prop: Stores.setting.cfAlertsEnabled,
+                      validator: (on) async {
+                        if (on) {
+                          final allowed = await MethodChans.notificationsAllowed();
+                          if (!allowed && mounted) {
+                            await MethodChans.openNotificationSettings();
+                          }
+                        }
+                        return true;
+                      },
+                    ),
+                  ),
+                  ValBuilder(
+                    listenable: Stores.setting.cfAlertsEnabled.listenable(),
+                    builder: (on) => on
+                        ? Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ListTile(
+                                leading: const Icon(Icons.data_usage),
+                                title: Text(l10n.cfAlertTrafficPct),
+                                trailing: ValBuilder(
+                                  listenable: Stores.setting.cfAlertTrafficPct.listenable(),
+                                  builder: (pct) => Text('$pct%', style: UIs.text15),
+                                ),
+                                onTap: () async {
+                                  final selected = await context.showPickSingleDialog<int>(
+                                    title: l10n.cfAlertTrafficPct,
+                                    items: const [80, 90, 95],
+                                    display: (p0) => '$p0%',
+                                    initial: Stores.setting.cfAlertTrafficPct.fetch(),
+                                  );
+                                  if (selected != null) {
+                                    Stores.setting.cfAlertTrafficPct.put(selected);
+                                  }
+                                },
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.calendar_today_outlined),
+                                title: Text(l10n.cfAlertExpiryDays),
+                                trailing: ValBuilder(
+                                  listenable: Stores.setting.cfAlertExpiryDays.listenable(),
+                                  builder: (days) => Text(
+                                    l10n.cfAlertDaysFmt(days),
+                                    style: UIs.text15,
+                                  ),
+                                ),
+                                onTap: () {
+                                  _expiryDaysCtrl.text = Stores.setting.cfAlertExpiryDays.fetch().toString();
+                                  context.showRoundDialog(
+                                    title: l10n.cfAlertExpiryDays,
+                                    child: Input(
+                                      controller: _expiryDaysCtrl,
+                                      autoFocus: true,
+                                      type: TextInputType.number,
+                                      icon: Icons.calendar_today_outlined,
+                                      suggestion: false,
+                                      onSubmitted: (s) {
+                                        final days = int.tryParse(s.trim());
+                                        if (days != null && days > 0) {
+                                          Stores.setting.cfAlertExpiryDays.put(days);
+                                        }
+                                        context.popDialog();
+                                      },
+                                    ),
+                                    actions: Btn.ok(onTap: () {
+                                      final days = int.tryParse(_expiryDaysCtrl.text.trim());
+                                      if (days != null && days > 0) {
+                                        Stores.setting.cfAlertExpiryDays.put(days);
+                                      }
+                                      context.popDialog();
+                                    }).toList,
+                                  );
+                                },
+                              ),
+                            ],
+                          )
+                        : UIs.placeholder,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );

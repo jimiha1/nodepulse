@@ -64,6 +64,15 @@ class SettingStore extends SqliteStore with ThemeSettings {
   /// instead.
   late final cfAuthEnabled = propertyDefault('cfAuthEnabled', false);
 
+  /// Local alerts for CF-Server-Monitor nodes (traffic threshold + expiration).
+  late final cfAlertsEnabled = propertyDefault('cfAlertsEnabled', false);
+
+  /// Traffic threshold percentage for alerts (80, 90, or 95).
+  late final cfAlertTrafficPct = propertyDefault('cfAlertTrafficPct', 90);
+
+  /// Advance notice days before expiration to alert.
+  late final cfAlertExpiryDays = propertyDefault('cfAlertExpiryDays', 7);
+
   // Maximum number of server connection retries.
   late final maxRetryCount = propertyDefault('maxRetryCount', 2);
 

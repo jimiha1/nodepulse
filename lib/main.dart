@@ -15,6 +15,7 @@ import 'package:server_box/core/chan.dart';
 import 'package:server_box/core/diag.dart';
 import 'package:server_box/core/llm/host.dart';
 import 'package:server_box/core/motion.dart';
+import 'package:server_box/core/service/alert_sync.dart';
 import 'package:server_box/core/service/crash_report.dart';
 import 'package:server_box/core/service/diagnostics_upload.dart';
 import 'package:server_box/core/service/native_exit.dart';
@@ -416,6 +417,18 @@ Future<void> _doPlatformRelated(ProviderContainer container) async {
           await WidgetSync.instance.init(container);
         } catch (e, s) {
           Loggers.app.warning('WidgetSync init failed', e, s);
+        }
+      })(),
+    );
+  }
+
+  if (isAndroid) {
+    unawaited(
+      (() async {
+        try {
+          await AlertSync.instance.init(container);
+        } catch (e, s) {
+          Loggers.app.warning('AlertSync init failed', e, s);
         }
       })(),
     );

@@ -9350,6 +9350,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ping Latency'**
   String get cfChartPing;
+
+  /// CF node alerts toggle title
+  ///
+  /// In en, this message translates to:
+  /// **'Node alerts'**
+  String get cfAlerts;
+
+  /// CF node alerts toggle description
+  ///
+  /// In en, this message translates to:
+  /// **'Periodic checks for traffic usage and node expiration'**
+  String get cfAlertsTip;
+
+  /// Threshold percentage of monthly traffic to trigger an alert
+  ///
+  /// In en, this message translates to:
+  /// **'Traffic alert threshold'**
+  String get cfAlertTrafficPct;
+
+  /// Days before expiration to trigger an alert
+  ///
+  /// In en, this message translates to:
+  /// **'Advance expiration notice'**
+  String get cfAlertExpiryDays;
+
+  /// Days format for alert settings
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days'**
+  String cfAlertDaysFmt(int days);
 }
 
 class _AppLocalizationsDelegate
