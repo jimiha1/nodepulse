@@ -137,6 +137,56 @@ class CfServer {
     );
   }
 
+  /// Returns a copy of this server with incremental dynamic metric fields
+  /// replaced by values in [data] (e.g. from WebSocket batchUpdate samples).
+  /// Fields not present in [data] keep their existing values.
+  CfServer copyWithMetrics(Map<String, dynamic> data) {
+    final loads = data.containsKey('load_avg') ? _loads(data['load_avg']) : null;
+    return CfServer(
+      id: id,
+      name: name,
+      group: group,
+      region: region,
+      os: os,
+      arch: arch,
+      price: price,
+      billingCycle: billingCycle,
+      expireDate: expireDate,
+      trafficLimit: trafficLimit,
+      trafficCalcType: trafficCalcType,
+      online: data.containsKey('last_updated') ? _isOnline(data) : online,
+      cpu: data.containsKey('cpu') ? (_dbl(data['cpu']) ?? cpu) : cpu,
+      cpuCores: data.containsKey('cpu_cores') ? _intOpt(data['cpu_cores']) : cpuCores,
+      cpuInfo: data.containsKey('cpu_info') ? _str(data['cpu_info']) : cpuInfo,
+      ramUsed: data.containsKey('ram_used') ? _int(data['ram_used'], ramUsed) : ramUsed,
+      ramTotal: data.containsKey('ram_total') ? _int(data['ram_total'], ramTotal) : ramTotal,
+      swapUsed: data.containsKey('swap_used') ? _int(data['swap_used'], swapUsed) : swapUsed,
+      swapTotal: data.containsKey('swap_total') ? _int(data['swap_total'], swapTotal) : swapTotal,
+      diskUsed: data.containsKey('disk_used') ? _int(data['disk_used'], diskUsed) : diskUsed,
+      diskTotal: data.containsKey('disk_total') ? _int(data['disk_total'], diskTotal) : diskTotal,
+      load1: loads != null ? loads[0] : load1,
+      load5: loads != null ? loads[1] : load5,
+      load15: loads != null ? loads[2] : load15,
+      netInSpeed: data.containsKey('net_in_speed') ? _int(data['net_in_speed'], netInSpeed) : netInSpeed,
+      netOutSpeed: data.containsKey('net_out_speed') ? _int(data['net_out_speed'], netOutSpeed) : netOutSpeed,
+      netRxMonthly: data.containsKey('net_rx_monthly') ? _int(data['net_rx_monthly'], netRxMonthly) : netRxMonthly,
+      netTxMonthly: data.containsKey('net_tx_monthly') ? _int(data['net_tx_monthly'], netTxMonthly) : netTxMonthly,
+      netRx: data.containsKey('net_rx') ? _int(data['net_rx'], netRx) : netRx,
+      netTx: data.containsKey('net_tx') ? _int(data['net_tx'], netTx) : netTx,
+      tcpConn: data.containsKey('tcp_conn') ? _int(data['tcp_conn'], tcpConn) : tcpConn,
+      udpConn: data.containsKey('udp_conn') ? _int(data['udp_conn'], udpConn) : udpConn,
+      processes: data.containsKey('processes') ? _int(data['processes'], processes) : processes,
+      pingCt: data.containsKey('ping_ct') ? _dbl(data['ping_ct']) : pingCt,
+      pingCu: data.containsKey('ping_cu') ? _dbl(data['ping_cu']) : pingCu,
+      pingCm: data.containsKey('ping_cm') ? _dbl(data['ping_cm']) : pingCm,
+      lossCt: data.containsKey('loss_ct') ? _dbl(data['loss_ct']) : lossCt,
+      lossCu: data.containsKey('loss_cu') ? _dbl(data['loss_cu']) : lossCu,
+      lossCm: data.containsKey('loss_cm') ? _dbl(data['loss_cm']) : lossCm,
+      bootTime: data.containsKey('boot_time') ? _bootSeconds(data['boot_time']) : bootTime,
+      gpus: data.containsKey('gpu_info') ? _gpus(data['gpu_info']) : gpus,
+    );
+  }
+
   /// Used share of the monthly traffic quota: 0..1, or -1 when the node has
   /// no limit. Which counter counts follows CF-Server-Monitor's own frontend
   /// (`traffic_calc_type`): `dl`/`down` → received, `ul`/`up` → sent,

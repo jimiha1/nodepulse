@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,6 +24,8 @@ class CfHomePage extends ConsumerStatefulWidget {
 }
 
 class _CfHomePageState extends ConsumerState<CfHomePage> {
+  StreamSubscription<void>? _wsSub;
+
   @override
   void initState() {
     super.initState();
@@ -31,6 +35,13 @@ class _CfHomePageState extends ConsumerState<CfHomePage> {
     // login was still in flight. The timer this arms polls from the next
     // interval on, and re-arming here cannot stack a second one beside it.
     ref.read(cfServersProvider.notifier).startAutoRefresh();
+    _wsSub = ref.read(cfServersProvider.notifier).watchWs();
+  }
+
+  @override
+  void dispose() {
+    _wsSub?.cancel();
+    super.dispose();
   }
 
   @override

@@ -6,6 +6,7 @@ import 'package:server_box/data/model/cf/cf_history.dart';
 import 'package:server_box/data/model/cf/cf_server.dart';
 import 'package:server_box/data/provider/server/cf/cf_api.dart';
 import 'package:server_box/data/provider/server/cf/cf_credentials.dart';
+import 'package:server_box/data/provider/server/cf/cf_ws.dart';
 import 'package:server_box/data/res/store.dart';
 
 part 'cf_servers_provider.g.dart';
@@ -81,6 +82,8 @@ Future<void> _restore(CfApi api, CfCredentials credentials) async {
 @Riverpod(keepAlive: true)
 class CfServers extends _$CfServers {
   Timer? _timer;
+  CfWs? _ws;
+  StreamController<void>? _wsStreamController;
 
   /// One up per [startAutoRefresh], so a restarted one cannot add a second
   /// timer beside the first: the ticks of a generation whose number the
@@ -89,7 +92,10 @@ class CfServers extends _$CfServers {
 
   @override
   Future<CfServersSnapshot> build() async {
-    ref.onDispose(_stopAutoRefresh);
+    ref.onDispose(() {
+      _stopAutoRefresh();
+      _stopWs();
+    });
     final api = ref.watch(cfApiProvider);
     // A private site's restore login starts the moment the API exists, and
     // this first fetch is the read it must not race — see [CfApi.ready].
@@ -142,10 +148,114 @@ class CfServers extends _$CfServers {
     schedule();
   }
 
-  /// The WebSocket feed of the same data, which Task 5 wires up. Nothing
-  /// reads it yet; the poll above is what runs until then.
-  StreamSubscription<void> watchWs() =>
-      const Stream<void>.empty().listen((_) {});
+  /// Initializes or re-initializes the WebSocket connection.
+  void _initWs() {
+    _stopWs();
+
+    final siteUrl = Stores.setting.cfSiteUrl.fetch();
+    if (siteUrl.isEmpty) return;
+
+    final api = ref.read(cfApiProvider);
+    _wsStreamController = StreamController<void>.broadcast();
+
+    _ws = CfWs.connect(
+      url: siteUrl,
+      token: api.token,
+      onConnected: () {
+        Loggers.app.info('CfWs connected, pausing polling timer');
+        _stopAutoRefresh();
+      },
+      onDisconnected: () {
+        Loggers.app.info('CfWs disconnected, resuming polling timer');
+        startAutoRefresh();
+      },
+      onSample: (serverId, data) {
+        _applySample(serverId, data);
+        _wsStreamController?.add(null);
+      },
+    );
+  }
+
+  void _applySample(String serverId, Map<String, dynamic> data) {
+    final current = state.value;
+    if (current == null) return;
+
+    final index = current.servers.indexWhere((s) => s.id == serverId);
+    if (index == -1) return;
+
+    final oldServer = current.servers[index];
+    final updatedServer = oldServer.copyWithMetrics(data);
+
+    final updatedServers = List<CfServer>.from(current.servers);
+    updatedServers[index] = updatedServer;
+
+    _pushSingleServerLiveBuffer(updatedServer);
+
+    // Compute updated snapshot
+    state = AsyncValue.data(
+      CfServersSnapshot(
+        servers: updatedServers,
+        total: current.total,
+        online: updatedServers.where((s) => s.online).length,
+        globalSpeedIn: current.globalSpeedIn,
+        globalSpeedOut: current.globalSpeedOut,
+        globalNetRx: current.globalNetRx,
+        globalNetTx: current.globalNetTx,
+        showExpire: current.showExpire,
+        showPrice: current.showPrice,
+      ),
+    );
+  }
+
+  void _pushSingleServerLiveBuffer(CfServer s) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final list = _liveBuffers.putIfAbsent(s.id, () => []);
+    list.add(
+      CfHistoryRow(
+        timestamp: now,
+        cpu: s.cpu,
+        ramUsed: s.ramUsed,
+        ramTotal: s.ramTotal,
+        diskUsed: s.diskUsed,
+        diskTotal: s.diskTotal,
+        netInSpeed: s.netInSpeed,
+        netOutSpeed: s.netOutSpeed,
+        tcpConn: s.tcpConn,
+        udpConn: s.udpConn,
+        processes: s.processes,
+        diskReadBps: 0,
+        diskWriteBps: 0,
+        swapUsed: s.swapUsed,
+        swapTotal: s.swapTotal,
+        loadAvg: '${s.load1} ${s.load5} ${s.load15}',
+        pingCt: s.pingCt,
+        pingCu: s.pingCu,
+        pingCm: s.pingCm,
+        lossCt: s.lossCt,
+        lossCu: s.lossCu,
+        lossCm: s.lossCm,
+      ),
+    );
+    if (list.length > 120) {
+      list.removeAt(0);
+    }
+  }
+
+  void _stopWs() {
+    _ws?.dispose();
+    _ws = null;
+    _wsStreamController?.close();
+    _wsStreamController = null;
+  }
+
+  /// The WebSocket feed stream subscription.
+  StreamSubscription<void> watchWs() {
+    if (_ws == null) {
+      _initWs();
+    }
+    return (_wsStreamController?.stream ?? const Stream<void>.empty())
+        .listen((_) {});
+  }
 
   /// Rolling live history buffer per server id (in-memory, up to ~120 samples).
   final Map<String, List<CfHistoryRow>> _liveBuffers = {};
