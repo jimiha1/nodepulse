@@ -37,7 +37,13 @@ class CfApi {
         onError: (err, handler) async {
           final status = err.response?.statusCode;
           final request = err.requestOptions;
+          // The auth POST itself is never re-login material: a refused
+          // re-login would re-enter here while the credentials are still
+          // set, recursing without bound. The flag below already bounds the
+          // data-request path to one replay.
+          final isAuthPost = request.path == _loginPath;
           if ((status == 401 || status == 403) &&
+              !isAuthPost &&
               request.extra[_retriedKey] != true &&
               _canRelogin) {
             try {
@@ -47,8 +53,9 @@ class CfApi {
               handler.resolve(await _dio.fetch<dynamic>(request));
             } catch (_) {
               // The re-login itself failed (the password probably changed
-              // server-side). Surface the original 401 — that is the state
-              // the caller has to act on: ask the user for fresh credentials.
+              // server-side, so performLogin has forgotten the credentials).
+              // Surface the original 401 — that is the state the caller has
+              // to act on: ask the user for fresh credentials.
               handler.next(err);
             }
             return;
@@ -62,6 +69,7 @@ class CfApi {
   static const _connectTimeout = Duration(seconds: 8);
   static const _receiveTimeout = Duration(seconds: 15);
   static const _retriedKey = 'cf_relogin_retried';
+  static const _loginPath = '/admin/api';
 
   late final Dio _dio;
   final String? Function()? _tokenProvider;
@@ -94,13 +102,17 @@ class CfApi {
     Response<dynamic> res;
     try {
       res = await _dio.post<dynamic>(
-        '/admin/api',
+        _loginPath,
         data: {'action': 'login', 'username': username, 'password': password},
       );
     } on DioException catch (e) {
       final data = e.response?.data;
       final error = data is Map && data['error'] is String ? data['error'] as String : null;
       if (error == null) rethrow;
+      // Refused credentials will be refused again — forget them so the 401
+      // path above cannot keep trying them, and the UI re-prompts instead.
+      _username = null;
+      _password = null;
       throw CfApiException(code: e.response?.statusCode, message: error);
     }
     final data = res.data is Map ? Map<String, dynamic>.from(res.data as Map) : null;

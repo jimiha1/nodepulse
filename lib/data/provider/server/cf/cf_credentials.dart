@@ -60,7 +60,9 @@ class CfCredentials {
   ///
   /// Returns `null` when there is nothing to authenticate with — the public
   /// site path — or when a refresh is due but the credentials or the login
-  /// seam are missing.
+  /// seam are missing. When a refresh runs, the login seam may throw —
+  /// refused credentials surface as `CfApiException`, transport failures as
+  /// `DioException` — so callers must be prepared to catch.
   Future<String?> token() async {
     final token = await _storage.read(key: _kToken);
     final exp = await _exp();

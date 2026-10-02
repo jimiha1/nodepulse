@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:server_box/data/provider/server/cf/cf_api.dart';
 import 'package:server_box/data/provider/server/cf/cf_credentials.dart';
@@ -106,6 +107,39 @@ void main() {
     }
   });
 
+  test('a data 401 re-logins and replays exactly once even if it 401s again', () async {
+    var logins = 0;
+    var fetches = 0;
+    final server = await _serve((request) async {
+      if (request.uri.path == '/admin/api') {
+        logins++;
+        return _json(request.response, {
+          'success': true,
+          'token': 'jwt-$logins',
+          'message': 'loginSuccessful',
+        });
+      }
+      if (request.uri.path == '/api/servers') {
+        fetches++;
+        request.response.statusCode = HttpStatus.unauthorized;
+        return request.response.close();
+      }
+      request.response.statusCode = HttpStatus.notFound;
+      return request.response.close();
+    });
+    final api = CfApi(baseUrl: 'http://127.0.0.1:${server.port}');
+    try {
+      await api.login('admin', 'pw');
+      await expectLater(api.fetchServers(), throwsA(isA<DioException>()));
+
+      expect(logins, 2, reason: 'the user login plus exactly one silent re-login');
+      expect(fetches, 2, reason: 'the original request plus exactly one replay');
+    } finally {
+      api.close();
+      await server.close(force: true);
+    }
+  });
+
   test('a public site is read without any token', () async {
     String? bearer;
     final server = await _serve((request) async {
@@ -130,8 +164,10 @@ void main() {
   });
 
   test('a refused login surfaces the server error key', () async {
+    var logins = 0;
     final server = await _serve((request) async {
       if (request.uri.path == '/admin/api') {
+        logins++;
         request.response.statusCode = HttpStatus.unauthorized;
         return _json(request.response, {'error': 'invalidCredentials', 'code': 401});
       }
@@ -148,7 +184,45 @@ void main() {
               .having((e) => e.message, 'message', 'invalidCredentials'),
         ),
       );
+      expect(logins, 1, reason: 'exactly one POST — the refusal must not re-enter re-login');
       expect(api.token, isNull);
+    } finally {
+      api.close();
+      await server.close(force: true);
+    }
+  });
+
+  test('a refused re-login does not recurse — one POST per attempt', () async {
+    var logins = 0;
+    final server = await _serve((request) async {
+      if (request.uri.path == '/admin/api') {
+        logins++;
+        if (logins == 1) {
+          return _json(request.response, {
+            'success': true,
+            'token': 'jwt-1',
+            'message': 'loginSuccessful',
+          });
+        }
+        // The password was rotated server-side: every later login refuses.
+        request.response.statusCode = HttpStatus.unauthorized;
+        return _json(request.response, {'error': 'invalidCredentials', 'code': 401});
+      }
+      request.response.statusCode = HttpStatus.notFound;
+      return request.response.close();
+    });
+    final api = CfApi(baseUrl: 'http://127.0.0.1:${server.port}');
+    try {
+      await api.login('admin', 'pw');
+      await expectLater(
+        api.login('admin', 'rotated'),
+        throwsA(
+          isA<CfApiException>()
+              .having((e) => e.code, 'code', 401)
+              .having((e) => e.message, 'message', 'invalidCredentials'),
+        ),
+      );
+      expect(logins, 2, reason: 'one POST per login call — the refused auth POST must not re-enter re-login');
     } finally {
       api.close();
       await server.close(force: true);
