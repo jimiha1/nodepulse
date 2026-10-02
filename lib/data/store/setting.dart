@@ -49,7 +49,10 @@ class SettingStore extends SqliteStore with ThemeSettings {
 
   /// The CF-Server-Monitor site the CF pages read, see
   /// `lib/data/provider/server/cf/`. Empty means none is configured.
-  late final cfSiteUrl = propertyDefault('cfSiteUrl', '');
+  late final cfSiteUrl = propertyDefault(
+    'cfSiteUrl',
+    '',
+  );
 
   /// Seconds between two polls of that site's node list.
   late final cfUpdateInterval = propertyDefault('cfUpdateInterval', 10);
