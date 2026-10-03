@@ -349,28 +349,6 @@ extension on _ContainerPageState {
       case ContainerMenu.restart:
         await _execContainerAction(() => _containerNotifier.restart(id));
         break;
-      case ContainerMenu.logs:
-        final cmd =
-            '${_containerState.type.name} logs -f --tail 100 ${shellSingleQuote(id)}';
-        final initCmd = await _containerNotifier.prepareInteractiveCommand(cmd);
-        if (!mounted || initCmd == null) return;
-        final args = SshPageArgs(
-          source: ServerSource(widget.args.spi),
-          initCmd: initCmd,
-        );
-        unawaited(SSHPage.route.go(context, args));
-        break;
-      case ContainerMenu.terminal:
-        final cmd =
-            '${_containerState.type.name} exec -it ${shellSingleQuote(id)} sh -c "command -v bash && exec bash || command -v ash && exec ash || exec sh"';
-        final initCmd = await _containerNotifier.prepareInteractiveCommand(cmd);
-        if (!mounted || initCmd == null) return;
-        final args = SshPageArgs(
-          source: ServerSource(widget.args.spi),
-          initCmd: initCmd,
-        );
-        unawaited(SSHPage.route.go(context, args));
-        break;
     }
   }
 

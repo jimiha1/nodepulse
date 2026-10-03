@@ -2,32 +2,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission
-        android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
-    <!-- `tools:replace` because camera_android_camerax declares this same
-         permission with maxSdkVersion 28 and the merger refuses to pick. 32 is
-         this app's own answer: it writes downloads and SFTP transfers, which
-         scoped storage only takes over at 33. -->
-    <uses-permission
-        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32"
-        tools:replace="android:maxSdkVersion" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-
-    <!-- Guards the in-process broadcast the notification's "Stop All" action
-         sends. `RECEIVER_NOT_EXPORTED` only exists from API 33, so on anything
-         older the dynamically registered receiver was reachable by any app on
-         the device — and its one action disconnects every SSH session. Signature
-         level, so only a build signed with this key can send it. -->
-    <permission
-        android:name="tech.lolli.toolbox.permission.INTERNAL_BROADCAST"
-        android:protectionLevel="signature" />
-    <uses-permission android:name="tech.lolli.toolbox.permission.INTERNAL_BROADCAST" />
 
     <!-- The database is encrypted with a random key held by Android's
          device-bound secure storage. Auto Backup can restore the database on
@@ -172,27 +148,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_medium" />
         </receiver>
-
-        <service
-            android:name=".ForegroundService"
-            android:enabled="true"
-            android:foregroundServiceType="dataSync"
-            android:exported="false" />
-
-        <!-- The Linux systems in the system file picker (#1583). Exported, as
-             a documents provider has to be, and guarded by MANAGE_DOCUMENTS,
-             which only the system's picker holds: another app reaches a file
-             here only after the user picks it there. -->
-        <provider
-            android:name=".linux.LinuxDocumentsProvider"
-            android:authorities="${applicationId}.linux"
-            android:exported="true"
-            android:grantUriPermissions="true"
-            android:permission="android.permission.MANAGE_DOCUMENTS">
-            <intent-filter>
-                <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
-            </intent-filter>
-        </provider>
 
     </application>
     <!-- Required to query activities that can process text, see:

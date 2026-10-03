@@ -54,20 +54,12 @@ class ServerFuncBtnAdapter extends TypeAdapter<ServerFuncBtn> {
   @override
   ServerFuncBtn read(BinaryReader reader) {
     switch (reader.readByte()) {
-      case 0:
-        return ServerFuncBtn.terminal;
-      case 1:
-        return ServerFuncBtn.files;
       case 2:
         return ServerFuncBtn.container;
       case 3:
         return ServerFuncBtn.process;
-      case 6:
-        return ServerFuncBtn.iperf;
       case 8:
         return ServerFuncBtn.systemd;
-      case 9:
-        return ServerFuncBtn.portForward;
       case 10:
         return ServerFuncBtn.power;
       case 12:
@@ -77,27 +69,19 @@ class ServerFuncBtnAdapter extends TypeAdapter<ServerFuncBtn> {
       case 15:
         return ServerFuncBtn.firewall;
       default:
-        return ServerFuncBtn.terminal;
+        return ServerFuncBtn.container;
     }
   }
 
   @override
   void write(BinaryWriter writer, ServerFuncBtn obj) {
     switch (obj) {
-      case ServerFuncBtn.terminal:
-        writer.writeByte(0);
-      case ServerFuncBtn.files:
-        writer.writeByte(1);
       case ServerFuncBtn.container:
         writer.writeByte(2);
       case ServerFuncBtn.process:
         writer.writeByte(3);
-      case ServerFuncBtn.iperf:
-        writer.writeByte(6);
       case ServerFuncBtn.systemd:
         writer.writeByte(8);
-      case ServerFuncBtn.portForward:
-        writer.writeByte(9);
       case ServerFuncBtn.power:
         writer.writeByte(10);
       case ServerFuncBtn.users:

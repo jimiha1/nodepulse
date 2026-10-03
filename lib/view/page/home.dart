@@ -19,8 +19,6 @@ import 'package:server_box/data/provider/server/all.dart';
 import 'package:server_box/data/res/build_data.dart';
 import 'package:server_box/data/res/store.dart';
 import 'package:server_box/data/res/url.dart';
-import 'package:server_box/data/ssh/session_manager.dart';
-import 'package:server_box/view/page/floating_panels.dart';
 import 'package:server_box/view/page/home_tab.dart';
 import 'package:server_box/view/page/macos_menu_bar.dart';
 import 'package:server_box/view/page/setting/entries/home_tabs.dart';
@@ -452,12 +450,7 @@ class _HomePageState extends ConsumerState<HomePage>
         final narrow =
             constraints.maxWidth - _kRailWidth < AdaptivePanes.kSplitWidth;
         _narrow = narrow;
-        return Stack(
-          children: [
-            mainContent(narrow),
-            FloatingPanels(area: constraints.biggest),
-          ],
-        );
+        return Stack(children: [mainContent(narrow)]);
       },
     );
 

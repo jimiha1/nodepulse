@@ -8,7 +8,6 @@ import 'package:flutter/foundation.dart';
 import 'package:server_box/core/service/diagnostics_upload.dart';
 import 'package:server_box/core/service/known_identifiers.dart';
 import 'package:server_box/core/service/native_exit.dart';
-import 'package:server_box/core/utils/ssh_file_backend.dart';
 import 'package:server_box/data/res/build_data.dart';
 import 'package:server_box/data/res/store.dart';
 
@@ -66,9 +65,8 @@ abstract final class CrashReport {
   /// that asked, which is what the file browser's error view is for. This only
   /// decides whether to interrupt the user about it.
   static bool isAppFault(Object error) {
-    // Both are wrappers with the original inside, and it is the original that
-    // says where the failure came from.
-    if (error is SftpUnavailable) return isAppFault(error.cause);
+    // A wrapper with the original inside, and it is the original that says
+    // where the failure came from.
     if (error is AsyncError) return isAppFault(error.error);
 
     // The whole `dart:io` family: a socket that would not open, a TLS

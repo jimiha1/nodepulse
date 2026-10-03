@@ -1180,7 +1180,6 @@ class _ContainerQuickActions extends StatelessWidget {
     final offered = ContainerMenu.items(item.status);
     final actions = [
       if (offered.contains(ContainerMenu.start)) ContainerMenu.start,
-      if (offered.contains(ContainerMenu.logs)) ContainerMenu.logs,
       if (includeRemove && offered.contains(ContainerMenu.rm)) ContainerMenu.rm,
     ];
     if (actions.isEmpty) return UIs.placeholder;

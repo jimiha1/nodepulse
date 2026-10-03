@@ -5,15 +5,18 @@ part 'tab.g.dart';
 @HiveType(typeId: 103)
 enum AppTab {
   @HiveField(0)
-  server,
-  @HiveField(1)
-  ssh,
-  @HiveField(2)
-  file;
+  server;
 
   /// Indices that named a tab which no longer exists, and so are never
   /// resolved as an integer.
-  static const _retiredIndices = {3, 4, 5, 6, 7};
+  ///
+  /// 1 was the terminal tab and 2 the file tab, both removed by the
+  /// CF-Server-Monitor trim along with 3–7 before them. Every build since the
+  /// SQLite migration stores tabs by name, so no record written by one holds
+  /// an integer at all, and the builds that stored integers (Hive) came
+  /// before any of these tabs existed.
+  // TODO(migration): drop once no stored tab order can still hold these.
+  static const _retiredIndices = {1, 2, 3, 4, 5, 6, 7};
 
   /// The tabs a fresh install puts in the bar, and the fallback when a stored
   /// list cannot be read.
@@ -39,9 +42,9 @@ enum AppTab {
   /// the tab like a fresh install does.
   ///
   /// The trim to a CF-Server-Monitor front end narrows a fresh bar to one:
-  /// the CF list is the app's first screen. The other tabs stay reachable —
-  /// through the settings' arrangement page and their own routes — and grow
-  /// back here as later tasks of the trim wire their replacements.
+  /// the CF list is the app's first screen, and the tabs that used to sit
+  /// beside it — terminal, files, and the rest before those — are gone with
+  /// their pages.
   static const defaultOrder = [server];
 
   /// The tabs not in [enabled], in declaration order — what "more" holds.

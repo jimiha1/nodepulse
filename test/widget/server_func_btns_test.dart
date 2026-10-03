@@ -64,9 +64,9 @@ void main() {
   }
 
   const all = [
-    ServerFuncBtn.terminal,
-    ServerFuncBtn.files,
+    ServerFuncBtn.container,
     ServerFuncBtn.process,
+    ServerFuncBtn.systemd,
   ];
 
   testWidgets('the row does not deal itself out when it first appears', (
@@ -88,46 +88,49 @@ void main() {
     await pump(tester, entries(all));
     await settle(tester);
 
-    final full = slot(tester, ServerFuncBtn.files);
-    final before = tester.getRect(find.byIcon(ServerFuncBtn.process.icon)).left;
+    final full = slot(tester, ServerFuncBtn.process);
+    final before = tester.getRect(find.byIcon(ServerFuncBtn.systemd.icon)).left;
 
     // The middle one is taken out.
     await pump(tester, entries(const [
-      ServerFuncBtn.terminal,
-      ServerFuncBtn.process,
+      ServerFuncBtn.container,
+      ServerFuncBtn.systemd,
     ]));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
     // Still there, part way closed rather than gone between two frames.
-    final closing = slot(tester, ServerFuncBtn.files);
+    final closing = slot(tester, ServerFuncBtn.process);
     expect(closing.width, greaterThan(0));
     expect(closing.width, lessThan(full.width));
     // And what was after it has started moving into the room it is giving up.
-    final moving = tester.getRect(find.byIcon(ServerFuncBtn.process.icon)).left;
+    final moving = tester.getRect(find.byIcon(ServerFuncBtn.systemd.icon)).left;
     expect(moving, lessThan(before));
 
     await settle(tester);
-    expect(find.byIcon(ServerFuncBtn.files.icon), findsNothing);
+    expect(find.byIcon(ServerFuncBtn.process.icon), findsNothing);
     expect(
-      tester.getRect(find.byIcon(ServerFuncBtn.process.icon)).left,
+      tester.getRect(find.byIcon(ServerFuncBtn.systemd.icon)).left,
       lessThan(moving),
     );
   });
 
   testWidgets('and one that arrives opens a place for itself', (tester) async {
-    await pump(tester, entries(const [ServerFuncBtn.terminal]));
+    await pump(tester, entries(const [ServerFuncBtn.container]));
     await settle(tester);
 
     await pump(tester, entries(all));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    final opening = slot(tester, ServerFuncBtn.files);
+    final opening = slot(tester, ServerFuncBtn.process);
     expect(opening.width, greaterThan(0));
     await settle(tester);
-    expect(slot(tester, ServerFuncBtn.files).width, greaterThan(opening.width));
-    expect(find.byIcon(ServerFuncBtn.process.icon), findsOneWidget);
+    expect(
+      slot(tester, ServerFuncBtn.process).width,
+      greaterThan(opening.width),
+    );
+    expect(find.byIcon(ServerFuncBtn.systemd.icon), findsOneWidget);
   });
 
   testWidgets('an entry asked for again while it is going turns around', (
@@ -137,21 +140,21 @@ void main() {
     await settle(tester);
 
     await pump(tester, entries(const [
-      ServerFuncBtn.terminal,
-      ServerFuncBtn.process,
+      ServerFuncBtn.container,
+      ServerFuncBtn.systemd,
     ]));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.byIcon(ServerFuncBtn.files.icon), findsOneWidget);
+    expect(find.byIcon(ServerFuncBtn.process.icon), findsOneWidget);
 
     // Back before it finished leaving: it opens back up from where it had got
     // to rather than being built afresh at nothing.
     await pump(tester, entries(all));
     await settle(tester);
-    expect(find.byIcon(ServerFuncBtn.files.icon), findsOneWidget);
+    expect(find.byIcon(ServerFuncBtn.process.icon), findsOneWidget);
     expect(
-      tester.getRect(find.byIcon(ServerFuncBtn.files.icon)).left,
-      lessThan(tester.getRect(find.byIcon(ServerFuncBtn.process.icon)).left),
+      tester.getRect(find.byIcon(ServerFuncBtn.process.icon)).left,
+      lessThan(tester.getRect(find.byIcon(ServerFuncBtn.systemd.icon)).left),
     );
   });
 
@@ -160,12 +163,12 @@ void main() {
   ) async {
     await pump(tester, entries(all));
     await settle(tester);
-    final at = slot(tester, ServerFuncBtn.files);
+    final at = slot(tester, ServerFuncBtn.process);
 
-    await pump(tester, entries(all, off: const {ServerFuncBtn.files}));
+    await pump(tester, entries(all, off: const {ServerFuncBtn.process}));
     for (var i = 0; i < 8; i++) {
       await tester.pump(const Duration(milliseconds: 40));
-      expect(slot(tester, ServerFuncBtn.files), at);
+      expect(slot(tester, ServerFuncBtn.process), at);
     }
   });
 }

@@ -8,21 +8,15 @@ import 'package:server_box/core/extension/context/locale.dart';
 import 'package:server_box/core/route.dart';
 import 'package:server_box/data/model/app/error.dart';
 import 'package:server_box/data/model/app/menu/server_func.dart';
-import 'package:server_box/data/model/app/tab.dart';
-import 'package:server_box/data/model/server/capabilities.dart';
 import 'package:server_box/data/model/server/monitor_remote_access.dart';
 import 'package:server_box/data/model/server/server_private_info.dart';
-import 'package:server_box/data/provider/app/session_requests.dart';
 import 'package:server_box/data/provider/server/single.dart';
 import 'package:server_box/data/res/store.dart';
 import 'package:server_box/view/page/container/container.dart';
 import 'package:server_box/view/page/firewall/firewall.dart';
-import 'package:server_box/view/page/iperf.dart';
-import 'package:server_box/view/page/port_forward.dart';
 import 'package:server_box/view/page/process.dart';
 import 'package:server_box/view/page/scheduled_tasks.dart';
 import 'package:server_box/view/page/services.dart';
-import 'package:server_box/view/page/storage/server_file.dart';
 import 'package:server_box/view/page/users.dart';
 import 'package:server_box/view/widget/edge_fade_scroll.dart';
 import 'package:server_box/view/widget/server_power.dart';
@@ -448,28 +442,6 @@ void runServerFunc(
   WidgetRef ref,
 ) async {
     switch (value) {
-      case ServerFuncBtn.files:
-        // Only the SFTP backend needs a connection opened first. A server
-        // whose files come from its agent's API has none to open, and asking
-        // for one fails on a host whose sshd this app cannot reach — which is
-        // the case that API exists for. The same predicate `ServerFilePage`
-        // picks the backend with, so the connection made here is the one the
-        // page then uses.
-        // Nor does this device, whose files are read in place.
-        if (!spi.local &&
-            !serverFilesUseAgent(
-              spi,
-              ref.read(serverProvider(spi.id)).remoteAccess,
-            ) &&
-            !await _ensureSshClient(context, spi.id, ref)) {
-          return;
-        }
-        if (!context.mounted) return;
-        // Into the file tab rather than over whatever is on screen, so two
-        // servers can be open at once and neither is lost by opening the other.
-        ref.read(sftpRequestsProvider.notifier).add(spi);
-        ref.read(homeTabRequestProvider.notifier).go(AppTab.file);
-        break;
       case ServerFuncBtn.container:
         if (!await _ensureExec(context, spi.id, ref)) return;
         if (!context.mounted) return;
@@ -481,15 +453,6 @@ void runServerFunc(
         if (!context.mounted) return;
         final args = SpiRequiredArgs(spi);
         unawaited(ProcessPage.route.go(context, args));
-        break;
-      case ServerFuncBtn.terminal:
-        _gotoSSH(spi, ref);
-        break;
-      case ServerFuncBtn.iperf:
-        // Only a form until it is submitted, and what it opens then is a
-        // terminal — so nothing to connect here either.
-        final args = SpiRequiredArgs(spi);
-        unawaited(IPerfPage.route.go(context, args));
         break;
       case ServerFuncBtn.systemd:
         if (!await _ensureExec(context, spi.id, ref)) return;
@@ -503,12 +466,6 @@ void runServerFunc(
         // One button for three commands: three entries of their own would be
         // three of the few this row has space for, spent on the same thing.
         await ServerPower.pick(context, ref, spi);
-        break;
-      case ServerFuncBtn.portForward:
-        // No connection first: a forward is dialled over SSH or the agent's
-        // relay when it starts, and says there why it could not.
-        final args = SpiRequiredArgs(spi);
-        unawaited(PortForwardPage.route.go(context, args));
         break;
       case ServerFuncBtn.users:
         if (!await _ensureExec(context, spi.id, ref)) return;
@@ -531,17 +488,6 @@ void runServerFunc(
   }
 }
 
-/// Opens a terminal on [spi] in the SSH tab.
-///
-/// One way in. A terminal opened from here used to be a page pushed over
-/// whatever was on screen, unknown to the SSH tab and its sessions, so the
-/// same server opened twice gave two shells that could not see each other and
-/// only one of which survived a relaunch.
-void _gotoSSH(Spi spi, WidgetRef ref) {
-  ref.read(terminalRequestsProvider.notifier).add(spi);
-  ref.read(homeTabRequestProvider.notifier).go(AppTab.ssh);
-}
-
 /// Opens whatever connection running a command needs, before opening a page
 /// that runs one.
 ///
@@ -556,17 +502,6 @@ void _gotoSSH(Spi spi, WidgetRef ref) {
 /// advice that never comes true.
 Future<bool> _ensureExec(BuildContext context, String id, WidgetRef ref) {
   return _ensure(context, id, ref, (n) => n.ensureExec());
-}
-
-/// Makes sure an SSH connection exists before opening a page that needs the
-/// byte streams only it can carry — SFTP and port forwarding.
-///
-/// Only ever called for a server whose [ServerCapabilities.byteStream] is
-/// true: port forwarding is hidden without it, and the file entry asks before
-/// calling this, since it is also offered where the files arrive over the
-/// agent's own API and there is no stream to open.
-Future<bool> _ensureSshClient(BuildContext context, String id, WidgetRef ref) {
-  return _ensure(context, id, ref, (n) => n.ensureShellClient());
 }
 
 /// Returns false — after telling the user why — when [connect] could not.

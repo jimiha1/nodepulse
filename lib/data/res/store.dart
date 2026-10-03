@@ -6,7 +6,6 @@ import 'package:server_box/data/store/container.dart';
 import 'package:server_box/data/store/entity_store.dart';
 import 'package:server_box/data/store/history.dart';
 import 'package:server_box/data/store/migrations/m003_hive_to_sqlite.dart';
-import 'package:server_box/data/store/port_forward.dart';
 import 'package:server_box/data/store/private_key.dart';
 import 'package:server_box/data/store/schema.dart';
 import 'package:server_box/data/store/self_addr.dart';
@@ -44,7 +43,6 @@ abstract final class Stores {
   static HistoryStore get history => getIt<HistoryStore>();
   static ConnectionStatsStore get connectionStats =>
       getIt<ConnectionStatsStore>();
-  static PortForwardStore get portForward => getIt<PortForwardStore>();
 
   /// What each server said its own address is.
   ///
@@ -77,7 +75,6 @@ abstract final class Stores {
     server,
     key,
     bmcCredential,
-    portForward,
   ];
 
   static Future<void> init() async {
@@ -96,9 +93,6 @@ abstract final class Stores {
     );
     getIt.registerLazySingleton<ConnectionStatsStore>(
       () => ConnectionStatsStore.instance,
-    );
-    getIt.registerLazySingleton<PortForwardStore>(
-      () => PortForwardStore.instance,
     );
     getIt.registerLazySingleton<SelfAddrStore>(() => SelfAddrStore.instance);
 

@@ -7,15 +7,11 @@ import 'package:server_box/view/page/setting/entries/home_tabs.dart';
 
 void main() {
   group('the default order', () {
-    test('is the bar, and the rest are behind "more"', () {
-      // The list *is* the bar now, so it is a subset rather than everything.
-      // The CF trim narrows a fresh bar to the server tab alone; the rest are
-      // still reachable, behind "more" and through their own routes.
+    test('is the bar, and nothing is behind "more"', () {
+      // The trim to a CF-Server-Monitor front end leaves the server tab as
+      // the only one, so the bar is the whole enum.
       expect(AppTab.defaultOrder, [AppTab.server]);
-      expect(AppTab.overflowOf(AppTab.defaultOrder), [
-        AppTab.ssh,
-        AppTab.file,
-      ]);
+      expect(AppTab.overflowOf(AppTab.defaultOrder), isEmpty);
     });
 
     test('every tab is reachable, in the bar or behind more', () {
@@ -35,18 +31,17 @@ void main() {
     });
 
     /// The declaration order is the `@HiveField` index and what an `int` in a
-    /// stored record resolves against, so it is not free to follow the bar.
-    test('is allowed to differ from the declaration order', () {
-      expect(AppTab.defaultOrder, isNot(AppTab.values));
+    /// stored record resolves against.
+    test('declares server as the single primary tab', () {
+      expect(AppTab.defaultOrder, equals(AppTab.values));
       expect(AppTab.server.index, 0);
-      expect(AppTab.ssh.index, 1);
-      expect(AppTab.file.index, 2);
     });
   });
 
   test('drops names the build no longer knows, keeping the stored order', () {
-    // `snippet` named a tab the deleted domains took away; a record written by
-    // a build that had it still parses, minus the names nobody can resolve.
+    // `ssh` and `file` named tabs the terminal-and-files trim took away; a
+    // record written by a build that had them still parses, minus the names
+    // nobody can resolve.
     final tabs = AppTab.parseAppTabsFromObj([
       'server',
       'ssh',
@@ -54,13 +49,7 @@ void main() {
       'snippet',
     ]);
 
-    expect(tabs, [AppTab.server, AppTab.ssh, AppTab.file]);
-  });
-
-  test('preserves an intentionally customized home tab list', () {
-    final tabs = AppTab.parseAppTabsFromObj(['server', 'ssh']);
-
-    expect(tabs, [AppTab.server, AppTab.ssh]);
+    expect(tabs, [AppTab.server]);
   });
 
   test('uses defaults for null and empty tab values', () {
@@ -74,18 +63,12 @@ void main() {
 
   test('names one tab twice and gets it once, in the order it first appeared', () {
     // The home page indexes its pages and its nav bar by position, so a repeat
-    // puts the same page on screen twice and leaves "which position is
-    // Terminal" without an answer — which is also what the reorder handler
-    // asks when the set changes under it.
-    final tabs = AppTab.parseAppTabsFromObj([
-      'ssh',
-      'server',
-      'ssh',
-      'file',
-      'server',
-    ]);
+    // puts the same page on screen twice and leaves "which position is which"
+    // without an answer — which is also what the reorder handler asks when the
+    // set changes under it.
+    final tabs = AppTab.parseAppTabsFromObj(['server', 'ssh', 'server']);
 
-    expect(tabs, [AppTab.ssh, AppTab.server, AppTab.file]);
+    expect(tabs, [AppTab.server]);
   });
 
   test('and mixes the ways a tab can be named without repeating it', () {
@@ -100,9 +83,9 @@ void main() {
   test('offers every arrangeable tab the stored list does not name', () {
     // A bar the user arranged once only names part of the enum; the rest has
     // to come back here, or the install could never turn one on.
-    final available = availableHomeTabs(const [AppTab.server]);
+    final available = availableHomeTabs(const []);
 
-    expect(available, [AppTab.ssh, AppTab.file]);
+    expect(available, [AppTab.server]);
   });
 
   /// A stored list may hold plain integers — `_parseAppTabFromElement`
@@ -110,93 +93,41 @@ void main() {
   /// be replaced by a new one: [_retiredIndices] drops the integer instead of
   /// letting it resolve past the end of `values`.
   test('drops a retired tab index instead of resolving it', () {
-    // 3 was `snippet`, then 4-7 named `agent`, `benchmark`, `remoteDesktop`
-    // and `virt`. All gone; none may resolve.
-    expect(AppTab.values, hasLength(3));
-    expect(AppTab.parseAppTabsFromObj([0, 3, 4, 5, 6, 7, 1]), [
+    // 1 was the terminal tab, 2 the file tab, and 3-7 named `snippet`,
+    // `agent`, `benchmark`, `remoteDesktop` and `virt` before those. All
+    // gone; none may resolve — and none may hand its index to the one tab
+    // that is left.
+    expect(AppTab.values, hasLength(1));
+    expect(AppTab.parseAppTabsFromObj([0, 1, 2, 3, 4, 5, 6, 7]), [
       AppTab.server,
-      AppTab.ssh,
     ]);
     // Nothing left is nothing stored, which is what the default is for.
     expect(AppTab.parseAppTabsFromObj([7]), AppTab.defaultOrder);
     // The name is gone from `values` too, so a record that spelled it out is
     // dropped by the same path.
-    expect(AppTab.parseAppTabsFromObj(['server', 'monitorSettings']), [
-      AppTab.server,
-    ]);
+    expect(AppTab.parseAppTabsFromObj(['server', 'ssh']), [AppTab.server]);
+    expect(AppTab.parseAppTabsFromObj(['server', 'file']), [AppTab.server]);
     expect(AppTab.parseAppTabsFromObj(['server', 'virt']), [AppTab.server]);
   });
 
   group('reorderHomeTabs', () {
-    // [server, file] | separator at 2 | [ssh]
-    const enabled = [AppTab.server, AppTab.file];
-    const disabled = [AppTab.ssh];
-
-    test('dragging past the separator enables a tab', () {
-      final next = reorderHomeTabs(
-        enabled: enabled,
-        disabled: disabled,
-        oldIndex: 3,
-        newIndex: 1,
-      );
-
-      expect(next?.enabled, [AppTab.server, AppTab.ssh, AppTab.file]);
-      expect(next?.disabled, isEmpty);
-    });
-
-    test('dragging under the separator disables a tab', () {
-      final next = reorderHomeTabs(
-        enabled: enabled,
-        disabled: disabled,
-        oldIndex: 1,
-        newIndex: 3,
-      );
-
-      expect(next?.enabled, [AppTab.server]);
-      expect(next?.disabled, [AppTab.ssh, AppTab.file]);
-    });
-
-    test('reorders within one half without changing what is enabled', () {
-      final next = reorderHomeTabs(
-        enabled: const [AppTab.server, AppTab.file, AppTab.ssh],
-        disabled: const [],
-        oldIndex: 2,
-        newIndex: 0,
-      );
-
-      expect(next?.enabled, [AppTab.ssh, AppTab.server, AppTab.file]);
-      expect(next?.disabled, isEmpty);
-    });
-
-    test('reports the server tab leaving, for the caller to refuse', () {
-      final next = reorderHomeTabs(
-        enabled: enabled,
-        disabled: disabled,
-        oldIndex: 0,
-        newIndex: 3,
-      );
-
-      expect(next?.enabled, isNot(contains(AppTab.server)));
-    });
-
-    test('moves nothing for a drag that lands where it started', () {
+    test('moves nothing when there is nothing to move', () {
+      // One tab, and the separator beside it: any drag is either the
+      // separator's own or lands where it started.
       expect(
         reorderHomeTabs(
-          enabled: enabled,
-          disabled: disabled,
-          oldIndex: 1,
-          newIndex: 1,
+          enabled: const [AppTab.server],
+          disabled: const [],
+          oldIndex: 0,
+          newIndex: 0,
         ),
         isNull,
       );
-    });
-
-    test('moves nothing when the separator itself is dragged', () {
       expect(
         reorderHomeTabs(
-          enabled: enabled,
-          disabled: disabled,
-          oldIndex: 2,
+          enabled: const [AppTab.server],
+          disabled: const [],
+          oldIndex: 1,
           newIndex: 0,
         ),
         isNull,

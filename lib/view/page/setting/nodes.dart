@@ -110,12 +110,6 @@ List<SettingsNode> _buildNodes() {
       title: libL10n.terminal,
       icon: Icons.terminal,
       children: [
-        SettingsNode.leaf(
-          id: 'terminal.setting',
-          title: libL10n.general,
-          icon: Icons.settings_outlined,
-          page: () => const AppSettingsPage(section: SettingsSection.ssh),
-        ),
         // Under the terminal because that is where a Linux system is
         // reached from, and absent when this build carries none — the same
         // question the terminal's own tab asks before it offers to install
@@ -139,12 +133,6 @@ List<SettingsNode> _buildNodes() {
           icon: Icons.verified_user_outlined,
           page: () => const KnownHostsPage(embedded: true),
         ),
-        SettingsNode.leaf(
-          id: 'terminal.virtKey',
-          title: l10n.editVirtKeys,
-          icon: Icons.keyboard_outlined,
-          page: () => const SSHVirtKeySettingPage(embedded: true),
-        ),
       ],
     ),
     SettingsNode.branch(
@@ -152,12 +140,6 @@ List<SettingsNode> _buildNodes() {
       title: libL10n.file,
       icon: Icons.folder_outlined,
       children: [
-        SettingsNode.leaf(
-          id: 'file.sftp',
-          title: 'SFTP',
-          icon: Icons.cloud_outlined,
-          page: () => const AppSettingsPage(section: SettingsSection.sftp),
-        ),
         // Under files rather than under the app: it is what opens one.
         SettingsNode.leaf(
           id: 'file.editor',

@@ -2,13 +2,10 @@ import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:server_box/core/extension/context/locale.dart';
-import 'package:server_box/core/utils/shell_quote.dart';
 import 'package:server_box/data/model/server/server_private_info.dart';
 import 'package:server_box/data/model/server/system_user.dart';
 import 'package:server_box/data/provider/server/single.dart';
 import 'package:server_box/data/service/user_manager.dart';
-import 'package:server_box/data/ssh/terminal_source.dart';
-import 'package:server_box/view/page/ssh/page/page.dart';
 
 /// Everything the detail page needs, including the two flows the list already
 /// owns. Duplicating the editor here would mean two dialogs to keep in step.
@@ -96,8 +93,6 @@ final class _UserDetailPageState extends ConsumerState<UserDetailPage> {
         children: [
           _buildIdentity(),
           UIs.height13,
-          _buildActions(),
-          UIs.height13,
           _buildAccountCard(),
           UIs.height13,
           ?_buildSecurityCard(),
@@ -167,22 +162,13 @@ extension on _UserDetailPageState {
     );
   }
 
-  /// Only the shell. The design also offers an SSH-keys button, which is not
-  /// here: what it would show is the count already in Security below, and what
-  /// it would edit is a file with no editor of its own yet.
+  /// The design also offered an SSH-keys button, which is not here: what it
+  /// would show is the count already in Security below, and what it would edit
+  /// is a file with no editor of its own yet. It went with the shell button —
+  /// `su - <name>` has nowhere to open since the terminal went.
+  ///
   /// TODO: open `authorized_keys` in the file editor once that is reachable
   /// from a page that is not the file browser.
-  Widget _buildActions() {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: FilledButton.tonalIcon(
-        onPressed: _openShell,
-        icon: const Icon(Icons.terminal, size: 17),
-        label: Text(l10n.userOpenShell),
-      ),
-    );
-  }
-
   Widget _buildAccountCard() {
     final group = _user.primaryGroup == null
         ? '${_user.gid}'
@@ -335,26 +321,5 @@ extension on _UserDetailPageState {
   Future<void> _run(Future<bool> Function(ServerUser user) action) async {
     final changed = await action(_user);
     if (changed && mounted) context.pop();
-  }
-
-  /// Types `su - <name>` rather than running it: the shell that opens is the
-  /// server's own, and switching user is a command the user should see before
-  /// it runs.
-  ///
-  /// Quoted even so. The name comes out of the server's own `/etc/passwd`,
-  /// which this app does not get to choose the contents of, and a command
-  /// typed into a terminal is one Enter away from running.
-  void _openShell() {
-    final isCurrent = _user.name == widget.args.catalog.currentUser;
-    SSHPage.route.go(
-      context,
-      SshPageArgs(
-        source: ServerSource(widget.args.spi),
-        initCmd: isCurrent
-            ? null
-            : 'su - ${shellSingleQuote(_user.name)}',
-        notFromTab: true,
-      ),
-    );
   }
 }

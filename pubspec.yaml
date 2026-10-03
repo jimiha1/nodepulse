@@ -103,7 +103,6 @@ dependencies:
   # Drives the build hook below. `sbm_ffi` is no longer a Flutter plugin — the
   # hook compiles the crate directly, so there is nothing to depend on.
   flutter_rust_bridge_hooks: 2.13.0
-  desktop_drop: ^0.8.4
   sentry: ^9.30.0
   # Runtime for the generated reader in `lib/src/proto`, which is how Android's
   # crash tombstone is decoded. Pure Dart, and its own dependencies —

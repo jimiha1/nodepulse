@@ -1,9 +1,7 @@
 import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/data/model/server/port_forward.dart';
 import 'package:server_box/data/model/server/server_private_info.dart';
 import 'package:server_box/data/model/server/ssh_credential.dart';
-import 'package:server_box/data/store/port_forward.dart';
 import 'package:server_box/data/store/server.dart';
 import 'package:sqlite3/sqlite3.dart' show SqliteException;
 
@@ -11,7 +9,6 @@ import '../../helpers/test_db.dart';
 
 void main() {
   late ServerStore servers;
-  late PortForwardStore forwards;
 
   const original = Spi(
     id: 'server-old',
@@ -23,21 +20,30 @@ void main() {
     name: 'through-production',
     ssh: SshCredential(ip: '10.0.0.2', jumpIds: ['server-old']),
   );
-  const forward = PortForwardConfig(
-    id: 'forward-1',
-    serverId: 'server-old',
-    name: 'postgres',
-    type: PortForwardType.local,
-    localPort: 15432,
-  );
+
+  /// A child row of the `port_forward` table, seeded by hand: the store that
+  /// owned these rows is gone with the terminal-and-files trim, but the table
+  /// and the rename-and-delete cascades that maintain it stay, and this is
+  /// the one test holding them to it.
+  void seedForward({
+    String id = 'forward-1',
+    String serverId = 'server-old',
+  }) {
+    SqliteDb.instance.execute(
+      'INSERT INTO port_forward '
+      '(id, server_id, name, type, local_host, local_port, remote_host, '
+      'remote_port, updated_at, rev) '
+      "VALUES (?, ?, 'postgres', 'local', NULL, 15432, NULL, NULL, 0, 0);",
+      [id, serverId],
+    );
+  }
 
   setUp(() async {
     await openTestDb();
-    forwards = PortForwardStore();
-    servers = ServerStore(portForwards: forwards);
+    servers = ServerStore();
     servers.put(original);
     servers.put(jumpOwner);
-    forwards.put(forward);
+    seedForward();
     SqliteDb.instance.execute(
       'INSERT INTO known_host (server_id, key_type, fingerprint) VALUES (?, ?, ?);',
       [original.id, 'ssh-ed25519', 'SHA256:old'],
@@ -65,16 +71,14 @@ void main() {
 
   tearDown(closeTestDb);
 
-  test('renaming moves every dependent row in one committed state', () async {
-    // Prime the caches that a raw foreign-key update used to leave stale.
-    expect(forwards.fetch().single.serverId, original.id);
-    final forwardChanged = forwards.watch().first;
+  int forwardRev(String id) =>
+      SqliteDb.instance.select('SELECT rev FROM port_forward WHERE id = ?;', [
+        id,
+      ]).single['rev']
+          as int;
 
-    final oldForwardRev =
-        SqliteDb.instance.select('SELECT rev FROM port_forward WHERE id = ?;', [
-              forward.id,
-            ]).single['rev']
-            as int;
+  test('renaming moves every dependent row in one committed state', () async {
+    final oldForwardRev = forwardRev('forward-1');
     final oldOwnerRev =
         SqliteDb.instance.select('SELECT rev FROM server WHERE id = ?;', [
               jumpOwner.id,
@@ -83,7 +87,6 @@ void main() {
 
     final replacement = original.copyWith(id: 'server-new');
     servers.rename(original, replacement);
-    await forwardChanged.timeout(const Duration(seconds: 1));
 
     expect(servers.fetchOneRaw(original.id), isNull);
     expect(servers.fetchOneRaw(replacement.id), replacement);
@@ -97,7 +100,12 @@ void main() {
       },
       {'ssh-ed25519': 'SHA256:old'},
     );
-    expect(forwards.fetch().single.serverId, replacement.id);
+    expect(
+      SqliteDb.instance
+          .select('SELECT server_id FROM port_forward;')
+          .single['server_id'],
+      replacement.id,
+    );
     expect(
       SqliteDb.instance
           .select('SELECT server_id FROM container_host;')
@@ -125,10 +133,9 @@ void main() {
     expect(servers.fetchOneRaw(jumpOwner.id)?.ssh?.jumpIds, [replacement.id]);
 
     expect(
-      SqliteDb.instance.select('SELECT rev FROM port_forward WHERE id = ?;', [
-        forward.id,
-      ]).single['rev'],
+      forwardRev('forward-1'),
       greaterThan(oldForwardRev),
+      reason: 'the carried row is stamped, so sync hears about the move',
     );
     expect(
       SqliteDb.instance.select('SELECT rev FROM server WHERE id = ?;', [
@@ -160,7 +167,11 @@ void main() {
 
     servers.dropCache();
     expect(servers.fetchOneRaw(original.id), original);
-    expect(forwards.fetchForServer(original.id), [forward]);
+    expect(
+      SqliteDb.instance.select('SELECT count(*) AS n FROM port_forward;')
+          .single['n'],
+      1,
+    );
     expect({
       for (final row in SqliteDb.instance.select(
         'SELECT key_type, fingerprint FROM known_host WHERE server_id = ?;',
@@ -178,20 +189,20 @@ void main() {
   });
 
   test(
-    'direct deletion invalidates child caches and stamps removed links',
+    'direct deletion stamps removed child rows and drops the links',
     () async {
-      expect(forwards.fetch(), [forward]);
-      final forwardChanged = forwards.watch().first;
-
       servers.deleteById(original.id);
-      await forwardChanged.timeout(const Duration(seconds: 1));
 
-      expect(forwards.fetch(), isEmpty);
+      expect(
+        SqliteDb.instance.select('SELECT count(*) AS n FROM port_forward;')
+            .single['n'],
+        0,
+      );
       expect(
         SqliteDb.instance.select(
           'SELECT count(*) AS n FROM tombstone '
           "WHERE tbl = 'port_forward' AND row_id = ?;",
-          [forward.id],
+          ['forward-1'],
         ).single['n'],
         1,
       );

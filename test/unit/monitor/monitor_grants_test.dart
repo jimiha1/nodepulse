@@ -11,9 +11,6 @@ import 'package:server_box/data/model/server/monitor_capabilities.dart';
 import 'package:server_box/data/model/server/monitor_grants.dart';
 import 'package:server_box/data/model/server/monitor_http_credential.dart';
 import 'package:server_box/data/model/server/server_private_info.dart';
-import 'package:server_box/data/provider/port_forward_provider.dart';
-import 'package:server_box/data/provider/server/single.dart';
-import 'package:server_box/data/res/status.dart';
 
 void main() {
   /// What an agent with roles answers for an account of role `desktop`.
@@ -117,42 +114,8 @@ void main() {
 
     test('a grant the role lacks: ask the admin', () {
       expect(
-        ServerFuncBtn.terminal.unavailableReason(agentOnly, access),
-        l10n.funcNeedsAgentPermission(ServerFuncBtn.terminal.toStr),
-      );
-      expect(
         ServerFuncBtn.process.unavailableReason(agentOnly, access),
         l10n.funcNeedsAgentPermission(ServerFuncBtn.process.toStr),
-      );
-    });
-
-    test('a grant held but not over this link: HTTPS', () {
-      final server = ServerState(
-        spi: agentOnly,
-        status: InitStatus.status,
-        remoteAccess: access,
-      );
-      expect(
-        portForwardUnavailable(server, listen: true),
-        contains('HTTPS'),
-      );
-      // The relay is fine, so a local forward is not held back.
-      expect(portForwardUnavailable(server, listen: false), isNull);
-    });
-
-    test('a forward says listen\'s reason when connect\'s says nothing', () {
-      // A forward is either grant's, so when the agent's reason for `connect`
-      // is one this app cannot read, `listen`'s is the one worth showing.
-      final access = MonitorCapabilities.fromJson(
-        withGrants()
-          ..['grants'] = {
-            'connect': {'ok': false, 'why': 'a_later_reason'},
-            'listen': {'ok': false, 'why': 'not_granted'},
-          },
-      ).remoteAccess;
-      expect(
-        ServerFuncBtn.portForward.unavailableReason(agentOnly, access),
-        l10n.funcNeedsAgentPermission(ServerFuncBtn.portForward.toStr),
       );
     });
 
@@ -160,12 +123,12 @@ void main() {
       final notConfigured = MonitorCapabilities.fromJson(
         withGrants()
           ..['grants'] = {
-            'files': {'ok': false, 'why': 'not_configured'},
+            'shell': {'ok': false, 'why': 'not_configured'},
           },
       ).remoteAccess;
       expect(
-        ServerFuncBtn.files.unavailableReason(agentOnly, notConfigured),
-        l10n.funcNeedsAgentSetup(ServerFuncBtn.files.toStr),
+        ServerFuncBtn.process.unavailableReason(agentOnly, notConfigured),
+        l10n.funcNeedsAgentSetup(ServerFuncBtn.process.toStr),
       );
     });
   });

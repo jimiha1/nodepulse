@@ -10,7 +10,6 @@ import 'package:server_box/data/model/server/ssh_credential.dart';
 import 'package:server_box/data/model/server/system.dart';
 import 'package:server_box/data/model/server/wol_cfg.dart';
 import 'package:server_box/data/store/entity_store.dart';
-import 'package:server_box/data/store/port_forward.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 /// Servers, as rows in `server` plus the child tables hanging off it.
@@ -21,15 +20,9 @@ import 'package:sqlite3/sqlite3.dart';
 class ServerStore extends EntityStore<Spi> {
   static const _identityFilesPrefix = 'server-box:identity-files:';
 
-  ServerStore({
-    PortForwardStore? portForwards,
-  }) : _portForwards = portForwards;
+  ServerStore();
 
-  static final instance = ServerStore(
-    portForwards: PortForwardStore.instance,
-  );
-
-  final PortForwardStore? _portForwards;
+  static final instance = ServerStore();
 
   @override
   String get table => 'server';
@@ -469,7 +462,6 @@ class ServerStore extends EntityStore<Spi> {
       synced.tombstone(id, at: at);
     });
     invalidate();
-    if (pfIds.isNotEmpty) _portForwards?.invalidate();
   }
 
   /// Changes a server's stable id without exposing a state in which either
@@ -544,7 +536,6 @@ class ServerStore extends EntityStore<Spi> {
     }
 
     invalidate();
-    if (portForwardIds.isNotEmpty) _portForwards?.invalidate();
   }
 
   List<String> _referencingIds(String sql, String serverId) => db

@@ -25,17 +25,17 @@ void main() {
     'persists the build migration and does not repeat it on relaunch',
     () async {
       setting.lastVer.put(1491);
-      setting.serverFuncBtns.put([ServerFuncBtn.terminal.name]);
+      setting.serverFuncBtns.put(['terminal']);
 
       migrateBuildFeatures(1536);
 
       expect(setting.lastVer.get(), 1536);
       expect(setting.serverFuncBtns.get(), [
-        ServerFuncBtn.terminal.name,
+        'terminal',
         ServerFuncBtn.power.name,
       ]);
 
-      setting.serverFuncBtns.put([ServerFuncBtn.terminal.name]);
+      setting.serverFuncBtns.put(['terminal']);
       // Finish the store's queued timestamp writes before replacing it.
       await setting.updateLastUpdateTs(key: null);
       await getIt.unregister<SettingStore>();
@@ -45,7 +45,7 @@ void main() {
       migrateBuildFeatures(1536);
 
       expect(setting.lastVer.get(), 1536);
-      expect(setting.serverFuncBtns.get(), [ServerFuncBtn.terminal.name]);
+      expect(setting.serverFuncBtns.get(), ['terminal']);
     },
   );
 
@@ -58,7 +58,7 @@ void main() {
 
   test('rolls back every feature write when one persistence step fails', () {
     setting.lastVer.put(1491);
-    setting.serverFuncBtns.put([ServerFuncBtn.terminal.name]);
+    setting.serverFuncBtns.put(['terminal']);
     SqliteDb.instance.execute('''
       CREATE TRIGGER fail_server_btn_migration
       BEFORE UPDATE OF value ON kv
@@ -71,6 +71,6 @@ void main() {
     expect(() => migrateBuildFeatures(1536), throwsStateError);
 
     expect(setting.lastVer.get(), 1491);
-    expect(setting.serverFuncBtns.get(), [ServerFuncBtn.terminal.name]);
+    expect(setting.serverFuncBtns.get(), ['terminal']);
   });
 }

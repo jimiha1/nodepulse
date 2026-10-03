@@ -1,7 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:server_box/data/model/app/tab.dart';
-import 'package:server_box/data/model/server/server_private_info.dart';
-import 'package:server_box/data/ssh/terminal_session.dart';
 
 part 'session_requests.g.dart';
 
@@ -37,8 +35,8 @@ class CurrentHomeTab extends _$CurrentHomeTab {
 /// carries its own way out.
 ///
 /// Which tab rather than a bare flag, because a tab is kept alive behind the
-/// others: the server tab goes on drawing a globe while somebody reads a
-/// terminal, and the chrome has to be back for that one.
+/// others: the server tab goes on drawing a globe while somebody reads
+/// something else, and the chrome has to be back for that one.
 @Riverpod(keepAlive: true)
 class ImmersiveTab extends _$ImmersiveTab {
   @override
@@ -62,9 +60,6 @@ class ImmersiveTab extends _$ImmersiveTab {
 /// A request rather than a call for two reasons. The tab may not exist yet —
 /// tabs are built when first visited — and only the tab knows whether opening
 /// something means selecting it beside the list or pushing a page over it.
-///
-/// One slot rather than a queue, unlike [TerminalRequests]: opening two
-/// servers in a row means looking at the second one, not at both.
 @Riverpod(keepAlive: true)
 class ServerDetailRequest extends _$ServerDetailRequest {
   @override
@@ -73,61 +68,4 @@ class ServerDetailRequest extends _$ServerDetailRequest {
   void go(String serverId) => state = serverId;
 
   void done() => state = null;
-}
-
-/// A server waiting for a terminal, and what to put in it once it opens.
-class TerminalRequest {
-  const TerminalRequest(this.spi, {this.session});
-
-  final Spi spi;
-
-  /// A shell that is already running, to be shown rather than started.
-  final TerminalSession? session;
-}
-
-/// Servers waiting for a terminal.
-///
-/// A queue rather than a direct call because the tab that opens terminals may
-/// not exist yet: tabs are built when first visited, so a request made from
-/// the server list arrives before there is anything to receive it. The tab
-/// drains this when it appears.
-@Riverpod(keepAlive: true)
-class TerminalRequests extends _$TerminalRequests {
-  @override
-  List<TerminalRequest> build() => const [];
-
-  void add(Spi spi, {TerminalSession? session}) => state = [
-    ...state,
-    TerminalRequest(spi, session: session),
-  ];
-
-  void clear() => state = const [];
-}
-
-/// A standing request to close every terminal.
-///
-/// The tab that owns the sessions is the only thing that can close them, and
-/// it is built when first visited — so this is a flag it drains, the same
-/// arrangement [TerminalRequests] has, rather than a call. A request left
-/// standing because that tab has never been built closes nothing when it
-/// finally is, which is right: a tab nobody has opened has no sessions.
-@Riverpod(keepAlive: true)
-class TerminalCloseAllRequest extends _$TerminalCloseAllRequest {
-  @override
-  bool build() => false;
-
-  void go() => state = true;
-
-  void done() => state = false;
-}
-
-/// Servers waiting for a file browser. Same reasoning as [TerminalRequests].
-@Riverpod(keepAlive: true)
-class SftpRequests extends _$SftpRequests {
-  @override
-  List<Spi> build() => const [];
-
-  void add(Spi spi) => state = [...state, spi];
-
-  void clear() => state = const [];
 }

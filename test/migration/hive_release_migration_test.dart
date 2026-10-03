@@ -8,7 +8,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:server_box/data/model/container/type.dart';
-import 'package:server_box/data/model/server/port_forward.dart';
 import 'package:server_box/data/model/server/system.dart';
 import 'package:server_box/data/res/store.dart';
 import 'package:server_box/data/store/migrations/all.dart';
@@ -317,17 +316,26 @@ void main() {
             'unix:///run/podman.sock',
           );
 
-          final forwards = Stores.portForward.fetchForServer('srv-pwd');
-          expect(forwards.length, 1);
-          expect(forwards.single.name, 'postgres');
-          expect(forwards.single.type, PortForwardType.local);
-          expect(forwards.single.localPort, 15432);
-          expect(forwards.single.remoteHost, '10.0.0.50');
-          expect(forwards.single.remotePort, 5432);
+          // The `port_forward` store is gone with the terminal-and-files
+          // trim, but the Hive import still carries the rows across — they
+          // land in the entity table by hand, so they are read back the same
+          // way. `PortForwardType` survives only as the Hive adapter's enum.
+          Map<String, Object?> forwardRow(String serverId) => SqliteDb.instance
+              .select(
+                'SELECT * FROM port_forward WHERE server_id = ?;',
+                [serverId],
+              )
+              .single;
+          final forward = forwardRow('srv-pwd');
+          expect(forward['name'], 'postgres');
+          expect(forward['type'], 'local');
+          expect(forward['local_port'], 15432);
+          expect(forward['remote_host'], '10.0.0.50');
+          expect(forward['remote_port'], 5432);
 
           expect(
-            Stores.portForward.fetchForServer('srv-key').single.type,
-            PortForwardType.remote,
+            forwardRow('srv-key')['type'],
+            'remote',
           );
         });
 

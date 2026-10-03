@@ -8,9 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import android.Manifest
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.IntentFilter
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -20,17 +18,11 @@ import io.flutter.plugin.common.MethodChannel
 import android.appwidget.AppWidgetManager
 import tech.lolli.toolbox.alert.AlertSettings
 import tech.lolli.toolbox.alert.AlertWorker
-import tech.lolli.toolbox.linux.LinuxDocumentsProvider
 import tech.lolli.toolbox.widget.HomeWidget
 import tech.lolli.toolbox.widget.WidgetStore
 
 class MainActivity: FlutterFragmentActivity() {
     private lateinit var channel: MethodChannel
-    private val ACTION_UPDATE_SESSIONS = "tech.lolli.toolbox.ACTION_UPDATE_SESSIONS"
-    private val ACTION_DISCONNECT_SESSION = "tech.lolli.toolbox.ACTION_DISCONNECT_SESSION"
-    private val ACTION_STOP_ALL_CONNECTIONS = "tech.lolli.toolbox.STOP_ALL_CONNECTIONS"
-    private val INTERNAL_BROADCAST_PERMISSION = "tech.lolli.toolbox.permission.INTERNAL_BROADCAST"
-    private var stopAllReceiver: BroadcastReceiver? = null
     private var disableImpeller = false
     private var ownsFlutterEngine = false
     private var notificationPermissionRequestInFlight = false
@@ -179,13 +171,6 @@ class MainActivity: FlutterFragmentActivity() {
                     "nativeLibDir" -> {
                         result.success(applicationInfo.nativeLibraryDir)
                     }
-                    "linuxSystemsChanged" -> {
-                        LinuxDocumentsProvider.notifyRootsChanged(this)
-                        result.success(null)
-                    }
-                    "isServiceRunning" -> {
-                        result.success(ForegroundService.isRunning)
-                    }
                     // Why the process died last time, from the system rather
                     // than from anything this app managed to run on its way
                     // out. Covers the crashes Dart cannot see at all: a SIGSEGV
@@ -201,11 +186,9 @@ class MainActivity: FlutterFragmentActivity() {
                             runOnUiThread { result.success(info) }
                         }.start()
                     }
-                    // Whether this app may post notifications at all. Without
-                    // it there is no foreground service, and without that the
-                    // system freezes the process the moment it is backgrounded
-                    // — so "run in the background" is a switch that cannot do
-                    // what it says. The settings page reads this to say so.
+                    // Whether this app may post notifications at all. The
+                    // settings page reads this to say what a "run in the
+                    // background" switch can and cannot promise.
                     "notificationsAllowed" -> {
                         result.success(notificationsAllowed())
                     }
@@ -236,22 +219,6 @@ class MainActivity: FlutterFragmentActivity() {
                         // would undo the cover on the recents thumbnail itself.
                         if (!privacyLocked && isForeground) applyPrivacyCover(false)
                         result.success(null)
-                    }
-                    "stopService" -> {
-                        try {
-                            // Queue the stop behind any pending foreground start.
-                            // Context.stopService can destroy the instance before
-                            // that start reaches onStartCommand, leaving Android's
-                            // foreground-service obligation outstanding.
-                            val serviceIntent = Intent(this@MainActivity, ForegroundService::class.java).apply {
-                                action = ForegroundService.ACTION_STOP_SERVICE
-                            }
-                            startService(serviceIntent)
-                            result.success(null)
-                        } catch (e: Exception) {
-                            android.util.Log.e("MainActivity", "Failed to stop service: ${e.message}")
-                            result.error("SERVICE_ERROR", e.message, null)
-                        }
                     }
                     "updateHomeWidget" -> {
                         HomeWidget.broadcastUpdate(applicationContext)
@@ -295,28 +262,6 @@ class MainActivity: FlutterFragmentActivity() {
                     "widgetTokenState" -> {
                         result.success(WidgetStore.tokenState(applicationContext))
                     }
-                    "updateSessions" -> {
-                        try {
-                            requestNotificationPermissionOnce()
-                            if (!notificationsAllowed()) {
-                                // Avoid starting/continuing service updates when notifications are blocked
-                                result.error("NOTIFICATION_PERMISSION_DENIED", "Notification permission not granted", null)
-                                return@setMethodCallHandler
-                            }
-                            val serviceIntent = Intent(this@MainActivity, ForegroundService::class.java)
-                            serviceIntent.action = ACTION_UPDATE_SESSIONS
-                            serviceIntent.putExtra("payload", method.arguments as String)
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !ForegroundService.isRunning) {
-                                startForegroundService(serviceIntent)
-                            } else {
-                                startService(serviceIntent)
-                            }
-                            result.success(null)
-                        } catch (e: Exception) {
-                            android.util.Log.e("MainActivity", "Failed to update sessions: ${e.message}")
-                            result.error("SERVICE_ERROR", e.message, null)
-                        }
-                    }
                     else -> {
                         result.notImplemented()
                     }
@@ -328,11 +273,7 @@ class MainActivity: FlutterFragmentActivity() {
         linkChannel = MethodChannel(binaryMessenger, "tech.lolli.toolbox/incoming_share")
 
         // Handle intent if launched via notification action
-        handleActionIntent(intent)
         if (!launchIntentIsStale) acceptLink(intent)
-
-        // Register broadcast receiver for stop all connections
-        setupStopAllReceiver()
     }
 
     private fun requestNotificationPermissionOnce() {
@@ -348,9 +289,9 @@ class MainActivity: FlutterFragmentActivity() {
         if (permissionPrefs.getBoolean(KEY_NOTIFICATION_PERMISSION_REQUESTED, false)) return
 
         // Record this before launching Android's permission activity. That
-        // activity changes the Flutter lifecycle, which immediately causes
-        // another session sync; without both guards every sync launches a new
-        // permission activity until Android removes the task.
+        // activity changes the Flutter lifecycle, and without this guard the
+        // change would launch a new permission activity until Android removes
+        // the task.
         notificationPermissionRequestInFlight = true
         permissionPrefs.edit().putBoolean(KEY_NOTIFICATION_PERMISSION_REQUESTED, true).apply()
 
@@ -363,7 +304,7 @@ class MainActivity: FlutterFragmentActivity() {
         } catch (e: Exception) {
             notificationPermissionRequestInFlight = false
             // A failed launch did not ask the user anything, so allow a later
-            // sync to make one genuine retry.
+            // ask to make one genuine retry.
             permissionPrefs.edit().remove(KEY_NOTIFICATION_PERMISSION_REQUESTED).apply()
             android.util.Log.e("MainActivity", "Failed to request permissions: ${e.message}")
         }
@@ -562,7 +503,6 @@ class MainActivity: FlutterFragmentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        handleActionIntent(intent)
         acceptLink(intent)
     }
 
@@ -573,52 +513,6 @@ class MainActivity: FlutterFragmentActivity() {
         if (!data.scheme.equals(LINK_SCHEME, ignoreCase = true)) return
         pendingLink = data.toString()
         linkChannel?.invokeMethod("opened", null)
-    }
-
-    private fun handleActionIntent(intent: Intent?) {
-        if (intent == null) return
-        when (intent.action) {
-            ACTION_DISCONNECT_SESSION -> {
-                val sessionId = intent.getStringExtra("session_id")
-                if (sessionId != null && ::channel.isInitialized) {
-                    try {
-                        channel.invokeMethod("disconnectSession", mapOf("id" to sessionId))
-                    } catch (e: Exception) {
-                        android.util.Log.e("MainActivity", "Failed to invoke disconnect: ${e.message}")
-                    }
-                }
-            }
-        }
-    }
-
-    private fun setupStopAllReceiver() {
-        stopAllReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                if (intent?.action == ACTION_STOP_ALL_CONNECTIONS && ::channel.isInitialized) {
-                    try {
-                        channel.invokeMethod("stopAllConnections", null)
-                    } catch (e: Exception) {
-                        android.util.Log.e("MainActivity", "Failed to invoke stopAllConnections: ${e.message}")
-                    }
-                }
-            }
-        }
-        val filter = IntentFilter(ACTION_STOP_ALL_CONNECTIONS)
-        // Both guards at once, on every version. `RECEIVER_NOT_EXPORTED` is
-        // what API 33+ requires and is ignored below it; the signature-level
-        // permission is what restricts the sender on the versions that have no
-        // flag. Either alone would leave an action whose whole job is to
-        // disconnect every SSH session reachable by other apps on some range of
-        // devices. `ContextCompat` picks the right platform call, which is also
-        // what lets lint see the flag -- it does not follow an SDK_INT branch.
-        ContextCompat.registerReceiver(
-            this,
-            stopAllReceiver,
-            filter,
-            INTERNAL_BROADCAST_PERMISSION,
-            null,
-            ContextCompat.RECEIVER_NOT_EXPORTED,
-        )
     }
 
     override fun onRequestPermissionsResult(
@@ -632,11 +526,9 @@ class MainActivity: FlutterFragmentActivity() {
             // An empty result is Android's word for "the dialog went away
             // without an answer" — the user switched apps while it was on
             // screen. The flag is written *before* the request, so that a
-            // lifecycle-driven re-sync cannot launch a second permission
-            // activity; left set here it would also mean never asking again,
-            // and with no notification permission there is no foreground
-            // service and no background operation, for good and with nothing
-            // said about it. A dialog nobody answered was not a decision.
+            // lifecycle change cannot launch a second permission activity;
+            // left set here it would also mean never asking again. A dialog
+            // nobody answered was not a decision.
             if (grantResults.isEmpty()) {
                 android.util.Log.i("MainActivity", "Notification permission dialog dismissed")
                 getSharedPreferences(NOTIFICATION_PERMISSION_PREFS, Context.MODE_PRIVATE)
@@ -645,36 +537,9 @@ class MainActivity: FlutterFragmentActivity() {
                     .apply()
             } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 android.util.Log.i("MainActivity", "Notification permission granted")
-                // The permission request is asynchronous and `updateSessions`
-                // test the permission the moment after asking for it, so the
-                // first attempt is always refused and nothing retries it. With
-                // a session already open and no further lifecycle change
-                // coming, the service stayed stopped and the process was free
-                // to be frozen — despite the user having just said yes. Telling
-                // Dart is what makes it ask again.
-                if (::channel.isInitialized) {
-                    try {
-                        channel.invokeMethod("notificationPermissionGranted", null)
-                    } catch (e: Exception) {
-                        android.util.Log.e("MainActivity", "Failed to report the grant: ${e.message}")
-                    }
-                }
             } else {
                 android.util.Log.w("MainActivity", "Notification permission denied")
-                // Optionally inform user about the limitation
             }
-        }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        stopAllReceiver?.let {
-            try {
-                unregisterReceiver(it)
-            } catch (e: Exception) {
-                android.util.Log.e("MainActivity", "Failed to unregister receiver: ${e.message}")
-            }
-            stopAllReceiver = null
         }
     }
 }

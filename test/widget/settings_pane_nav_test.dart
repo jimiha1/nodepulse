@@ -21,7 +21,6 @@ import 'package:server_box/data/store/bmc_credential.dart';
 import 'package:server_box/data/store/connection_stats.dart';
 import 'package:server_box/data/store/container.dart';
 import 'package:server_box/data/store/history.dart';
-import 'package:server_box/data/store/port_forward.dart';
 import 'package:server_box/data/store/private_key.dart';
 import 'package:server_box/data/store/server.dart';
 import 'package:server_box/data/store/setting.dart';
@@ -99,7 +98,6 @@ void main() {
     getIt.registerSingleton<ConnectionStatsStore>(
       ConnectionStatsStore.instance,
     );
-    getIt.registerSingleton<PortForwardStore>(PortForwardStore());
   });
 
   tearDown(() async {

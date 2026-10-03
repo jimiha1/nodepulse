@@ -6,7 +6,6 @@ import 'dart:typed_data';
 import 'package:fl_lib/fl_lib.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:logging/logging.dart';
-import 'package:server_box/core/utils/local_file_backend.dart';
 import 'package:server_box/core/utils/server.dart';
 import 'package:server_box/core/utils/ssh_key_unlock.dart';
 import 'package:server_box/data/model/server/bmc_cfg.dart';
@@ -62,9 +61,9 @@ abstract class BackupV2 with _$BackupV2 implements Mergeable {
     required Map<String, Object?> history,
     required Map<String, Object?> settings,
 
-    /// Absent from every file written before port forwards became a record of
-    /// their own, so it defaults rather than being required — an older backup
-    /// has to keep decoding.
+    /// Port forwards are gone with the SSH-terminal trim, but the field
+    /// stays: an older backup that carries them has to keep decoding, and a
+    /// restore then simply has nothing to put them into.
     @Default(<String, Object?>{}) Map<String, Object?> portForwards,
 
     /// Absent from files written before built-in RDP/VNC support.
@@ -97,7 +96,6 @@ abstract class BackupV2 with _$BackupV2 implements Mergeable {
     late bool keysChanged;
     late bool credsChanged;
     late bool serversChanged;
-    late bool forwardsChanged;
     late bool containerChanged;
     late Set<String> historyNotifications;
     late Set<String> settingNotifications;
@@ -119,11 +117,6 @@ abstract class BackupV2 with _$BackupV2 implements Mergeable {
         force: force,
         notify: false,
         appliedIds: appliedServerIds,
-      );
-      forwardsChanged = Stores.portForward.merge(
-        _portForwardsWithRestoredServerIds(restored.serverIds),
-        force: force,
-        notify: false,
       );
 
       final restoredContainer = _containerWithRestoredServerIds(
@@ -187,11 +180,7 @@ abstract class BackupV2 with _$BackupV2 implements Mergeable {
       forgetParsedIdentities();
     }
     if (credsChanged) Stores.bmcCredential.invalidate();
-    if (serversChanged) {
-      Stores.server.invalidate();
-      Stores.portForward.invalidate();
-    }
-    if (forwardsChanged && !serversChanged) Stores.portForward.invalidate();
+    if (serversChanged) Stores.server.invalidate();
     _notifySqliteStore(Stores.history, historyNotifications);
     _notifySqliteStore(Stores.setting, settingNotifications);
 
@@ -224,7 +213,6 @@ abstract class BackupV2 with _$BackupV2 implements Mergeable {
       spis: Stores.server.getAllMap(),
       keys: Stores.key.getAllMap(),
       bmcCredentials: Stores.bmcCredential.getAllMap(),
-      portForwards: Stores.portForward.getAllMap(),
       container: Stores.container.getAllMap(),
       history: _backupStore(Stores.history),
       settings: includeSettings
@@ -261,11 +249,15 @@ abstract class BackupV2 with _$BackupV2 implements Mergeable {
 
     final path = Paths.doc.joinPath(name ?? Miscs.bakFileName);
     final bytes = utf8.encode(result);
-    await const LocalFileBackend().write(
-      path,
-      Stream.value(bytes),
-      size: bytes.length,
-    );
+    // Beside the destination, not in a temp directory: a rename across
+    // filesystems is a copy, and this one has to be the cheap kind for the
+    // atomicity to be worth anything. What `LocalFileBackend.write` did for
+    // the file browser, done by hand — the backend went with it, and a backup
+    // is a single write whose only real requirement is never leaving a half
+    // file where the user will restore from it.
+    final staging = File('$path.bak-tmp');
+    await staging.writeAsBytes(bytes, flush: true);
+    await staging.rename(path);
     return path;
   }
 
@@ -510,13 +502,6 @@ abstract class BackupV2 with _$BackupV2 implements Mergeable {
     return out;
   }
 
-  Map<String, Object?> _portForwardsWithRestoredServerIds(
-    Map<String, String> serverIds,
-  ) => {
-    for (final entry in portForwards.entries)
-      entry.key: _recordWithRestoredServerId(entry.value, serverIds),
-  };
-
   Map<String, Object?> _containerWithRestoredServerIds(
     Map<String, String> serverIds,
   ) => {
@@ -609,17 +594,6 @@ Map<String, Object?> _sshWithRestoredIds(
     ];
   }
   return ssh;
-}
-
-Object? _recordWithRestoredServerId(
-  Object? value,
-  Map<String, String> serverIds,
-) {
-  if (value is! Map) return value;
-  final record = Map<String, Object?>.from(value);
-  final id = record['serverId'];
-  if (id is String) record['serverId'] = serverIds[id] ?? id;
-  return record;
 }
 
 Object? _jsonWithRestoredServerIds(

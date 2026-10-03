@@ -13,7 +13,6 @@ import 'package:server_box/data/model/app/error.dart';
 import 'package:server_box/data/model/server/server.dart';
 import 'package:server_box/data/model/server/server_private_info.dart';
 import 'package:server_box/data/model/server/try_limiter.dart';
-import 'package:server_box/data/provider/port_forward_provider.dart';
 import 'package:server_box/data/provider/server/refresh_scheduler.dart';
 import 'package:server_box/data/provider/server/selection.dart';
 import 'package:server_box/data/provider/server/single.dart';
@@ -413,7 +412,6 @@ class ServersNotifier extends _$ServersNotifier {
   }
 
   Future<void> _clearServerData(String id) async {
-    await ref.read(portForwardProvider(id).notifier).clear();
     await Stores.connectionStats.clearServerStats(id);
     Stores.selfAddr.forget(id);
   }

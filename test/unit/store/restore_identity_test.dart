@@ -228,8 +228,9 @@ void main() {
 
       await backup.merge(force: true);
 
+      // 0 was `terminal` in the layout that wrote it, and an entry the build
+      // no longer knows is dropped; 2 was `container`, and still resolves.
       expect(Stores.setting.serverFuncBtns.fetch(), [
-        ServerFuncBtn.terminal.name,
         ServerFuncBtn.container.name,
       ]);
     });

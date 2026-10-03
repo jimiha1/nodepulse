@@ -286,43 +286,9 @@ extension _HomePageNav on _HomePageState {
           ),
         ],
       ),
-      AppTab.ssh => (
-        title: libL10n.terminal,
-        actions: [
-          ContextMenuAction(
-            text: l10n.disconnectAll,
-            icon: MingCute.unlink_2_line,
-            destructive: true,
-            onTap: () => unawaited(_confirmCloseAllTerminals()),
-          ),
-        ],
-      ),
-      _ => null,
     };
-    if (menu == null) return null;
     return (at) =>
         showContextMenu(context, menu.actions, title: menu.title, at: at);
-  }
-
-  /// Asked first, unlike disconnecting servers.
-  ///
-  /// A server that was disconnected reconnects with the entry above it and is
-  /// back where it was. A terminal that was closed takes its scrollback with
-  /// it, and whatever was still running in it.
-  Future<void> _confirmCloseAllTerminals() async {
-    final ok = await context.showRoundDialog<bool>(
-      title: libL10n.attention,
-      child: Text(
-        libL10n.askContinue(
-          '${libL10n.close} ${libL10n.all} ${libL10n.terminal}',
-        ),
-      ),
-      actions: Btnx.okReds,
-    );
-    if (ok != true) return;
-    // The tab that owns the sessions does the closing; see
-    // [TerminalCloseAllRequest] for why it cannot be called directly.
-    ref.read(terminalCloseAllRequestProvider.notifier).go();
   }
 
   /// Points at the tab strip, once per install.

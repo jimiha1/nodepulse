@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/data/model/server/capabilities.dart';
 import 'package:server_box/data/model/server/connect_credential.dart';
 import 'package:server_box/data/model/server/monitor_http_credential.dart';
 import 'package:server_box/data/model/server/monitor_remote_access.dart';
@@ -8,7 +7,6 @@ import 'package:server_box/data/model/server/ssh_credential.dart';
 import 'package:server_box/data/model/ssh/virtual_key.dart';
 import 'package:server_box/data/ssh/terminal_session.dart';
 import 'package:server_box/data/ssh/terminal_source.dart';
-import 'package:server_box/view/page/storage/server_file.dart';
 
 /// What the order in the server editor actually decides.
 ///
@@ -112,54 +110,10 @@ void main() {
     });
   });
 
-  group('the file browser', () {
-    test('uses the agent when the agent leads and has its file API', () {
-      final spi = server(prefer: ServerTransport.monitorHttp);
-      expect(serverFilesUseAgent(spi, full), isTrue);
-    });
-
-    test('uses SFTP when SSH leads', () {
-      final spi = server(prefer: ServerTransport.ssh);
-      expect(serverFilesUseAgent(spi, full), isFalse);
-    });
-
-    test('uses SFTP when the agent leads without its file API', () {
-      final spi = server(prefer: ServerTransport.monitorHttp);
-      expect(serverFilesUseAgent(spi, const MonitorRemoteAccess()), isFalse);
-      expect(serverFilesUseAgent(spi, null), isFalse);
-      // Not `ServerCapabilities.files`, which is the union and so answers true
-      // for every server with an SSH credential however the agent is
-      // configured — asking it here put the agent's page in front of a server
-      // whose agent serves no files.
-      expect(
-        ServerCapabilities.ofSpi(spi, granted: const MonitorRemoteAccess())
-            .files,
-        isTrue,
-      );
-    });
-
-    test('uses the agent for a server with no byte stream to run SFTP on', () {
-      // The case the file API exists for: an agent on a host whose sshd this
-      // app cannot reach. No order to resolve, so the grant decides alone.
-      final spi = server(withSsh: false);
-      expect(serverFilesUseAgent(spi, full), isTrue);
-    });
-
-    test('never uses the agent on a server that has none', () {
-      final spi = server(withMonitor: false);
-      expect(serverFilesUseAgent(spi, full), isFalse);
-      expect(
-        ServerCapabilities.ofSpi(spi).byteStream,
-        isTrue,
-        reason: 'SFTP is the remaining answer',
-      );
-    });
-  });
-
   group('a command', () {
     // `ensureExec` already followed the order; this is the assertion that the
-    // three now agree, which is the whole point of the change.
-    test('goes the same way the shell and the files do', () {
+    // transports agree, which is the whole point of the change.
+    test('goes the same way the shell does', () {
       for (final prefer in ServerTransport.values) {
         final spi = server(prefer: prefer);
         final leads = ServerConnectCredential.fromSpi(spi);
@@ -170,7 +124,6 @@ void main() {
           reason: 'exec follows $prefer',
         );
         expect(serverShellUsesAgent(spi, full), agentLeads);
-        expect(serverFilesUseAgent(spi, full), agentLeads);
       }
     });
   });

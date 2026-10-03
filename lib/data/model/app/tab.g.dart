@@ -15,10 +15,6 @@ class AppTabAdapter extends TypeAdapter<AppTab> {
     switch (reader.readByte()) {
       case 0:
         return AppTab.server;
-      case 1:
-        return AppTab.ssh;
-      case 2:
-        return AppTab.file;
       default:
         return AppTab.server;
     }
@@ -29,10 +25,6 @@ class AppTabAdapter extends TypeAdapter<AppTab> {
     switch (obj) {
       case AppTab.server:
         writer.writeByte(0);
-      case AppTab.ssh:
-        writer.writeByte(1);
-      case AppTab.file:
-        writer.writeByte(2);
     }
   }
 

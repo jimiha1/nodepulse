@@ -17,20 +17,12 @@ types:
     typeId: 6
     nextIndex: 16
     fields:
-      terminal:
-        index: 0
-      files:
-        index: 1
       container:
         index: 2
       process:
         index: 3
-      iperf:
-        index: 6
       systemd:
         index: 8
-      portForward:
-        index: 9
       power:
         index: 10
       users:

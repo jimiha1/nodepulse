@@ -41,12 +41,15 @@ void main() {
     });
 
     test('converts a stored button row to names', () {
-      // 8 is `power` in the nine-entry pre-m021 layout, which is what an
-      // untagged row of small indexes falls back to — see
-      // `legacyIndexNamesBeforeM021`.
+      // 2 is `container` and 8 `power` in the nine-entry pre-m021 layout,
+      // which is what an untagged row of small indexes falls back to — see
+      // `legacyIndexNamesBeforeM021`. The ints are written as literals: they
+      // name positions in that historical layout, not in today's enum, which
+      // the trim has since shortened. 0 named `terminal` there, and an entry
+      // the build no longer knows is dropped rather than resolved.
       store.set(EnumNamesMigration.btnsKey, [
-        ServerFuncBtn.terminal.index,
-        ServerFuncBtn.container.index,
+        0,
+        2,
         8,
       ], updateLastUpdateTsOnSet: false);
 
@@ -54,27 +57,7 @@ void main() {
 
       expect(store.get<Object>(EnumNamesMigration.btnsKey), {
         'layout': 'current',
-        'values': ['terminal', 'container', 'power'],
-      });
-    });
-
-    test('preserves post-feature users and scheduled tasks indexes', () {
-      // 8 and 9 are `users` and `scheduledTasks` in today's layout; 9 does not
-      // fit the pre-m021 nine-entry layout, so the whole row reads as current.
-      store.set(
-        EnumNamesMigration.btnsKey,
-        [8, 9],
-        updateLastUpdateTsOnSet: false,
-      );
-
-      EnumNamesMigration().applySync();
-
-      expect(store.get<Object>(EnumNamesMigration.btnsKey), {
-        'layout': 'current',
-        'values': [
-          ServerFuncBtn.users.name,
-          ServerFuncBtn.scheduledTasks.name,
-        ],
+        'values': ['container', 'power'],
       });
     });
 
@@ -90,32 +73,35 @@ void main() {
       expect(store.get<Object>(EnumNamesMigration.sortKey), 'status');
     });
 
-    test('an index no case answers to is dropped, not shifted', () {
-      // What a row written by a build with more cases looks like here. Read as
-      // an index it would name whatever sits at that position; there is no
-      // such entry, so it goes.
+    test('an entry no case answers to is dropped, not shifted', () {
+      // What a row written by a build with more cases looks like here. The
+      // first two named `terminal` and `files`, both gone from the enum; the
+      // third is an index past the end of today's values. None of the three
+      // may name whatever sits at another's position, so all of them go.
       store.set(EnumNamesMigration.btnsKey, [
-        ServerFuncBtn.terminal.index,
+        'terminal',
+        'files',
         ServerFuncBtn.values.length + 5,
-        ServerFuncBtn.files.index,
       ], updateLastUpdateTsOnSet: false);
 
       EnumNamesMigration().applySync();
 
       expect(store.get<Object>(EnumNamesMigration.btnsKey), {
         'layout': 'current',
-        'values': ['terminal', 'files'],
+        'values': <String>[],
       });
     });
 
     test(
-      'settings decoding preserves post-feature users and scheduled tasks',
+      'settings decoding keeps a tagged current-layout row as names',
       () {
-        store.set(
-          EnumNamesMigration.btnsKey,
-          [8, 9],
-          updateLastUpdateTsOnSet: false,
-        );
+        store.set(EnumNamesMigration.btnsKey, {
+          'layout': 'current',
+          'values': [
+            ServerFuncBtn.users.name,
+            ServerFuncBtn.scheduledTasks.name,
+          ],
+        });
 
         expect(store.serverFuncBtns.fetch(), [
           ServerFuncBtn.users.name,
@@ -141,7 +127,7 @@ void main() {
 
     test('runs twice without changing what it wrote', () {
       store.set(EnumNamesMigration.btnsKey, [
-        ServerFuncBtn.terminal.index,
+        ServerFuncBtn.container.index,
       ], updateLastUpdateTsOnSet: false);
 
       EnumNamesMigration().applySync();
@@ -161,7 +147,10 @@ void main() {
 
   group('reading either shape', () {
     test('a name and an index both resolve', () {
-      expect(ServerFuncBtn.byStored('terminal'), ServerFuncBtn.terminal);
+      // `terminal` was an entry once; a row naming it now resolves to
+      // nothing, the same way a misspelt one does.
+      expect(ServerFuncBtn.byStored('terminal'), isNull);
+      expect(ServerFuncBtn.byStored('container'), ServerFuncBtn.container);
       expect(
         ServerFuncBtn.byStored(ServerFuncBtn.power.index),
         ServerFuncBtn.power,
@@ -172,20 +161,24 @@ void main() {
           legacyIntegerNames: ServerFuncBtn.legacyIndexNamesBeforeM021,
         ),
         isNull,
+        reason: 'that position names `iperf` in the legacy layout, which is '
+            'gone — and an entry gone from the enum resolves to nothing',
       );
       expect(
         ServerFuncBtn.namesFromStored({
           'layout': 'preM021',
           'values': [5, 6, 7, 8],
         }),
-        ['iperf', 'systemd', 'portForward', 'power'],
+        // `iperf` and `portForward` sat at 5 and 7 there; both are gone, so
+        // only what is left resolves.
+        ['systemd', 'power'],
       );
       expect(
         ServerFuncBtn.namesFromStored({
           'layout': 'current',
           'values': [5, 6, 7, 8],
         }),
-        ['iperf', 'systemd', 'portForward', 'power'],
+        ['scheduledTasks', 'firewall'],
       );
       expect(ServerFuncBtn.byStored('nothing-of-the-sort'), isNull);
       expect(ServerFuncBtn.byStored(ServerFuncBtn.values.length), isNull);

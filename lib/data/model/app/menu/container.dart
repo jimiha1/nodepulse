@@ -2,28 +2,22 @@ import 'package:fl_lib/fl_lib.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:server_box/data/model/container/status.dart';
 
+/// `logs` and `terminal` used to sit here and opened an interactive terminal;
+/// both went with the SSH terminal itself.
 enum ContainerMenu {
   start,
   stop,
   restart,
-  rm,
-  logs,
-  terminal;
+  rm;
 
   static List<ContainerMenu> items(ContainerStatus status) {
     if (status.isRunning) {
-      return [
-        stop,
-        restart,
-        rm,
-        logs,
-        terminal,
-      ];
+      return [stop, restart, rm];
     }
     if (status.isStopped || status == ContainerStatus.unknown) {
-      return [start, rm, logs];
+      return [start, rm];
     }
-    return [rm, logs];
+    return [rm];
   }
 
   IconData get icon => switch (this) {
@@ -31,8 +25,6 @@ enum ContainerMenu {
     ContainerMenu.stop => Icons.stop,
     ContainerMenu.restart => Icons.restart_alt,
     ContainerMenu.rm => Icons.delete,
-    ContainerMenu.logs => Icons.logo_dev,
-    ContainerMenu.terminal => Icons.terminal,
   };
 
   String get toStr => switch (this) {
@@ -40,8 +32,5 @@ enum ContainerMenu {
     ContainerMenu.stop => libL10n.stop,
     ContainerMenu.restart => libL10n.restart,
     ContainerMenu.rm => libL10n.delete,
-    ContainerMenu.logs => libL10n.log,
-    ContainerMenu.terminal => libL10n.terminal,
   };
 }
-

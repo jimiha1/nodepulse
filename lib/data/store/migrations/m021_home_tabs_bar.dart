@@ -1,4 +1,3 @@
-import 'package:server_box/data/model/app/tab.dart';
 import 'package:server_box/data/store/schema.dart';
 import 'package:server_box/data/store/setting.dart';
 
@@ -15,11 +14,13 @@ class HomeTabsBarMigration implements SchemaMigration {
 
   static const appliedAt = 21;
   static const key = 'homeTabs';
-  static const legacyTabs = {
-    AppTab.server,
-    AppTab.ssh,
-    AppTab.file,
-  };
+
+  /// The default bar this migration converts, in the order a stored list held
+  /// it. Named as the strings older builds wrote: the terminal and file tabs
+  /// have since been removed from `AppTab`, so their entries here can no
+  /// longer resolve against the enum and are matched against this list
+  /// instead.
+  static const legacyTabs = ['server', 'ssh', 'file'];
 
   @override
   int get from => appliedAt;
@@ -32,15 +33,29 @@ class HomeTabsBarMigration implements SchemaMigration {
     final raw = store.get<Object>(key);
     if (raw is! List) return;
 
-    final tabs = AppTab.parseAppTabsFromObj(raw);
-    if (tabs.length != legacyTabs.length ||
-        !tabs.toSet().containsAll(legacyTabs)) {
+    // What each element named when this migration shipped: the tab name a
+    // newer build stored, or the tab its index pointed at in the enum's
+    // declaration order of the day. Unresolvable elements are dropped, and a
+    // repeat is counted once — the same shape `AppTab.parseAppTabsFromObj`
+    // gives a stored list.
+    final names = <String>{};
+    for (final e in raw) {
+      final name = switch (e) {
+        final String name => name,
+        final int index when index >= 0 && index < legacyTabs.length =>
+          legacyTabs[index],
+        _ => null,
+      };
+      if (name != null) names.add(name);
+    }
+    if (names.length != legacyTabs.length ||
+        !names.containsAll(legacyTabs.toSet())) {
       return;
     }
 
     final ok = store.set(
       key,
-      tabs.take(tabs.length - 1).map((tab) => tab.name).toList(),
+      names.take(names.length - 1).toList(),
       updateLastUpdateTsOnSet: false,
     );
     if (!ok) throw StateError('m021: writing "$key" failed');

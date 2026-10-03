@@ -10,9 +10,7 @@ enum SettingsSection {
   appearance,
   privacy,
   server,
-  ssh,
   linux,
-  sftp,
   container,
   editor,
   fullScreen;
@@ -28,11 +26,9 @@ enum SettingsSection {
     SettingsSection.appearance => libL10n.appearanceSettings,
     SettingsSection.privacy => l10n.privacy,
     SettingsSection.server => libL10n.server,
-    SettingsSection.ssh => libL10n.terminal,
     // Not localized: the id is what the settings search matches on, and Linux
     // is the same word in every locale this ships in.
     SettingsSection.linux => 'Linux',
-    SettingsSection.sftp => 'SFTP',
     SettingsSection.container => libL10n.container,
     SettingsSection.editor => libL10n.editor,
     SettingsSection.fullScreen => l10n.fullScreen,
@@ -52,9 +48,7 @@ enum SettingsSection {
     SettingsSection.privacy => '${libL10n.app} › ${l10n.privacy}',
     SettingsSection.fullScreen => '${libL10n.app} › ${l10n.fullScreen}',
     SettingsSection.server => '${libL10n.server} › ${libL10n.general}',
-    SettingsSection.ssh => '${libL10n.terminal} › ${libL10n.general}',
     SettingsSection.linux => '${libL10n.terminal} › Linux',
-    SettingsSection.sftp => '${libL10n.file} › SFTP',
     SettingsSection.editor => '${libL10n.file} › ${libL10n.editor}',
     SettingsSection.container => libL10n.container,
   };
@@ -159,12 +153,6 @@ final class _AppSettingsPageState extends ConsumerState<AppSettingsPage> {
   /// platform has answered, which is not a row and not a group.
   bool? _bioAuthAvail;
 
-  late final _sshOpacityCtrl = TextEditingController(
-    text: _setting.sshBgOpacity.fetch().toString(),
-  );
-  late final _sshBlurCtrl = TextEditingController(
-    text: _setting.sshBlurRadius.fetch().toString(),
-  );
   late final _textScalerCtrl = TextEditingController(
     // `.fetch()`, as the three above: without it the field opened showing
     // `Instance of 'SqlitePropDefault<double>'` and handed that to be parsed.
@@ -212,8 +200,6 @@ final class _AppSettingsPageState extends ConsumerState<AppSettingsPage> {
 
   @override
   void dispose() {
-    _sshOpacityCtrl.dispose();
-    _sshBlurCtrl.dispose();
     _textScalerCtrl.dispose();
     _serverLogoCtrl.dispose();
     _serverMarkCtrl.dispose();
@@ -229,9 +215,7 @@ final class _AppSettingsPageState extends ConsumerState<AppSettingsPage> {
     SettingsSection.appearance => _buildAppearance(),
     SettingsSection.privacy => _buildPrivacy(),
     SettingsSection.server => _buildServer(),
-    SettingsSection.ssh => _buildSSH(),
     SettingsSection.linux => _buildLinux(),
-    SettingsSection.sftp => _buildSFTP(),
     SettingsSection.container => _buildContainer(),
     SettingsSection.editor => _buildEditor(),
     SettingsSection.fullScreen => _buildFullScreen(),

@@ -12,11 +12,16 @@ void main() {
     });
 
     test('a server function, by its function-row name', () {
-      final link = AppLink.parse('serverbox://server/abc/files') as ServerLink;
-      expect(link.func, ServerFuncBtn.files);
+      final link = AppLink.parse(
+        'serverbox://server/abc/container',
+      ) as ServerLink;
+      expect(link.func, ServerFuncBtn.container);
     });
 
     test('an unknown function is no link, not the server page', () {
+      // `files` named an entry the terminal-and-files trim took away, so it
+      // parses as nothing at all — like a name that never existed.
+      expect(AppLink.parse('serverbox://server/abc/files'), isNull);
       expect(AppLink.parse('serverbox://server/abc/rm'), isNull);
       expect(AppLink.parse('serverbox://server/abc/files/x'), isNull);
       expect(AppLink.parse('serverbox://server'), isNull);
@@ -30,9 +35,11 @@ void main() {
     });
 
     test('one trailing slash is still the same link', () {
-      final link = AppLink.parse('serverbox://server/abc/files/') as ServerLink;
+      final link = AppLink.parse(
+        'serverbox://server/abc/container/',
+      ) as ServerLink;
       expect(link.id, 'abc');
-      expect(link.func, ServerFuncBtn.files);
+      expect(link.func, ServerFuncBtn.container);
       expect(AppLink.parse('serverbox://add-server/?host=h'), isA<AddServerLink>());
     });
 
@@ -66,7 +73,12 @@ void main() {
     });
 
     test('a tab by its name', () {
-      expect((AppLink.parse('serverbox://tab/file') as TabLink).tab, AppTab.file);
+      expect(
+        (AppLink.parse('serverbox://tab/server') as TabLink).tab,
+        AppTab.server,
+      );
+      // `file` named a tab the trim took away; it is no link now, like `nope`.
+      expect(AppLink.parse('serverbox://tab/file'), isNull);
       expect(AppLink.parse('serverbox://tab/nope'), isNull);
     });
 
@@ -92,9 +104,9 @@ void main() {
   test('every link reads back as itself', () {
     final links = <AppLink>[
       const ServerLink('abc'),
-      const ServerLink('abc', func: ServerFuncBtn.terminal),
+      const ServerLink('abc', func: ServerFuncBtn.container),
       const AddServerLink(host: 'h', port: 2222, user: 'u', name: 'n a m e'),
-      const TabLink(AppTab.file),
+      const TabLink(AppTab.server),
     ];
     for (final link in links) {
       final back = AppLink.parse(link.toUri().toString());

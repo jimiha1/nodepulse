@@ -8,7 +8,6 @@ import 'package:fl_lib/fl_lib.dart';
 import 'package:meta/meta.dart';
 import 'package:server_box/core/extension/context/locale.dart';
 import 'package:server_box/core/utils/android_rootfs.dart';
-import 'package:server_box/core/utils/ish_proxy_socket.dart';
 import 'package:server_box/core/utils/process_tree.dart';
 import 'package:server_box/data/model/app/error.dart';
 
@@ -17,8 +16,7 @@ import 'package:server_box/data/model/app/error.dart';
 /// Where the command runs is the platform's answer to "a shell": the host's
 /// own on a desktop, and the Linux guest on a phone, where the host has none a
 /// user's tools are in. Android's guest is a process under proot and goes
-/// through this class like the desktop; iOS has no processes to start, and
-/// [IshProxySocket] runs the command in its interpreter instead.
+/// through this class like the desktop.
 class ProxyCommandSocket implements SSHSocket {
   ProxyCommandSocket._({
     required Process process,
@@ -76,12 +74,6 @@ class ProxyCommandSocket implements SSHSocket {
       originalHost: originalHost,
       jump: jump,
     );
-    if (isIOS) {
-      return IshProxySocket.connect(
-        command: resolvedCommand,
-        timeout: timeout,
-      );
-    }
 
     // Android: in the selected Linux system, under proot. The host has a
     // shell, but none of the tools a ProxyCommand names — `nc`, `socat`,

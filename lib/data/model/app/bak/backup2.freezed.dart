@@ -15,9 +15,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$BackupV2 {
 
- int get version; int get date; Map<String, Object?> get spis; Map<String, Object?> get snippets; Map<String, Object?> get keys; Map<String, Object?> get container; Map<String, Object?> get history; Map<String, Object?> get settings;/// Absent from every file written before port forwards became a record of
-/// their own, so it defaults rather than being required — an older backup
-/// has to keep decoding.
+ int get version; int get date; Map<String, Object?> get spis; Map<String, Object?> get snippets; Map<String, Object?> get keys; Map<String, Object?> get container; Map<String, Object?> get history; Map<String, Object?> get settings;/// Port forwards are gone with the SSH-terminal trim, but the field
+/// stays: an older backup that carries them has to keep decoding, and a
+/// restore then simply has nothing to put them into.
  Map<String, Object?> get portForwards;/// Absent from files written before built-in RDP/VNC support.
  Map<String, Object?> get remoteDesktopProfiles;/// Same reason as [portForwards]: no file written before BMC support has
 /// one. A server whose `bmc.credId` names an account this map does not
@@ -275,13 +275,13 @@ class _BackupV2 extends BackupV2 {
   return EqualUnmodifiableMapView(_settings);
 }
 
-/// Absent from every file written before port forwards became a record of
-/// their own, so it defaults rather than being required — an older backup
-/// has to keep decoding.
+/// Port forwards are gone with the SSH-terminal trim, but the field
+/// stays: an older backup that carries them has to keep decoding, and a
+/// restore then simply has nothing to put them into.
  final  Map<String, Object?> _portForwards;
-/// Absent from every file written before port forwards became a record of
-/// their own, so it defaults rather than being required — an older backup
-/// has to keep decoding.
+/// Port forwards are gone with the SSH-terminal trim, but the field
+/// stays: an older backup that carries them has to keep decoding, and a
+/// restore then simply has nothing to put them into.
 @override@JsonKey() Map<String, Object?> get portForwards {
   if (_portForwards is EqualUnmodifiableMapView) return _portForwards;
   // ignore: implicit_dynamic_type

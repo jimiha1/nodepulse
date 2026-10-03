@@ -32,17 +32,6 @@ abstract final class MethodChans {
     }
   }
 
-  /// Stops Android's terminal foreground service after its queued starts have
-  /// been handled.
-  static Future<void> stopService() async {
-    if (!isAndroid) return;
-    try {
-      await _channel.invokeMethod('stopService');
-    } catch (e, s) {
-      Loggers.app.warning('Failed to stop Android terminal service', e, s);
-    }
-  }
-
   static Future<void> updateHomeWidget() async {
     if (!isIOS && !isAndroid) return;
     if (!Stores.setting.autoUpdateHomeWidget.fetch()) return;
@@ -168,33 +157,13 @@ abstract final class MethodChans {
     }
   }
 
-  /// Starts or updates Android's terminal foreground service with [payload].
-  ///
-  /// The native side also owns the notification permission request, so one
-  /// call describes the desired state instead of racing a separate start.
-  static Future<void> updateSessions(String payload) async {
-    if (!isAndroid) return;
-    try {
-      Loggers.app.info('Updating Android sessions: $payload');
-      await _channel.invokeMethod('updateSessions', payload);
-    } on PlatformException catch (e, s) {
-      // A denied notification permission is a supported state: Android cannot
-      // run the foreground service, and the settings page explains how to
-      // enable it. Do not turn every ordinary session sync into a warning.
-      if (e.code == 'NOTIFICATION_PERMISSION_DENIED') return;
-      Loggers.app.warning('Failed to update Android sessions', e, s);
-    } catch (e, s) {
-      Loggers.app.warning('Failed to update Android sessions', e, s);
-    }
-  }
-
   /// Whether Android will let this app post notifications.
   ///
   /// Read by the settings page rather than acted on: without the permission
-  /// there is no foreground service, and without that the system freezes the
-  /// process as soon as it is backgrounded — so `bgRun` is a switch that cannot
-  /// keep its promise, and saying nothing about it leaves the user with a
-  /// connection that drops for no reason they can see (#1287).
+  /// the system freezes the process as soon as it is backgrounded, so `bgRun`
+  /// is a switch that cannot keep its promise, and saying nothing about it
+  /// leaves the user with a connection that drops for no reason they can see
+  /// (#1287).
   ///
   /// True off Android, where the question does not arise.
   static Future<bool> notificationsAllowed() async {
@@ -272,21 +241,6 @@ abstract final class MethodChans {
     } catch (e, s) {
       Loggers.app.warning('Failed to read crash diagnostics', e, s);
       return const [];
-    }
-  }
-
-  static Future<bool> isServiceRunning() async {
-    if (!isAndroid) return false;
-    try {
-      final res = await _channel.invokeMethod('isServiceRunning');
-      return res == true;
-    } catch (e, s) {
-      Loggers.app.warning(
-        'Failed to check if Android service is running',
-        e,
-        s,
-      );
-      return false;
     }
   }
 
@@ -407,42 +361,6 @@ abstract final class MethodChans {
     if (!isIOS && !isMacOS && !isAndroid) return;
     _shareChannel.setMethodCallHandler((call) async {
       if (call.method == 'opened') onOpened();
-    });
-  }
-
-  /// Register a handler for native -> Flutter callbacks.
-  /// Currently handles:
-  /// - `disconnectSession` with argument map {id: string}
-  /// - `stopAllConnections` with no arguments
-  /// - `notificationPermissionGranted` with no arguments
-  static void registerHandler(
-    Future<void> Function(String id) onDisconnect, [
-    VoidCallback? onStopAll,
-    VoidCallback? onNotificationPermissionGranted,
-  ]) {
-    _channel.setMethodCallHandler((call) async {
-      switch (call.method) {
-        case 'disconnectSession':
-          final args = call.arguments;
-          final id = args is Map ? args['id'] as String? : args as String?;
-          if (id != null && id.isNotEmpty) {
-            await onDisconnect(id);
-          }
-          return;
-        case 'stopAllConnections':
-          onStopAll?.call();
-          return;
-        // Android asks for the permission asynchronously, so the call that
-        // triggered the prompt has already been refused by the time the user
-        // answers it. This is the only edge that says the answer was yes, and
-        // without acting on it the foreground service stays stopped until
-        // something else happens to sync — see [updateSessions].
-        case 'notificationPermissionGranted':
-          onNotificationPermissionGranted?.call();
-          return;
-        default:
-          return;
-      }
     });
   }
 }

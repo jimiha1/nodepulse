@@ -9,7 +9,6 @@ import 'package:server_box/data/model/server/monitor_remote_access.dart';
 import 'package:server_box/data/model/server/server_private_info.dart';
 import 'package:server_box/data/model/server/ssh_credential.dart';
 import 'package:server_box/data/ssh/terminal_session.dart';
-import 'package:server_box/view/page/storage/server_file.dart';
 
 /// A server that is this device: what it dials, and what it keeps.
 void main() {
@@ -69,10 +68,9 @@ void main() {
       expect(spi.fallbackTransport, isNull);
     });
 
-    test('never routes the shell or the files to the agent', () {
+    test('never routes the shell to the agent', () {
       final spi = local(parked: true);
       expect(serverShellUsesAgent(spi, full), isFalse);
-      expect(serverFilesUseAgent(spi, full), isFalse);
     });
 
     test('ignores a conflict among settings that are not dialled', () {

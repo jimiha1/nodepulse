@@ -347,11 +347,9 @@ fa1215b4be74\tUp 12 hours\tfirefly\tuusec/firefly:latest
     expect(ContainerMenu.items(ContainerStatus.unknown), [
       ContainerMenu.start,
       ContainerMenu.rm,
-      ContainerMenu.logs,
     ]);
     expect(ContainerMenu.items(ContainerStatus.paused), [
       ContainerMenu.rm,
-      ContainerMenu.logs,
     ]);
   });
 

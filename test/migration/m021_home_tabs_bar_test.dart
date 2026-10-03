@@ -37,8 +37,8 @@ void main() {
     // the legacy set is recognized.
     store.set('homeTabs', [
       AppTab.server.name,
-      AppTab.ssh.name,
-      AppTab.file.name,
+      'ssh',
+      'file',
       'agent',
       'snippet',
     ]);
@@ -47,7 +47,7 @@ void main() {
 
     expect(store.get<List>('homeTabs'), [
       AppTab.server.name,
-      AppTab.ssh.name,
+      'ssh',
     ]);
   });
 
@@ -55,26 +55,26 @@ void main() {
     store.set('homeTabs', [
       AppTab.server.name,
       'snippet',
-      AppTab.file.name,
+      'file',
       'agent',
-      AppTab.ssh.name,
+      'ssh',
     ]);
 
     await migration.apply();
 
     expect(store.get<List>('homeTabs'), [
       AppTab.server.name,
-      AppTab.file.name,
+      'file',
     ]);
   });
 
   test('does not change a custom arrangement', () async {
-    final custom = [AppTab.server.name, AppTab.ssh.name];
+    final custom = [AppTab.server.name, 'ssh'];
     store.set('homeTabs', custom);
     await migration.apply();
     expect(store.get<List>('homeTabs'), custom);
 
-    final namesUnknown = ['unknown', AppTab.server.name, AppTab.ssh.name];
+    final namesUnknown = ['unknown', AppTab.server.name, 'ssh'];
     store.set('homeTabs', namesUnknown);
     await migration.apply();
     expect(store.get<List>('homeTabs'), namesUnknown);
@@ -83,8 +83,8 @@ void main() {
   test('is idempotent', () async {
     store.set('homeTabs', [
       AppTab.server.name,
-      AppTab.ssh.name,
-      AppTab.file.name,
+      'ssh',
+      'file',
       'agent',
       'snippet',
     ]);
@@ -94,7 +94,7 @@ void main() {
 
     expect(store.get<List>('homeTabs'), [
       AppTab.server.name,
-      AppTab.ssh.name,
+      'ssh',
     ]);
   });
 }

@@ -5,8 +5,6 @@ import 'package:material_ui/material_ui.dart';
 import 'package:server_box/data/model/app/tab.dart';
 import 'package:server_box/data/res/store.dart';
 import 'package:server_box/view/page/server/cf_tab.dart';
-import 'package:server_box/view/page/ssh/tab.dart';
-import 'package:server_box/view/page/storage/tab.dart';
 import 'package:server_box/view/widget/conn_count_badge.dart';
 import 'package:server_box/view/widget/marked_title.dart';
 import 'package:server_box/view/widget/nav_rail.dart';
@@ -14,12 +12,7 @@ import 'package:server_box/view/widget/nav_rail.dart';
 extension AppTabViewX on AppTab {
   Widget get page {
     return switch (this) {
-      // The CF site's list is what this app now opens on; the old SSH fleet
-      // tab stays built — its page still compiles, its route still exists —
-      // until the trim's last task removes it.
       AppTab.server => const CfHomePage(),
-      AppTab.ssh => const SSHTabPage(),
-      AppTab.file => const FileTabPage(),
     };
   }
 
@@ -37,12 +30,6 @@ extension AppTabViewX on AppTab {
   String get label {
     return switch (this) {
       AppTab.server => libL10n.server,
-      // Not "SSH": a terminal is what this tab holds, and SSH is only where
-      // most of them happen to come from. One already comes from a monitor
-      // agent's own PTY, and the name had to stop naming the transport before
-      // a shell on this device could live here too.
-      AppTab.ssh => libL10n.terminal,
-      AppTab.file => libL10n.file,
     };
   }
 
@@ -107,19 +94,10 @@ class _AppTabIcon extends StatelessWidget {
             ? switch (tab) {
                 AppTab.server =>
                   selected ? MingCute.server_fill : MingCute.server_line,
-                AppTab.ssh =>
-                  selected ? MingCute.terminal_fill : MingCute.terminal_line,
-                AppTab.file =>
-                  selected
-                      ? MingCute.folder_open_fill
-                      : MingCute.folder_open_line,
               }
             : switch (tab) {
                 AppTab.server =>
                   selected ? BoxIcons.bxs_server : BoxIcons.bx_server,
-                AppTab.ssh =>
-                  selected ? Icons.terminal : Icons.terminal_outlined,
-                AppTab.file => selected ? Icons.folder : Icons.folder_open,
               };
         return ThemeIconAsset(
           keyName: ThemeIcons.tabKey(tab.name, selected: selected),

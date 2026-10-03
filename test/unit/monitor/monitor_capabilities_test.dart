@@ -167,11 +167,6 @@ void main() {
     const granted = MonitorHttpCapabilities(
       MonitorRemoteAccess(terminal: true, fullAccess: true, stream: true),
     );
-    /// What an agent older than the relay endpoint reports: the grant, with no
-    /// endpoint behind it.
-    const grantedBeforeRelay = MonitorHttpCapabilities(
-      MonitorRemoteAccess(terminal: true, fullAccess: true),
-    );
     const refused = MonitorHttpCapabilities(MonitorRemoteAccess.none);
 
     test('an SSH server offers every entry', () {
@@ -193,42 +188,12 @@ void main() {
       expect(ServerFuncBtn.power.availableWith(refused), isFalse);
     });
 
-    test('a full-access agent offers everything but files', () {
-      // Full access is the shell grant, and the file API is a grant of its
-      // own — see the next test.
-      expect(ServerFuncBtn.files.availableWith(granted), isFalse);
+    test('a full-access agent offers everything', () {
+      // Full access is the shell grant, and every entry left runs a shell —
+      // the file and terminal entries went with the trim.
       for (final btn in ServerFuncBtn.values) {
-        if (btn == ServerFuncBtn.files) continue;
         expect(btn.availableWith(granted), isTrue, reason: btn.name);
       }
-    });
-
-    test('port forwarding follows the relay, not the grant behind it', () {
-      // The endpoint is what a forward needs — a local forward is dialled
-      // through it as a session is — and an agent that has the grant but not
-      // the endpoint cannot carry one.
-      for (final btn in [
-        ServerFuncBtn.portForward,
-      ]) {
-        expect(btn.availableWith(granted), isTrue, reason: btn.name);
-        expect(
-          btn.availableWith(grantedBeforeRelay),
-          isFalse,
-          reason: btn.name,
-        );
-      }
-    });
-
-    test('the file entry follows the agent\'s file grant alone', () {
-      // The whole point of the entry no longer being called SFTP: an agent
-      // that serves files and nothing else is browsable, and one that grants a
-      // shell but no file roots is not.
-      const filesOnly = MonitorHttpCapabilities(
-        MonitorRemoteAccess(files: true),
-      );
-      expect(ServerFuncBtn.files.availableWith(filesOnly), isTrue);
-      expect(ServerFuncBtn.terminal.availableWith(filesOnly), isFalse);
-      expect(ServerFuncBtn.files.availableWith(granted), isFalse);
     });
   });
   group('ServerFuncBtn.unavailableReason', () {
@@ -236,15 +201,6 @@ void main() {
     final agentOnly = Spi(name: 'test', id: 'r', monitorHttp: monitor);
 
     test('names the grant an agent-only server is missing', () {
-      const shellOnly = MonitorRemoteAccess(fullAccess: true);
-      expect(
-        ServerFuncBtn.files.unavailableReason(agentOnly, shellOnly),
-        contains('[remote_access.fs]'),
-      );
-      expect(
-        ServerFuncBtn.terminal.unavailableReason(agentOnly, shellOnly),
-        contains('[remote_access.terminal]'),
-      );
       expect(
         ServerFuncBtn.process.unavailableReason(
           agentOnly,
@@ -254,28 +210,15 @@ void main() {
       );
     });
 
-    test('a relay missing under full access is an agent to update', () {
-      const beforeRelay = MonitorRemoteAccess(terminal: true, fullAccess: true);
-      for (final btn in [
-        ServerFuncBtn.portForward,
-      ]) {
-        expect(
-          btn.unavailableReason(agentOnly, beforeRelay),
-          l10n.funcNeedsAgentUpdate(btn.toStr),
-          reason: btn.name,
-        );
-      }
-    });
-
     test('an agent not heard from yet gets the plain answer', () {
       expect(
-        ServerFuncBtn.files.unavailableReason(agentOnly, null),
-        l10n.funcUnavailableFmt(ServerFuncBtn.files.toStr),
+        ServerFuncBtn.process.unavailableReason(agentOnly, null),
+        l10n.funcUnavailableFmt(ServerFuncBtn.process.toStr),
       );
     });
   });
 
-  group('port forwarding on a server with both SSH and an agent', () {
+  group('TCP relay answers on a server with both SSH and an agent', () {
     const monitor = MonitorHttpCredential(addr: 'https://agent:3770');
     Spi both(ServerTransport preferred) => Spi(
       name: 'test',
@@ -309,28 +252,6 @@ void main() {
       );
       expect(caps.tcpRelay, isTrue);
       expect(caps.remoteListen, isTrue);
-    });
-
-    test('the entry follows the agent where it leads, SSH or not', () {
-      final spi = both(ServerTransport.monitorHttp);
-      expect(
-        ServerFuncBtn.portForward.availableOn(spi, MonitorRemoteAccess.none),
-        isFalse,
-      );
-      expect(ServerFuncBtn.portForward.availableOn(spi, relayOnly), isTrue);
-      // And says what the agent is missing, as an agent-only server would.
-      expect(
-        ServerFuncBtn.portForward.unavailableReason(
-          spi,
-          MonitorRemoteAccess.none,
-        ),
-        contains('full_access'),
-      );
-      // Everything else still asks the union.
-      expect(
-        ServerFuncBtn.files.availableOn(spi, MonitorRemoteAccess.none),
-        isTrue,
-      );
     });
 
     test('an agent that listens can take a remote forward', () {

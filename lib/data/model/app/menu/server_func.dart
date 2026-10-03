@@ -9,18 +9,9 @@ import 'package:server_box/data/model/server/server_private_info.dart';
 import 'package:server_box/data/res/store.dart';
 
 enum ServerFuncBtn {
-  terminal(),
-
-  /// Not `sftp`: SFTP is one of two ways a server's files are reached, and
-  /// which one it is belongs to `ServerFilePage` rather than to the entry that
-  /// opens it. A monitor-backed host with no reachable sshd browses over its
-  /// agent's file API and never sees SFTP at all.
-  files(),
   container(),
   process(),
-  iperf(),
   systemd(1051),
-  portForward(1340),
   power(1491),
   users(1579),
   scheduledTasks(1579),
@@ -69,12 +60,9 @@ enum ServerFuncBtn {
   }
 
   static final defaultNames = [
-    terminal,
-    files,
     container,
     process,
     systemd,
-    portForward,
     power,
     users,
     scheduledTasks,
@@ -88,6 +76,9 @@ enum ServerFuncBtn {
   /// This is deliberately separate from [values]. An integer from an older
   /// build must be resolved against the order that wrote it, never today's
   /// declaration order, or a removed entry silently selects another button.
+  /// Entries the trim has since removed (terminal, files, snippet, iperf,
+  /// portForward) stay listed: a stored row naming one resolves to nothing
+  /// and is dropped, rather than shifting the ones after it.
   static const legacyIndexNamesBeforeM021 = <String>[
     'terminal',
     'files',
@@ -186,14 +177,9 @@ enum ServerFuncBtn {
   Widget? get mark => null;
 
   IconData get icon => switch (this) {
-    // The file tab's own icon, since that is where this entry lands.
-    files => Icons.folder_open,
     container => FontAwesome.docker_brand,
     process => Icons.list_alt_outlined,
-    terminal => Icons.terminal,
-    iperf => Icons.speed,
     systemd => MingCute.plugin_2_fill,
-    portForward => Icons.compare_arrows,
     power => Icons.power_settings_new,
     users => Icons.manage_accounts_outlined,
     scheduledTasks => Icons.schedule,
@@ -203,11 +189,9 @@ enum ServerFuncBtn {
   /// Whether a connection with [caps] can actually do what this entry opens.
   ///
   /// Asked of the capabilities rather than of the transport, and asked per
-  /// entry rather than once for all of them: these three needs are genuinely
-  /// different, and a server reached over its monitor agent meets two of them.
+  /// entry rather than once for all of them: these needs are genuinely
+  /// different, and a server reached over its monitor agent meets one of them.
   bool availableWith(ServerCapabilities caps) => switch (this) {
-    // Both end in the terminal — iperf hands it a command to start with.
-    terminal || iperf => caps.terminal,
     container ||
     process ||
     systemd ||
@@ -215,26 +199,11 @@ enum ServerFuncBtn {
     users ||
     scheduledTasks ||
     firewall => caps.shell,
-    // Browsing files is its own question: a transport could grow a file API
-    // without growing a stream this app can point anywhere.
-    files => caps.files,
-    // A local or dynamic forward is a TCP connection to an address this app
-    // names per connection, as a remote desktop is; a remote one has the
-    // server listen. Either is enough to open the page, which offers the kinds
-    // that are there. Asked of [ServerCapabilities.forwardsOf] — see
-    // [availableOn].
-    portForward => caps.tcpRelay || caps.remoteListen,
   };
 
-  /// [availableWith] for [spi], asked of the capabilities this entry runs on:
-  /// a port forward only of the transport it goes through when the agent
-  /// leads (see [ServerCapabilities.forwardsOf]), everything else of the
-  /// server's union.
-  bool availableOn(Spi spi, MonitorRemoteAccess? granted) => availableWith(
-    this == portForward
-        ? ServerCapabilities.forwardsOf(spi, granted: granted)
-        : ServerCapabilities.ofSpi(spi, granted: granted),
-  );
+  /// [availableWith] for [spi], asked of the capabilities this entry runs on.
+  bool availableOn(Spi spi, MonitorRemoteAccess? granted) =>
+      availableWith(ServerCapabilities.ofSpi(spi, granted: granted));
 
   /// Why this is not [availableWith] a server — what would make it so, where
   /// that is something its agent's operator can change.
@@ -244,51 +213,22 @@ enum ServerFuncBtn {
   /// is this app's.
   String unavailableReason(Spi spi, MonitorRemoteAccess? granted) {
     final generic = l10n.funcUnavailableFmt(toStr);
-    // A forward on a server whose agent leads goes through the agent alone,
-    // SSH or not, so the agent is what would have to change.
-    final agentOnly =
-        spi.sshOn == null ||
-        (this == portForward && spi.transport == ServerTransport.monitorHttp);
+    final agentOnly = spi.sshOn == null;
     if (!agentOnly || spi.monitorOn == null || granted == null) {
       return generic;
     }
-    // An agent with roles says which grant and why, for this account.
+    // An agent with roles says which grant and why, for this account. Every
+    // entry left runs a shell, so `shell`'s grant is the one that matters.
     if (granted.grants case final grants?) {
-      // A forward is either grant's — see [availableWith] — so the reason is
-      // `connect`'s, or `listen`'s where that one says more.
-      if (this == portForward) {
-        return monitorGrantReason(toStr, grants.connect) ??
-            monitorGrantReason(toStr, grants.listen) ??
-            generic;
-      }
-      final grant = switch (this) {
-        files => grants.files,
-        _ => grants.shell,
-      };
-      return monitorGrantReason(toStr, grant) ?? generic;
+      return monitorGrantReason(toStr, grants.shell) ?? generic;
     }
-    final grant = switch (this) {
-      files => '[remote_access.fs]',
-      portForward when granted.fullAccess => null,
-      terminal || iperf when granted.fullAccess =>
-        '[remote_access.terminal]',
-      _ => 'full_access',
-    };
-    return grant == null
-        ? l10n.funcNeedsAgentUpdate(toStr)
-        : l10n.funcNeedsAgentGrant(toStr, grant);
+    return l10n.funcNeedsAgentGrant(toStr, 'full_access');
   }
 
   String get toStr => switch (this) {
-    // Named after what it opens, not after the protocol that used to be the
-    // only way to get there — the same word the file tab carries.
-    files => libL10n.file,
     container => libL10n.container,
     process => libL10n.process,
-    terminal => libL10n.terminal,
-    iperf => 'iperf',
     systemd => l10n.services,
-    portForward => libL10n.portForward,
     power => l10n.power,
     users => l10n.systemUsers,
     scheduledTasks => l10n.scheduledTasks,

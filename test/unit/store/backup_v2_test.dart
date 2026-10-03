@@ -153,14 +153,14 @@ void main() {
         container: const {},
         history: const {},
         settings: const {
-          'homeTabs': [AppTab.server, AppTab.ssh],
+          'homeTabs': [AppTab.server],
         },
       );
 
       final decoded =
           json.decode(backup.toJsonString()) as Map<String, dynamic>;
 
-      expect(decoded['settings']['homeTabs'], ['server', 'ssh']);
+      expect(decoded['settings']['homeTabs'], ['server']);
     });
 
     test('fails instead of stringifying unknown objects', () {
@@ -372,11 +372,7 @@ void main() {
     });
 
     test('a file carrying no settings leaves the local ones alone', () async {
-      Stores.setting.homeTabs.put(const [
-        AppTab.server,
-        AppTab.ssh,
-        AppTab.file,
-      ]);
+      Stores.setting.homeTabs.put(const [AppTab.server]);
 
       final backup = BackupV2(
         version: BackupV2.formatVer,
@@ -390,11 +386,7 @@ void main() {
       );
       await backup.merge(force: true);
 
-      expect(Stores.setting.homeTabs.fetch(), const [
-        AppTab.server,
-        AppTab.ssh,
-        AppTab.file,
-      ]);
+      expect(Stores.setting.homeTabs.fetch(), const [AppTab.server]);
     });
 
     test('does not apply device-local markers from an older backup', () async {
@@ -510,13 +502,6 @@ void main() {
           id: 'backup-server-id',
           ssh: const SshCredential(ip: '10.0.0.2'),
         );
-        const forward = PortForwardConfig(
-          id: 'forward-1',
-          serverId: 'backup-server-id',
-          name: 'web',
-          type: PortForwardType.local,
-          localPort: 8080,
-        );
         final backup = BackupV2(
           version: BackupV2.formatVer,
           date: 1,
@@ -537,7 +522,6 @@ void main() {
             },
           },
           keys: const {},
-          portForwards: {'forward-1': forward.toJson()},
           container: const {
             'backup-server-id': {'host_docker': 'tcp://10.0.0.2:2375'},
           },
@@ -555,10 +539,6 @@ void main() {
         expect(Stores.server.fetch(), hasLength(1));
         expect(Stores.server.fetch().single.id, local.id);
         expect(Stores.server.fetch().single.ssh?.ip, '10.0.0.2');
-        expect(
-          Stores.portForward.fetchForServer(local.id).single.id,
-          forward.id,
-        );
         expect(
           Stores.container.fetch(local.id, ContainerType.docker),
           'tcp://10.0.0.2:2375',
@@ -606,15 +586,6 @@ void main() {
             },
           },
           keys: const {},
-          portForwards: const {
-            'forward-duplicate': {
-              'id': 'forward-duplicate',
-              'serverId': 'second-key',
-              'name': 'duplicate',
-              'type': 'local',
-              'localPort': 8080,
-            },
-          },
           container: const {
             'first-key': {'host_docker': 'tcp://10.0.0.1:2375'},
           },
@@ -627,7 +598,6 @@ void main() {
           throwsA(isA<FormatException>()),
         );
         expect(Stores.server.fetch(), isEmpty);
-        expect(Stores.portForward.fetch(), isEmpty);
         expect(
           Stores.container.fetch('shared-backup-id', ContainerType.docker),
           isNull,

@@ -9,7 +9,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:server_box/core/app_navigator.dart';
 import 'package:server_box/core/diag.dart';
-import 'package:server_box/core/utils/ish_shell.dart';
 import 'package:server_box/core/utils/local_server.dart';
 import 'package:server_box/core/utils/local_shell.dart';
 import 'package:server_box/core/utils/monitor_terminal.dart';
@@ -241,15 +240,10 @@ class TerminalSession {
     }
 
     if (source case final LocalSource local) {
-      // Which of the three this is, is what a report saying "the terminal
-      // crashed" leaves out, and the three fail in entirely different places:
-      // an interpreter linked into the app, proot over the platform's shell,
-      // and the platform's shell itself.
-      final kind = !local.rootfs
-          ? 'host'
-          : isIOS
-          ? 'ish'
-          : 'proot';
+      // Which of the two this is, is what a report saying "the terminal
+      // crashed" leaves out, and the two fail in entirely different places:
+      // proot over the platform's shell, and the platform's shell itself.
+      final kind = !local.rootfs ? 'host' : 'proot';
       Diag.crumb(
         SbDiag.terminal,
         'open local shell',
@@ -322,14 +316,9 @@ class TerminalSession {
 
   /// A shell on this device, in its Linux userland or on the host.
   ///
-  /// Two mechanisms behind one source: Android enters a real rootfs with proot
-  /// through the same pty a host shell uses, and iOS has no process to start at
-  /// all, so its guest is an interpreter with a console of its own. The page
-  /// above knows neither.
+  /// Android enters a real rootfs with proot through the same pty a host shell
+  /// uses; the page above knows neither mechanism.
   ShellBackend _localBackend(LocalSource local) {
-    if (local.rootfs && isIOS) {
-      return IshShellBackend(profileId: local.profileId);
-    }
     return LocalShellBackend(
       inRootfs: local.rootfs,
       profileId: local.profileId,

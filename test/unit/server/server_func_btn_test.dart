@@ -27,53 +27,38 @@ void main() {
     await closeTestDb();
   });
 
-  /// The stored row, as names — what the setting actually holds.
+  /// The stored row, as names — what the setting actually holds. Rows seeded
+  /// with `terminal` or `files` spell an older build's arrangement: both
+  /// entries are gone from the enum, and a stored name nobody resolves is
+  /// dropped rather than shifting the rest.
   List<String> row() => setting.serverFuncBtns.get();
 
   test('adds every entry that shipped during the upgrade', () async {
     // A row from before any of the entries with release boundaries shipped.
-    setting.serverFuncBtns.put([
-      ServerFuncBtn.terminal.name,
-      ServerFuncBtn.files.name,
-    ]);
+    setting.serverFuncBtns.put(['terminal', 'files']);
 
     ServerFuncBtn.autoAddNewFuncs(1000, 1600);
 
     expect(row(), [
-      ServerFuncBtn.terminal.name,
-      ServerFuncBtn.files.name,
+      'terminal',
+      'files',
       ServerFuncBtn.systemd.name,
-      ServerFuncBtn.portForward.name,
       ServerFuncBtn.power.name,
       ServerFuncBtn.users.name,
       ServerFuncBtn.scheduledTasks.name,
     ]);
   });
 
-  test(
-    'uses release tags as the Systemd and port-forward boundaries',
-    () async {
-      setting.serverFuncBtns.put([ServerFuncBtn.terminal.name]);
+  test('uses a release tag as the systemd boundary', () async {
+    setting.serverFuncBtns.put(['terminal']);
 
-      ServerFuncBtn.autoAddNewFuncs(1051, 1070);
-      expect(row(), [
-        ServerFuncBtn.terminal.name,
-        ServerFuncBtn.systemd.name,
-      ]);
-
-      ServerFuncBtn.autoAddNewFuncs(1340, 1351);
-      expect(row(), [
-        ServerFuncBtn.terminal.name,
-        ServerFuncBtn.systemd.name,
-        ServerFuncBtn.portForward.name,
-      ]);
-    },
-  );
+    ServerFuncBtn.autoAddNewFuncs(1051, 1070);
+    expect(row(), ['terminal', ServerFuncBtn.systemd.name]);
+  });
 
   test('adds no entry when the target is the release boundary', () {
     const boundaries = [
       (1051, ServerFuncBtn.systemd),
-      (1340, ServerFuncBtn.portForward),
       (1491, ServerFuncBtn.power),
       (1579, ServerFuncBtn.users),
       (1579, ServerFuncBtn.scheduledTasks),
@@ -81,7 +66,7 @@ void main() {
     ];
 
     for (final (boundary, button) in boundaries) {
-      setting.serverFuncBtns.put([ServerFuncBtn.terminal.name]);
+      setting.serverFuncBtns.put(['terminal']);
 
       ServerFuncBtn.autoAddNewFuncs(boundary - 1, boundary);
 
@@ -90,25 +75,22 @@ void main() {
   });
 
   test('adds nothing for an upgrade that shipped no new entry', () async {
-    setting.serverFuncBtns.put([ServerFuncBtn.terminal.name]);
+    setting.serverFuncBtns.put(['terminal']);
 
     // A window after the newest entry's boundary. It has to move whenever one
     // is added, which is the point: the assertion is about a window containing
     // no entry, not about two particular numbers.
     ServerFuncBtn.autoAddNewFuncs(1580, 1600);
 
-    expect(row(), [ServerFuncBtn.terminal.name]);
+    expect(row(), ['terminal']);
   });
 
   test('adds the firewall after the last build without it', () async {
-    setting.serverFuncBtns.put([ServerFuncBtn.terminal.name]);
+    setting.serverFuncBtns.put(['terminal']);
 
     ServerFuncBtn.autoAddNewFuncs(1719, 1720);
 
-    expect(row(), [
-      ServerFuncBtn.terminal.name,
-      ServerFuncBtn.firewall.name,
-    ]);
+    expect(row(), ['terminal', ServerFuncBtn.firewall.name]);
   });
 
   test('leaves an entry the user removed removed', () async {
@@ -116,20 +98,17 @@ void main() {
     // containing Power, and the user took it out of the row. An
     // upgrade to 1600 must not put it back — and would have, when the rule was
     // `to` alone.
-    setting.serverFuncBtns.put([
-      ServerFuncBtn.terminal.name,
-      ServerFuncBtn.systemd.name,
-    ]);
+    setting.serverFuncBtns.put(['terminal', ServerFuncBtn.systemd.name]);
 
     ServerFuncBtn.autoAddNewFuncs(1580, 1600);
 
-    expect(row(), [ServerFuncBtn.terminal.name, ServerFuncBtn.systemd.name]);
+    expect(row(), ['terminal', ServerFuncBtn.systemd.name]);
   });
 
   test('an entry already in the row is not added twice', () async {
     setting.serverFuncBtns.put([
       ServerFuncBtn.power.name,
-      ServerFuncBtn.terminal.name,
+      'terminal',
     ]);
 
     ServerFuncBtn.autoAddNewFuncs(1000, 1536);
@@ -143,11 +122,11 @@ void main() {
 
   for (final retainedBuild in [1466, 1480, 1491]) {
     test('adds Power when upgrading from v$retainedBuild', () async {
-      setting.serverFuncBtns.put([ServerFuncBtn.terminal.name]);
+      setting.serverFuncBtns.put(['terminal']);
 
       ServerFuncBtn.autoAddNewFuncs(retainedBuild, 1536);
 
-      expect(row(), [ServerFuncBtn.terminal.name, ServerFuncBtn.power.name]);
+      expect(row(), ['terminal', ServerFuncBtn.power.name]);
     });
   }
 
@@ -167,7 +146,6 @@ void main() {
       ServerFuncBtn.defaultNames,
       containsAll([
         ServerFuncBtn.systemd.name,
-        ServerFuncBtn.portForward.name,
         ServerFuncBtn.power.name,
         ServerFuncBtn.users.name,
         ServerFuncBtn.scheduledTasks.name,
@@ -180,9 +158,8 @@ void main() {
   ///
   /// `ServerDetailPage` used to draw the row only when `capabilities.terminal`
   /// was true, which is `full_access` for a monitor server. An agent that
-  /// grants `[remote_access.fs]` and nothing else has a Files button and no
-  /// others, and that server lost its whole row — while the Files tab, which
-  /// asks `caps.files`, went on listing it.
+  /// grants one thing and not the rest had a server that lost its whole row —
+  /// while the entry that asks for what was granted went on listing it.
   group('serverFuncBtnsFor', () {
     const monitorOnly = Spi(
       id: 'm',
@@ -205,17 +182,15 @@ void main() {
 
     /// Every entry stays on the row, so what the grant decides is the order
     /// and which of them can be used — not how long the row is.
-    test('an agent granting only files leaves Files the one usable button', () {
-      final btns = serverFuncBtnsFor(
-        monitorOnly,
-        const MonitorRemoteAccess(files: true),
+    test('an agent granting full access leaves every entry usable', () {
+      final btns = usable(
+        serverFuncBtnsFor(
+          monitorOnly,
+          const MonitorRemoteAccess(fullAccess: true),
+        ),
       );
 
-      expect(usable(btns), [ServerFuncBtn.files]);
-      expect(btns.first.btn, ServerFuncBtn.files);
-      expect(btns, hasLength(ServerFuncBtn.values.length));
-      // The rest keep the user's arrangement behind it.
-      expect(btns.last.available, isFalse);
+      expect(btns, ServerFuncBtn.values);
     });
 
     test('an agent granting nothing leaves nothing usable', () {
@@ -225,26 +200,6 @@ void main() {
       );
       // Before the first poll the agent has said nothing, which is not a grant.
       expect(usable(serverFuncBtnsFor(monitorOnly, null)), isEmpty);
-    });
-
-    test('full access keeps everything but the two that need a byte stream', () {
-      final btns = usable(
-        serverFuncBtnsFor(
-          monitorOnly,
-          const MonitorRemoteAccess(
-            fullAccess: true,
-            terminal: true,
-            files: true,
-          ),
-        ),
-      );
-
-      // No endpoint relays a connection to an address this app names, so port
-      // forwarding stays out however much else is granted.
-      expect(btns, isNot(contains(ServerFuncBtn.portForward)));
-      expect(btns, contains(ServerFuncBtn.terminal));
-      expect(btns, contains(ServerFuncBtn.files));
-      expect(btns, contains(ServerFuncBtn.container));
     });
 
     test('an SSH server is not asked the agent anything', () {

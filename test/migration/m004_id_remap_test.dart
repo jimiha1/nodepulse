@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:server_box/data/model/container/type.dart';
 import 'package:server_box/data/store/container.dart';
 import 'package:server_box/data/store/migrations/m004_kv_to_tables.dart';
-import 'package:server_box/data/store/port_forward.dart';
 import 'package:server_box/data/store/server.dart';
 
 import '../helpers/test_db.dart';
@@ -31,6 +30,12 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late ServerStore servers;
+
+  // The store that owned these rows is gone; the entity table and its raw
+  // SQL are what the import writes, and what the assertions read.
+  String forwardIdFor(String serverId) => SqliteDb.instance
+      .select('SELECT id FROM port_forward WHERE server_id = ?;', [serverId])
+      .single['id'] as String;
 
   /// An arbitrary legacy reference: the `kv` key the server is stored under,
   /// and the value every record below uses to name it. Its shape is not
@@ -159,7 +164,7 @@ void main() {
 
     final id = await migrate();
 
-    expect(PortForwardStore().fetchForServer(id).single.id, 'pf-1');
+    expect(forwardIdFor(id), 'pf-1');
   });
 
   test('a late port forward still resolves a generated server id', () async {
@@ -175,7 +180,7 @@ void main() {
     });
     await const KvToTablesMigration().apply();
 
-    expect(PortForwardStore().fetchForServer(id).single.id, 'pf-late');
+    expect(forwardIdFor(id), 'pf-late');
   });
 
   test('a container host follows it', () async {
@@ -261,7 +266,7 @@ void main() {
     final beta = migrated.where((server) => server.name == 'beta').single;
     expect(beta.id, isNot('duplicate-id'));
     expect(
-      PortForwardStore().fetchForServer(beta.id).single.id,
+      forwardIdFor(beta.id),
       'pf-b',
       reason: 'the exact legacy kv key still resolves to its reassigned row',
     );
@@ -344,7 +349,7 @@ void main() {
       SqliteDb.instance.select('SELECT name FROM snippet;').single['name'],
       'healthy',
     );
-    expect(PortForwardStore().fetchForServer(id).single.id, 'healthy-forward');
+    expect(forwardIdFor(id), 'healthy-forward');
     expect(
       SqliteDb.instance
           .select('SELECT count(*) AS n FROM conn_stat;')

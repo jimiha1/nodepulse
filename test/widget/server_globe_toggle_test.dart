@@ -554,19 +554,6 @@ void main() {
       expect(find.text(body), findsNothing);
     });
 
-    testWidgets('not while another tab is the one on screen', (tester) async {
-      // This tab is kept alive behind the others, so the wait can finish after
-      // the user has moved on — and the overlay draws above every route.
-      addServer();
-      await pump(tester);
-      final ctx = tester.element(find.byType(ServerPage));
-      ProviderScope.containerOf(
-        ctx,
-      ).read(currentHomeTabProvider.notifier).update(AppTab.ssh);
-      await waitItOut(tester);
-      expect(find.text(body), findsNothing);
-    });
-
     testWidgets('leaving the page cancels the wait', (tester) async {
       // A bare `Future.delayed` outlives the page, which is a pending timer
       // after the tree is gone.

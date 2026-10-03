@@ -7,8 +7,6 @@ import 'package:server_box/data/model/server/server_exec.dart';
 import 'package:server_box/data/model/server/server_private_info.dart';
 import 'package:server_box/data/model/server/service.dart';
 import 'package:server_box/data/provider/services.dart';
-import 'package:server_box/data/ssh/terminal_source.dart';
-import 'package:server_box/view/page/ssh/page/page.dart';
 
 final class ServiceDetailPageArgs {
   const ServiceDetailPageArgs({required this.spi, required this.unitKey});
@@ -193,12 +191,6 @@ extension on _ServiceDetailViewState {
                         icon: Icon(action.icon, size: 17),
                         label: Text(action.displayName),
                       ),
-                    if (_definitionCommand(unit) case final command?)
-                      FilledButton.tonalIcon(
-                        onPressed: () => _openInTerminal(command),
-                        icon: const Icon(Icons.description_outlined, size: 17),
-                        label: Text(context.l10n.serviceUnitFile),
-                      ),
                   ],
                 ),
               ),
@@ -228,7 +220,6 @@ extension on _ServiceDetailViewState {
     final secondary = unit.actions
         .where((a) => !primary.contains(a) && a != ServiceAction.stop)
         .toList();
-    final definition = _definitionCommand(unit);
     return ListView(
       padding: const EdgeInsets.fromLTRB(13, 7, 13, 40),
       children: [
@@ -252,12 +243,6 @@ extension on _ServiceDetailViewState {
         _buildTiles(unit, columns: 2),
         const SizedBox(height: 17),
         ?_buildLog(unit),
-        if (definition != null)
-          _linkTile(
-            icon: Icons.description_outlined,
-            label: context.l10n.serviceUnitFile,
-            onTap: () => _openInTerminal(definition),
-          ),
         for (final action in secondary)
           _linkTile(
             icon: action.icon,
@@ -295,7 +280,6 @@ extension on _ServiceDetailViewState {
       ),
       null => null,
     };
-    final logCommand = ref.read(_provider.notifier).logTerminalCommand(unit);
     return Padding(
       padding: const EdgeInsets.only(bottom: 13),
       child: Container(
@@ -325,12 +309,6 @@ extension on _ServiceDetailViewState {
                 ],
               ),
             ),
-            if (_pane && logCommand != null)
-              TextButton(
-                onPressed: () => _openInTerminal(logCommand),
-                style: TextButton.styleFrom(foregroundColor: scheme.error),
-                child: Text(context.l10n.serviceFullJournal),
-              ),
           ],
         ),
       ),
@@ -526,9 +504,6 @@ extension on _ServiceDetailViewState {
     for (final action in const [ServiceAction.restart, ServiceAction.start])
       if (unit.actions.contains(action)) action,
   ];
-
-  String? _definitionCommand(ServiceUnit unit) =>
-      ref.read(_provider.notifier).definitionTerminalCommand(unit);
 }
 
 // --- Actions ---
@@ -546,9 +521,6 @@ extension on _ServiceDetailViewState {
 
   Future<void> _run(ServiceUnit unit, ServiceAction action) =>
       ServiceUi.runAction(context, ref, widget.spi, unit, action);
-
-  void _openInTerminal(String command) =>
-      ServiceUi.openInTerminal(context, widget.spi, command);
 }
 
 /// What the list and the detail view both draw and both do.
@@ -623,7 +595,7 @@ abstract final class ServiceUi {
     ].join(' · ');
   }
 
-  /// A unit's actions, then what can be read about it in a terminal.
+  /// A unit's actions.
   ///
   /// [compact] gives up the 40pt tap target for 32, for a row that would
   /// otherwise be as tall as its button rather than its text.
@@ -634,10 +606,6 @@ abstract final class ServiceUi {
     ServiceUnit unit, {
     bool compact = false,
   }) {
-    final notifier = ref.read(servicesProvider(spi).notifier);
-    final status = notifier.statusTerminalCommand(unit);
-    final log = notifier.logTerminalCommand(unit);
-    final definition = notifier.definitionTerminalCommand(unit);
     return ContextMenuButton(
       tooltip: libL10n.more,
       actions: () => [
@@ -647,24 +615,6 @@ abstract final class ServiceUi {
             icon: action.icon,
             destructive: action.destructive,
             onTap: () => runAction(context, ref, spi, unit, action),
-          ),
-        if (status != null)
-          ContextMenuAction(
-            text: l10n.status,
-            icon: Icons.info_outline,
-            onTap: () => openInTerminal(context, spi, status),
-          ),
-        if (log != null)
-          ContextMenuAction(
-            text: context.l10n.serviceFullJournal,
-            icon: Icons.receipt_long,
-            onTap: () => openInTerminal(context, spi, log),
-          ),
-        if (definition != null)
-          ContextMenuAction(
-            text: context.l10n.serviceUnitFile,
-            icon: Icons.description_outlined,
-            onTap: () => openInTerminal(context, spi, definition),
           ),
       ],
       child: Padding(
@@ -741,20 +691,6 @@ abstract final class ServiceUi {
     }
     // Refreshed either way: a failed restart still changed what the unit is.
     await notifier.getServices();
-  }
-
-  /// Opens a terminal running [command], for what is read rather than acted
-  /// on: a whole log, a unit file. A command that needs root is prefixed with
-  /// `sudo` there, where the terminal can ask for the password itself.
-  static void openInTerminal(BuildContext context, Spi spi, String command) {
-    SSHPage.route.go(
-      context,
-      SshPageArgs(
-        source: ServerSource(spi),
-        initCmd: command,
-        notFromTab: true,
-      ),
-    );
   }
 }
 

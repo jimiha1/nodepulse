@@ -1,5 +1,3 @@
-import 'dart:isolate';
-
 import 'package:dartssh2/dartssh2.dart';
 import 'package:fl_lib/fl_lib.dart';
 import 'package:fl_lib/generated/l10n/lib_l10n.dart';
@@ -7,9 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:server_box/core/extension/context/locale.dart' as app_locale;
 import 'package:server_box/core/extension/context/locale.dart';
-import 'package:server_box/core/utils/server.dart';
 import 'package:server_box/core/utils/ssh_auth.dart';
-import 'package:server_box/data/model/file/transfer_worker.dart';
 import 'package:server_box/generated/l10n/l10n.dart';
 import 'package:server_box/generated/l10n/l10n_en.dart';
 
@@ -53,34 +49,6 @@ void main() {
     );
 
     expect(result, ['stored-password']);
-  });
-
-  test('SFTP authentication messages can cross isolate boundaries', () async {
-    final events = await Isolate.run(
-      () => <Object>[
-        TransferKeyboardInteractivePrompt(
-          id: 1,
-          spi: _spi,
-          expiresAt: DateTime.now().add(KeyboardInteractiveAuth.promptTimeout),
-          request: SSHUserInfoRequest('OTP', 'Enter a code', [
-            SSHUserInfoPrompt('Code:', false),
-          ]),
-        ),
-        TransferHostKeyPrompt(
-          id: 2,
-          info: HostKeyPromptInfo(
-            spi: _spi,
-            keyType: 'ssh-ed25519',
-            fingerprint: 'SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-            isMismatch: false,
-          ),
-        ),
-      ],
-    );
-
-    expect(events, hasLength(2));
-    expect(events.first, isA<TransferKeyboardInteractivePrompt>());
-    expect(events.last, isA<TransferHostKeyPrompt>());
   });
 
   testWidgets('collects every keyboard-interactive prompt response', (
