@@ -256,6 +256,37 @@ class WidgetConfigTest {
     }
 
     @Test
+    fun roundTripExpiryPresets() {
+        for ((i, expiry) in WidgetExpiry.entries.withIndex()) {
+            val appWidgetId = 60 + i
+            WidgetConfig.saveToPrefs(
+                mockPrefs,
+                appWidgetId,
+                WidgetConfig(serverId = "srv-exp", kind = WidgetKind.MEDIUM, expiry = expiry),
+            )
+            val loaded = WidgetConfig.loadFromPrefs(mockPrefs, appWidgetId, WidgetKind.MEDIUM)
+            assertEquals(expiry, loaded.expiry)
+        }
+    }
+
+    @Test
+    fun expiryDefaultsToM30AndSurvivesForget() {
+        val appWidgetId = 70
+        val empty = WidgetConfig.loadFromPrefs(mockPrefs, appWidgetId, WidgetKind.MEDIUM)
+        assertEquals(WidgetExpiry.M30, empty.expiry)
+
+        WidgetConfig.saveToPrefs(
+            mockPrefs,
+            appWidgetId,
+            WidgetConfig(serverId = "srv-exp", kind = WidgetKind.MEDIUM, expiry = WidgetExpiry.H2),
+        )
+        assertEquals(WidgetExpiry.H2, WidgetConfig.loadFromPrefs(mockPrefs, appWidgetId, WidgetKind.MEDIUM).expiry)
+
+        WidgetConfig.forgetFromPrefs(mockPrefs, appWidgetId)
+        assertEquals(WidgetExpiry.M30, WidgetConfig.loadFromPrefs(mockPrefs, appWidgetId, WidgetKind.MEDIUM).expiry)
+    }
+
+    @Test
     fun fallbackToDefaultsWhenEmptyOrCorrupted() {
         val appWidgetIdSmall = 49
         // Nothing stored

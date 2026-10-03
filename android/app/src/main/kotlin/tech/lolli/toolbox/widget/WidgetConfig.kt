@@ -44,8 +44,9 @@ enum class MediumMode(val key: String) {
  * How old the widget's data may get before the header time starts warning.
  *
  * The ladder is anchored to Android's floor on `updatePeriodMillis`: the
- * system will not broadcast an update more often than every 30 minutes, so
- * a shorter threshold would leave a healthy widget permanently in warning.
+ * periodic update cannot arrive more often than every 30 minutes, so a
+ * shorter threshold would leave an otherwise healthy widget in warning until
+ * the user refreshed it by hand.
  */
 enum class WidgetExpiry(val minutes: Int, val key: String) {
     M10(10, "10m"),
