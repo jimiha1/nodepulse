@@ -205,22 +205,15 @@ object WidgetApi {
             "$ct/$cu/${cm}ms"
         } else "--"
 
-        // Loss: compact slash format "0/5/12%" or "0%" if all zeroes
+        // Loss: compact slash format "0/0/0%"
         val lossCt = o.optDoubleOrNull("loss_ct")
         val lossCu = o.optDoubleOrNull("loss_cu")
         val lossCm = o.optDoubleOrNull("loss_cm")
         val lossText = if (lossCt != null || lossCu != null || lossCm != null) {
-            val ctVal = lossCt?.toInt() ?: 0
-            val cuVal = lossCu?.toInt() ?: 0
-            val cmVal = lossCm?.toInt() ?: 0
-            if (ctVal == 0 && cuVal == 0 && cmVal == 0) {
-                "0%"
-            } else {
-                val ct = lossCt?.let { "${it.toInt()}" } ?: "-"
-                val cu = lossCu?.let { "${it.toInt()}" } ?: "-"
-                val cm = lossCm?.let { "${it.toInt()}" } ?: "-"
-                "$ct/$cu/$cm%"
-            }
+            val ct = lossCt?.let { "${it.toInt()}" } ?: "-"
+            val cu = lossCu?.let { "${it.toInt()}" } ?: "-"
+            val cm = lossCm?.let { "${it.toInt()}" } ?: "-"
+            "$ct/$cu/$cm%"
         } else "--"
 
         val losses = listOfNotNull(lossCt, lossCu, lossCm)
