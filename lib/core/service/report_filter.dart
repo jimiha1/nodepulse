@@ -1,17 +1,14 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:icloud_storage_plus/models/exceptions.dart';
 import 'package:server_box/data/model/app/error.dart';
 
 /// Whether an error is a defect in this app, or the network's or the user's
-/// account's doing: a host that does not answer, credentials it refuses,
-/// iCloud signed out.
+/// account's doing: a host that does not answer, credentials it refuses.
 abstract final class ReportFilter {
   static bool isDefect(Object error) => switch (error) {
     SocketException() || HandshakeException() => false,
     DioException(:final type) => !_dioNetwork.contains(type),
-    ICloudContainerAccessException() => false,
     RemoteBackupPasswordMissing() => false,
     _ => true,
   };
