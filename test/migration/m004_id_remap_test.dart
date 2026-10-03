@@ -7,7 +7,6 @@ import 'package:server_box/data/store/container.dart';
 import 'package:server_box/data/store/migrations/m004_kv_to_tables.dart';
 import 'package:server_box/data/store/port_forward.dart';
 import 'package:server_box/data/store/server.dart';
-import 'package:server_box/data/store/snippet.dart';
 
 import '../helpers/test_db.dart';
 
@@ -140,7 +139,12 @@ void main() {
 
     final id = await migrate();
 
-    expect(SnippetStore().fetch().single.autoRunOn, [id]);
+    expect(
+      SqliteDb.instance
+          .select('SELECT server_id FROM snippet_auto_run_on;')
+          .single['server_id'],
+      id,
+    );
   });
 
   test('a port forward follows it', () async {
@@ -336,7 +340,10 @@ void main() {
 
     final id = await migrate();
 
-    expect(SnippetStore().fetch().single.name, 'healthy');
+    expect(
+      SqliteDb.instance.select('SELECT name FROM snippet;').single['name'],
+      'healthy',
+    );
     expect(PortForwardStore().fetchForServer(id).single.id, 'healthy-forward');
     expect(
       SqliteDb.instance

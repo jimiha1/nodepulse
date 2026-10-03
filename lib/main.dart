@@ -13,7 +13,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:server_box/app.dart';
 import 'package:server_box/core/chan.dart';
 import 'package:server_box/core/diag.dart';
-import 'package:server_box/core/llm/host.dart';
 import 'package:server_box/core/motion.dart';
 import 'package:server_box/core/service/alert_sync.dart';
 import 'package:server_box/core/service/crash_report.dart';
@@ -43,8 +42,8 @@ import 'package:server_box/view/page/schema_too_new.dart';
 Future<void> main() async {
   await _runInZone(() async {
     // The app's providers, made here rather than by a `ProviderScope`: the
-    // Agent's tools run outside any widget and read the same servers the pages
-    // do — see [LlmHost.init].
+    // alert and widget services run outside any widget and read the same
+    // servers the pages do.
     final container = ProviderContainer();
     try {
       await _initApp(container);
@@ -189,9 +188,6 @@ Future<void> _initApp(ProviderContainer container) async {
   // when that page asks for it.
   registerDistMarkLicenses();
   await _initData();
-  // After the stores and their migrations, before the first frame: a chat the
-  // Agent tab opens at once needs the runtime already there.
-  await LlmHost.init(container);
   // After the settings are open, and before the first frame is drawn with a
   // preference it has not read.
   await AppMotion.init();

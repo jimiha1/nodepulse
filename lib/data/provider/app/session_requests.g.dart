@@ -83,29 +83,14 @@ abstract class _$HomeTabRequest extends $Notifier<AppTab?> {
 }
 
 /// Which tab is on screen right now.
-///
-/// [HomeTabRequest] is where something asks to be taken; this is where the
-/// home page says where it ended up. The floating Agent needs it to stay out
-/// of the way of the Agent tab, which is the better view of the same thing
-/// whenever it is the one being looked at.
 
 @ProviderFor(CurrentHomeTab)
 final currentHomeTabProvider = CurrentHomeTabProvider._();
 
 /// Which tab is on screen right now.
-///
-/// [HomeTabRequest] is where something asks to be taken; this is where the
-/// home page says where it ended up. The floating Agent needs it to stay out
-/// of the way of the Agent tab, which is the better view of the same thing
-/// whenever it is the one being looked at.
 final class CurrentHomeTabProvider
     extends $NotifierProvider<CurrentHomeTab, AppTab?> {
   /// Which tab is on screen right now.
-  ///
-  /// [HomeTabRequest] is where something asks to be taken; this is where the
-  /// home page says where it ended up. The floating Agent needs it to stay out
-  /// of the way of the Agent tab, which is the better view of the same thing
-  /// whenever it is the one being looked at.
   CurrentHomeTabProvider._()
     : super(
         from: null,
@@ -136,11 +121,6 @@ final class CurrentHomeTabProvider
 String _$currentHomeTabHash() => r'af235edea49c8cf180a96ad5f182d2c18aaf6fe2';
 
 /// Which tab is on screen right now.
-///
-/// [HomeTabRequest] is where something asks to be taken; this is where the
-/// home page says where it ended up. The floating Agent needs it to stay out
-/// of the way of the Agent tab, which is the better view of the same thing
-/// whenever it is the one being looked at.
 
 abstract class _$CurrentHomeTab extends $Notifier<AppTab?> {
   AppTab? build();
@@ -341,160 +321,6 @@ abstract class _$ServerDetailRequest extends $Notifier<String?> {
   }
 }
 
-/// A host waiting to be selected on the Virtualization tab — what a server's
-/// PVE card asks for.
-///
-/// A request for the same reasons as [ServerDetailRequest]: the tab is built
-/// when first visited, so it may not exist yet, and which host it shows is its
-/// own state. It drains this when it appears and whenever it changes.
-
-@ProviderFor(VirtHostRequest)
-final virtHostRequestProvider = VirtHostRequestProvider._();
-
-/// A host waiting to be selected on the Virtualization tab — what a server's
-/// PVE card asks for.
-///
-/// A request for the same reasons as [ServerDetailRequest]: the tab is built
-/// when first visited, so it may not exist yet, and which host it shows is its
-/// own state. It drains this when it appears and whenever it changes.
-final class VirtHostRequestProvider
-    extends $NotifierProvider<VirtHostRequest, String?> {
-  /// A host waiting to be selected on the Virtualization tab — what a server's
-  /// PVE card asks for.
-  ///
-  /// A request for the same reasons as [ServerDetailRequest]: the tab is built
-  /// when first visited, so it may not exist yet, and which host it shows is its
-  /// own state. It drains this when it appears and whenever it changes.
-  VirtHostRequestProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'virtHostRequestProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$virtHostRequestHash();
-
-  @$internal
-  @override
-  VirtHostRequest create() => VirtHostRequest();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(String? value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<String?>(value),
-    );
-  }
-}
-
-String _$virtHostRequestHash() => r'674dfaeb20a7aeeab48a8f1cec45a740ed8bc663';
-
-/// A host waiting to be selected on the Virtualization tab — what a server's
-/// PVE card asks for.
-///
-/// A request for the same reasons as [ServerDetailRequest]: the tab is built
-/// when first visited, so it may not exist yet, and which host it shows is its
-/// own state. It drains this when it appears and whenever it changes.
-
-abstract class _$VirtHostRequest extends $Notifier<String?> {
-  String? build();
-  @$mustCallSuper
-  @override
-  WhenComplete runBuild() {
-    final ref = this.ref as $Ref<String?, String?>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<String?, String?>,
-              String?,
-              Object?,
-              Object?
-            >;
-    return element.handleCreate(ref, build);
-  }
-}
-
-/// A server whose remote desktop profiles the Remote desktop tab should show
-/// — what a server's function row asks for.
-///
-/// A request for the same reasons as [VirtHostRequest]: the tab is built when
-/// first visited, and which server it shows is its own state.
-
-@ProviderFor(RemoteDesktopServerRequest)
-final remoteDesktopServerRequestProvider =
-    RemoteDesktopServerRequestProvider._();
-
-/// A server whose remote desktop profiles the Remote desktop tab should show
-/// — what a server's function row asks for.
-///
-/// A request for the same reasons as [VirtHostRequest]: the tab is built when
-/// first visited, and which server it shows is its own state.
-final class RemoteDesktopServerRequestProvider
-    extends $NotifierProvider<RemoteDesktopServerRequest, String?> {
-  /// A server whose remote desktop profiles the Remote desktop tab should show
-  /// — what a server's function row asks for.
-  ///
-  /// A request for the same reasons as [VirtHostRequest]: the tab is built when
-  /// first visited, and which server it shows is its own state.
-  RemoteDesktopServerRequestProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'remoteDesktopServerRequestProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$remoteDesktopServerRequestHash();
-
-  @$internal
-  @override
-  RemoteDesktopServerRequest create() => RemoteDesktopServerRequest();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(String? value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<String?>(value),
-    );
-  }
-}
-
-String _$remoteDesktopServerRequestHash() =>
-    r'0ed3c0194b0bef40d4277a30198680b4c2755ad8';
-
-/// A server whose remote desktop profiles the Remote desktop tab should show
-/// — what a server's function row asks for.
-///
-/// A request for the same reasons as [VirtHostRequest]: the tab is built when
-/// first visited, and which server it shows is its own state.
-
-abstract class _$RemoteDesktopServerRequest extends $Notifier<String?> {
-  String? build();
-  @$mustCallSuper
-  @override
-  WhenComplete runBuild() {
-    final ref = this.ref as $Ref<String?, String?>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<String?, String?>,
-              String?,
-              Object?,
-              Object?
-            >;
-    return element.handleCreate(ref, build);
-  }
-}
-
 /// Servers waiting for a terminal.
 ///
 /// A queue rather than a direct call because the tab that opens terminals may
@@ -546,7 +372,7 @@ final class TerminalRequestsProvider
   }
 }
 
-String _$terminalRequestsHash() => r'50a3481c89293e718f336933ead05f6b85053759';
+String _$terminalRequestsHash() => r'45db0bd615a3018b6c3dcdd28ebace7b1b3ceb55';
 
 /// Servers waiting for a terminal.
 ///

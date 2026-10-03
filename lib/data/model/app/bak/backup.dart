@@ -6,9 +6,7 @@ import 'package:logging/logging.dart';
 import 'package:server_box/core/utils/server.dart';
 import 'package:server_box/core/utils/ssh_key_unlock.dart';
 import 'package:server_box/data/model/server/private_key_info.dart';
-import 'package:server_box/data/model/server/pve_config.dart';
 import 'package:server_box/data/model/server/server_private_info.dart';
-import 'package:server_box/data/model/server/snippet.dart';
 import 'package:server_box/data/res/store.dart';
 import 'package:server_box/data/store/migrations/m008_settings_fixups.dart';
 import 'package:server_box/data/store/migrations/m009_grouped_settings.dart';
@@ -33,35 +31,21 @@ class Backup implements Mergeable {
   final int version;
   final String date;
   final List<Spi> spis;
-  final List<Snippet> snippets;
+  final List<Map<String, dynamic>> snippets;
   final List<PrivateKeyInfo> keys;
   final Map<String, dynamic> container;
   final Map<String, dynamic> history;
   final int? lastModTime;
   final Map<String, dynamic>? settings;
 
-  /// The PVE configuration of each entry of [spis], by position, read out of
-  /// the raw records: this format predates `server_pve` and kept PVE inside
-  /// each server's `custom`, which [Spi] no longer reads.
-  // TODO(migration): remove after 5 releases, with
-  // `PveConfig.fromLegacyRecord`.
-  @JsonKey(readValue: _readLegacyPve, includeToJson: false)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   final List<Map<String, dynamic>?> legacyPve;
-
-  static Object? _readLegacyPve(Map json, String _) {
-    final spis = json['spis'];
-    if (spis is! List) return const <Object?>[];
-    return [
-      for (final spi in spis)
-        spi is Map ? PveConfig.fromServerRecord(spi)?.toJson() : null,
-    ];
-  }
 
   const Backup({
     required this.version,
     required this.date,
     required this.spis,
-    required this.snippets,
+    this.snippets = const [],
     required this.keys,
     required this.container,
     required this.history,
@@ -114,17 +98,7 @@ class Backup implements Mergeable {
     SqliteStore.transact(() {
       Stores.key.replaceAll(keys);
       Stores.server.replaceAll(restoredSpis);
-      Stores.snippet.replaceAll(snippets);
       Stores.container.restoreLegacyMap(container);
-      // The file is the complete state, so a server without PVE has none.
-      // TODO(migration): remove after 5 releases, with [legacyPve].
-      for (final (i, spi) in restoredSpis.indexed) {
-        Stores.pve.restoreOne(
-          Stores.server.reconcile(spi).id,
-          legacyPve.elementAtOrNull(i),
-          notify: false,
-        );
-      }
       _restoreInto(Stores.history, history);
 
       if (settings_ != null) {
@@ -157,7 +131,6 @@ class Backup implements Mergeable {
     }
 
     // After the commit, since the rows were written without announcing it.
-    Stores.pve.invalidate();
     await Provider.reload();
     await RNodes.app.notify();
 

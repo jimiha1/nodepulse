@@ -21,10 +21,8 @@ library;
 
 import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/data/model/server/pve_config.dart';
 import 'package:server_box/data/store/migrations/all.dart';
 import 'package:server_box/data/store/migrations/m030_pve_virt.dart';
-import 'package:server_box/data/store/pve.dart';
 import 'package:server_box/data/store/schema.dart';
 import 'package:server_box/data/store/setting.dart';
 import 'package:server_box/data/store/tables.dart';
@@ -210,15 +208,15 @@ void main() {
       expect(_pveRow('blank')!['pwd'], isNull);
     });
 
-    test('reads back through the store', () async {
+    test('the migrated row carries what the columns held', () async {
       await _createV30();
       _seedServer('pve', pveAddr: 'https://h:8006', ignoreCert: true);
       await const PveVirtMigration().apply();
 
-      expect(
-        PveStore().fetch('pve'),
-        const PveConfig(addr: 'https://h:8006', auth: PveAuth.password),
-      );
+      final row = _pveRow('pve')!;
+      expect(row['addr'], 'https://h:8006');
+      expect(row['auth'], 'password');
+      expect(row['cert_sha256'], isNull);
     });
   });
 

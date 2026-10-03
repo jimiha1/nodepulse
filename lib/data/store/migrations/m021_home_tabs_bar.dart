@@ -19,8 +19,6 @@ class HomeTabsBarMigration implements SchemaMigration {
     AppTab.server,
     AppTab.ssh,
     AppTab.file,
-    AppTab.snippet,
-    AppTab.agent,
   };
 
   @override

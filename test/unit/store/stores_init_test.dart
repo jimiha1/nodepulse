@@ -72,9 +72,8 @@ void main() {
     Stores.setting.timeout.put(11);
     expect(Stores.setting.timeout.get(), 11);
 
-    // The two table-backed stores answer only if their tables were created.
+    // The table-backed store answers only if its table was created.
     expect(Stores.connectionStats.getAllServerStats(), isEmpty);
-    expect(Stores.snippet.fetch(), isEmpty);
   });
 
   test('a second launch reopens the same file', () async {

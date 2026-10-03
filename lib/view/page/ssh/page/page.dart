@@ -1,29 +1,23 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:dartssh2/dartssh2.dart';
 import 'package:fl_lib/fl_lib.dart';
-import 'package:fl_pi_llm_ui/fl_pi_llm_ui.dart' show Composer;
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:server_box/core/extension/context/locale.dart';
-import 'package:server_box/core/llm/scope.dart';
 import 'package:server_box/core/utils/sudo_password.dart';
-import 'package:server_box/data/model/ai/ask_ai_models.dart';
 import 'package:server_box/data/model/app/error.dart';
 import 'package:server_box/data/model/app/tab.dart';
 import 'package:server_box/data/model/server/server_private_info.dart';
 import 'package:server_box/data/model/server/shell_backend.dart';
-import 'package:server_box/data/model/server/snippet.dart';
 import 'package:server_box/data/model/ssh/virtual_key.dart';
 import 'package:server_box/data/provider/app/session_requests.dart';
 import 'package:server_box/data/provider/app/terminal_shell.dart';
-import 'package:server_box/data/provider/snippet.dart';
 import 'package:server_box/data/provider/virtual_keyboard.dart';
 import 'package:server_box/data/res/store.dart';
 import 'package:server_box/data/res/terminal.dart';
@@ -33,8 +27,6 @@ import 'package:server_box/data/ssh/terminal_session.dart';
 import 'package:server_box/data/ssh/terminal_source.dart';
 import 'package:server_box/data/ssh/tmux/tmux_export.dart';
 import 'package:server_box/data/ssh/tmux/tmux_ids.dart';
-import 'package:server_box/view/page/agent/view.dart';
-import 'package:server_box/view/page/ssh/ask_ai_layout.dart';
 import 'package:server_box/view/page/ssh/page/tmux_page_controller.dart';
 import 'package:server_box/view/page/ssh/page/virt_key_intro.dart';
 import 'package:server_box/view/page/ssh/present_server.dart';
@@ -47,7 +39,6 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:xterm/core.dart';
 import 'package:xterm/ui.dart' hide TerminalThemes;
 
-part 'ask_ai.dart';
 part 'init.dart';
 part 'keyboard.dart';
 part 'virt_key.dart';
@@ -74,7 +65,6 @@ final class SshPageArgs {
   /// Whether [initCmd] starts with sudo, whose prompt is then answered from
   /// the session's sudo password (`TerminalSession.answersSudo`).
   final bool initCmdSudo;
-  final Snippet? initSnippet;
 
   /// What ends the program [initCmd] started without ending the shell under
   /// it — `virsh console`'s escape, Ctrl+]. Given, the bar offers it as
@@ -122,7 +112,6 @@ final class SshPageArgs {
     this.initCmd,
     this.reenter = false,
     this.initCmdSudo = false,
-    this.initSnippet,
     this.detachInput,
     this.session,
     this.onLeave,
@@ -156,7 +145,6 @@ final class SshPageArgs {
     initCmd: initCmd,
     reenter: reenter,
     initCmdSudo: initCmdSudo,
-    initSnippet: initSnippet,
     detachInput: detachInput,
     session: session,
     onLeave: onLeave,
@@ -306,18 +294,6 @@ class SSHPageState extends ConsumerState<SSHPage>
 
   ShellSession? get _session => _sess.foreground;
 
-  /// The agent's own command channel, separate from the terminal's session.
-  /// SSH-only: the agent runs commands with `exec`, which the monitor PTY
-  /// cannot do — see [ShellBackend.supportsExec].
-  SSHSession? _aiCommandSession;
-  bool _aiCommandCancelled = false;
-
-  /// Takes this terminal out of reach of its Agent session, run on dispose.
-  ///
-  /// A closure rather than a call in `dispose`, because unregistering needs the
-  /// notifier and `ref` is not usable once the state is going away. Captured
-  /// while it still is — see [_attachAgentHost].
-  VoidCallback? _releaseAgentHost;
   Timer? _discontinuityTimer;
   static const _connectionCheckInterval = Duration(seconds: 60);
   static const _connectionCheckTimeout = Duration(seconds: 10);
@@ -346,7 +322,6 @@ class SSHPageState extends ConsumerState<SSHPage>
   bool _disconnectDialogOpen = false;
   bool _reportedDisconnected = false;
   VoidCallback? _visibilityListener;
-  bool _isPickingSnippet = false;
   TerminalConnectionStep _connectionStep = TerminalConnectionStep.connecting;
   String? _connectionFailureDetail;
   bool _openingTerminal = false;
@@ -397,10 +372,6 @@ class SSHPageState extends ConsumerState<SSHPage>
   late final String _sessionId = ShortId.generate();
   late final int _sessionStartMs = DateTime.now().millisecondsSinceEpoch;
 
-  Future<void> pickSnippetFromToolbar() => _pickSnippet();
-
-  Future<void> openAgentFromToolbar() => _showAskAiPanel();
-
   @override
   void deactivate() {
     _keyboardHandlerActive = false;
@@ -430,15 +401,10 @@ class SSHPageState extends ConsumerState<SSHPage>
     final shell = _terminalShell;
     final session = _sess;
     WidgetsBinding.instance.addPostFrameCallback((_) => shell.hideIf(session));
-    _releaseAgentHost?.call();
     _virtKeyLongPressTimer?.cancel();
     final introListener = _introVisibilityListener;
     if (introListener != null) {
       widget.args.visibleListenable?.removeListener(introListener);
-    }
-    final aiCommandSession = _aiCommandSession;
-    if (aiCommandSession != null) {
-      unawaited(_terminateAiCommandSession(aiCommandSession));
     }
     unawaited(_tmuxPageController.dispose());
     _terminalController.dispose();
@@ -501,7 +467,6 @@ class SSHPageState extends ConsumerState<SSHPage>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _terminalShell = ref.read(terminalShellProvider.notifier);
-    _attachAgentHost();
     _reloadVirtKeys();
     Stores.setting.virtKeyRows.listenable().addListener(
       _handleVirtKeySettingsChanged,
@@ -753,7 +718,6 @@ class SSHPageState extends ConsumerState<SSHPage>
           ),
           hideScrollBar: false,
           focusNode: widget.args.focusNode,
-          toolbarBuilder: _buildTerminalToolbar,
           onCopied: _onTerminalCopied,
           onSelectAll: _onTerminalSelectAll,
           onPaste: _onTerminalPaste,
@@ -875,20 +839,6 @@ class SSHPageState extends ConsumerState<SSHPage>
           tooltip: l10n.disconnect,
           icon: const Icon(Icons.link_off),
         ),
-      // The agent's tools all name a server, so on this device the button
-      // would look tappable and do nothing. Snippets are different: the ones
-      // that do not mention a server run here fine — see [_pickSnippet].
-      if (widget.args.spi != null)
-        IconButton(
-          onPressed: openAgentFromToolbar,
-          tooltip: 'SSH Agent',
-          icon: const Icon(Icons.auto_awesome),
-        ),
-      IconButton(
-        onPressed: _pickSnippet,
-        tooltip: libL10n.snippet,
-        icon: const Icon(Icons.code),
-      ),
     ];
     // Only where there is a sudo password to insert. This device's shell is
     // already whoever is running the app.
@@ -902,56 +852,6 @@ class SSHPageState extends ConsumerState<SSHPage>
       );
     }
     return actions;
-  }
-
-  Future<void> _pickSnippet() async {
-    if (_isPickingSnippet) return;
-    _isPickingSnippet = true;
-
-    try {
-      final spi = widget.args.spi;
-      // On this device, only the ones that do not name a server. A script
-      // saying `${host}` has no answer here, and substituting an empty string
-      // would quietly run a different command rather than refuse.
-      final snippets = ref
-          .read(snippetProvider.select((p) => p.snippets))
-          .where((e) => spi != null || !e.needsServer)
-          .toList();
-      if (snippets.isEmpty) {
-        if (!mounted) return;
-        Toast.show(libL10n.empty);
-        return;
-      }
-
-      // By tag, which is what the virtual key used to offer and this did not.
-      // There is one picker now: the key called a copy of this that bailed
-      // without a word whenever there was no server, so the snippet key did
-      // nothing at all on a shell on this device.
-      final tags = ref.read(snippetProvider.select((p) => p.tags));
-      final picked = await context.showPickWithTagDialog<Snippet>(
-        title: libL10n.snippet,
-        tags: tags.vn,
-        itemsBuilder: (tag) {
-          if (tag == TagSwitcher.kDefaultTag) return snippets;
-          return snippets.where((e) => e.tags?.contains(tag) ?? false).toList();
-        },
-        display: (snippet) => snippet.name,
-      );
-      final selected = picked?.firstOrNull;
-      if (selected == null) return;
-
-      try {
-        await selected.runInTerm(_terminal, spi);
-      } catch (e, s) {
-        if (!mounted) return;
-        context.showErrDialog(e, s, '${libL10n.snippet}: ${selected.name}');
-        return;
-      }
-      if (!mounted) return;
-      _focusTerminal();
-    } finally {
-      _isPickingSnippet = false;
-    }
   }
 
   Widget _buildVirtualKey(

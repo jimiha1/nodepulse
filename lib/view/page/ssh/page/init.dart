@@ -448,44 +448,12 @@ extension _Init on SSHPageState {
         identical(_session, shell) &&
         _tmuxCurrentSession == null;
 
-    // Snippets name the server they run on, and their scripts are written
-    // against one. A terminal on this device has neither.
-    final spi = widget.args.spi;
-    final snippets = ref.read(snippetProvider.select((p) => p.snippets));
-    if (spi != null) {
-      for (final snippet in snippets) {
-        if (snippet.autoRunOn?.contains(spi.id) == true) {
-          if (!current()) return;
-          await _runStartupSnippet(snippet, spi, current);
-        }
-      }
-    }
-
     if (!current()) return;
     final initCmd = widget.args.initCmd;
     if (initCmd != null) {
       _terminal.textInput(initCmd);
       _terminal.keyInput(TerminalKey.enter);
       await _answerSudo();
-    }
-
-    final initSnippet = widget.args.initSnippet;
-    if (initSnippet != null && (spi != null || !initSnippet.needsServer)) {
-      if (!current()) return;
-      await _runStartupSnippet(initSnippet, spi, current);
-    }
-  }
-
-  Future<void> _runStartupSnippet(
-    Snippet snippet,
-    Spi? spi,
-    bool Function() current,
-  ) async {
-    try {
-      await snippet.runInTerm(_terminal, spi, alive: current);
-    } catch (e, s) {
-      if (!mounted) return;
-      context.showErrDialog(e, s, '${libL10n.snippet}: ${snippet.name}');
     }
   }
 
@@ -958,7 +926,7 @@ extension _Init on SSHPageState {
     // console, a command from the file browser — runs it in a plain shell.
     // [_initTerminal] types [SshPageArgs.initCmd] only when no tmux session
     // was attached, so with tmux on it was silently never run.
-    if (widget.args.initCmd != null || widget.args.initSnippet != null) {
+    if (widget.args.initCmd != null) {
       return const TmuxLaunchPlan.none();
     }
 

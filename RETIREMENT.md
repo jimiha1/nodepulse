@@ -84,13 +84,17 @@ below that version remains.
 | Location | Retire when |
 |---|---|
 | `lib/data/store/db.dart` — `known_host` table | no install can still carry rows; `m004_kv_to_tables.dart` and `m012_known_hosts_to_settings.dart` are the only readers |
+| `lib/data/store/db.dart` — `snippet`, `snippet_tag`, `snippet_auto_run_on` tables | the cf-trim removed `SnippetStore`; `m004_kv_to_tables.dart` is the only writer left, so no install can still carry Hive-import snippet rows |
+| `lib/data/store/db.dart` — `benchmark_run` table | the cf-trim removed the benchmark domain; no writer remains |
+| `lib/data/store/db.dart` — `remote_desktop_profile` table | the cf-trim removed `RemoteDesktopStore`; `m024_remote_desktop_profiles.dart` creates it and no writer remains |
+| `lib/data/store/db.dart` — `server_pve` table | the cf-trim removed `PveStore`; `m030_pve_virt.dart` is the only writer left, so no install can still carry a PVE-configured server |
 
 ## Tabs and history
 
 | Location | Retire when |
 |---|---|
 | `lib/data/store/history.dart` — `homeTabIndex` | no install can carry one; `lib/view/page/home.dart` reads it once on upgrade |
-| `lib/data/model/app/tab.dart` — `_retiredIndices` | no stored tab order can hold index 7 |
+| `lib/data/model/app/tab.dart` — `_retiredIndices` | no stored tab order can hold indices 3–7 (`snippet`, `agent`, `benchmark`, `remoteDesktop`, `virt` — all removed by the cf-trim) |
 | `lib/view/page/storage/tab.dart` — the `serverId == null` fallback | no saved tab set predates the `kind` field |
 | `lib/data/ssh/terminal_source.dart` — `rootfsId`'s `alpine` spelling | no saved tab set predates profiles |
 | `lib/view/page/ssh/tab.dart` — the `serverId` fallback | no saved tab set predates `sourceId` |

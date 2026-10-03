@@ -1,19 +1,11 @@
-import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:server_box/data/model/app/menu/server_func.dart';
 import 'package:server_box/data/model/app/tab.dart';
-import 'package:server_box/data/res/store.dart';
-import 'package:server_box/data/store/setting.dart';
 import 'package:server_box/view/page/home_tab.dart';
 import 'package:server_box/view/page/setting/entries/home_tabs.dart';
-import 'package:server_box/view/widget/nav_bar.dart';
-
-import '../../helpers/test_db.dart';
 
 void main() {
-  group('the bottom bar', _bottomBarMarks);
-
   group('the default order', () {
     test('is the bar, and the rest are behind "more"', () {
       // The list *is* the bar now, so it is a subset rather than everything.
@@ -23,11 +15,6 @@ void main() {
       expect(AppTab.overflowOf(AppTab.defaultOrder), [
         AppTab.ssh,
         AppTab.file,
-        AppTab.snippet,
-        AppTab.agent,
-        AppTab.benchmark,
-        AppTab.remoteDesktop,
-        AppTab.virt,
       ]);
     });
 
@@ -52,12 +39,14 @@ void main() {
     test('is allowed to differ from the declaration order', () {
       expect(AppTab.defaultOrder, isNot(AppTab.values));
       expect(AppTab.server.index, 0);
-      expect(AppTab.snippet.index, 3);
-      expect(AppTab.agent.index, 4);
+      expect(AppTab.ssh.index, 1);
+      expect(AppTab.file.index, 2);
     });
   });
 
-  test('parses the legacy default home tabs without recurring migration', () {
+  test('drops names the build no longer knows, keeping the stored order', () {
+    // `snippet` named a tab the deleted domains took away; a record written by
+    // a build that had it still parses, minus the names nobody can resolve.
     final tabs = AppTab.parseAppTabsFromObj([
       'server',
       'ssh',
@@ -65,28 +54,7 @@ void main() {
       'snippet',
     ]);
 
-    expect(tabs, [AppTab.server, AppTab.ssh, AppTab.file, AppTab.snippet]);
-  });
-
-  test('preserves an existing Agent tab without duplication', () {
-    final tabs = AppTab.parseAppTabsFromObj([
-      'server',
-      'ssh',
-      'file',
-      'snippet',
-      'agent',
-    ]);
-
-    // The stored order, kept as it was -- not the default, which the two
-    // happen to differ from since Agent moved ahead of snippets.
-    expect(tabs, [
-      AppTab.server,
-      AppTab.ssh,
-      AppTab.file,
-      AppTab.snippet,
-      AppTab.agent,
-    ]);
-    expect(tabs.where((tab) => tab == AppTab.agent), hasLength(1));
+    expect(tabs, [AppTab.server, AppTab.ssh, AppTab.file]);
   });
 
   test('preserves an intentionally customized home tab list', () {
@@ -130,41 +98,25 @@ void main() {
   });
 
   test('offers every arrangeable tab the stored list does not name', () {
-    // The legacy four. Everything added since has to be reachable from here,
-    // or an install that stored that list could never turn one on.
-    final available = availableHomeTabs(const [
-      AppTab.server,
-      AppTab.ssh,
-      AppTab.file,
-      AppTab.snippet,
-    ]);
+    // A bar the user arranged once only names part of the enum; the rest has
+    // to come back here, or the install could never turn one on.
+    final available = availableHomeTabs(const [AppTab.server]);
 
-    expect(available, [
-      AppTab.agent,
-      AppTab.benchmark,
-      AppTab.remoteDesktop,
-      AppTab.virt,
-    ]);
+    expect(available, [AppTab.ssh, AppTab.file]);
   });
 
   /// A stored list may hold plain integers — `_parseAppTabFromElement`
-  /// resolves one against `values` by position — so a new tab may only ever be
-  /// appended. Inserting one would silently re-point every integer after it at
-  /// a different tab.
-  test('appends new tabs without changing earlier enum indices', () {
-    expect(AppTab.server.index, 0);
-    expect(AppTab.benchmark.index, 5);
-    expect(AppTab.remoteDesktop.index, 6);
-    expect(AppTab.virt.index, 7);
-  });
-
-  /// 7 was the Monitor settings tab. `values` is positional, so the next case
-  /// appended took that index — Virtualization — and without the retired list
-  /// an install that had the old tab in its bar would silently get the new tab
-  /// in its place.
+  /// resolves one against `values` by position — so a retired case may never
+  /// be replaced by a new one: [_retiredIndices] drops the integer instead of
+  /// letting it resolve past the end of `values`.
   test('drops a retired tab index instead of resolving it', () {
-    expect(AppTab.values[7], AppTab.virt);
-    expect(AppTab.parseAppTabsFromObj([0, 7, 1]), [AppTab.server, AppTab.ssh]);
+    // 3 was `snippet`, then 4-7 named `agent`, `benchmark`, `remoteDesktop`
+    // and `virt`. All gone; none may resolve.
+    expect(AppTab.values, hasLength(3));
+    expect(AppTab.parseAppTabsFromObj([0, 3, 4, 5, 6, 7, 1]), [
+      AppTab.server,
+      AppTab.ssh,
+    ]);
     // Nothing left is nothing stored, which is what the default is for.
     expect(AppTab.parseAppTabsFromObj([7]), AppTab.defaultOrder);
     // The name is gone from `values` too, so a record that spelled it out is
@@ -172,21 +124,13 @@ void main() {
     expect(AppTab.parseAppTabsFromObj(['server', 'monitorSettings']), [
       AppTab.server,
     ]);
-  });
-
-  test('the tab that took index 7 is reached by its name', () {
-    // Every build that knows it stores tabs by name, so this is the only way a
-    // record names it.
-    expect(AppTab.parseAppTabsFromObj(['server', 'virt']), [
-      AppTab.server,
-      AppTab.virt,
-    ]);
+    expect(AppTab.parseAppTabsFromObj(['server', 'virt']), [AppTab.server]);
   });
 
   group('reorderHomeTabs', () {
-    // [server, file] | separator at 2 | [ssh, snippet, agent]
+    // [server, file] | separator at 2 | [ssh]
     const enabled = [AppTab.server, AppTab.file];
-    const disabled = [AppTab.ssh, AppTab.snippet, AppTab.agent];
+    const disabled = [AppTab.ssh];
 
     test('dragging past the separator enables a tab', () {
       final next = reorderHomeTabs(
@@ -197,7 +141,7 @@ void main() {
       );
 
       expect(next?.enabled, [AppTab.server, AppTab.ssh, AppTab.file]);
-      expect(next?.disabled, [AppTab.snippet, AppTab.agent]);
+      expect(next?.disabled, isEmpty);
     });
 
     test('dragging under the separator disables a tab', () {
@@ -209,19 +153,19 @@ void main() {
       );
 
       expect(next?.enabled, [AppTab.server]);
-      expect(next?.disabled, [AppTab.ssh, AppTab.file, AppTab.snippet, AppTab.agent]);
+      expect(next?.disabled, [AppTab.ssh, AppTab.file]);
     });
 
     test('reorders within one half without changing what is enabled', () {
       final next = reorderHomeTabs(
         enabled: const [AppTab.server, AppTab.file, AppTab.ssh],
-        disabled: disabled,
+        disabled: const [],
         oldIndex: 2,
         newIndex: 0,
       );
 
       expect(next?.enabled, [AppTab.ssh, AppTab.server, AppTab.file]);
-      expect(next?.disabled, disabled);
+      expect(next?.disabled, isEmpty);
     });
 
     test('reports the server tab leaving, for the caller to refuse', () {
@@ -265,72 +209,23 @@ void main() {
     // fl_lib's to test, and what matters here is which entries have one. A tab
     // that gained a mark without the row that lists it being told would draw
     // the mark nowhere at all.
-    test('the tabs still in beta carry one, the rest carry none', () {
+    test('nothing carries one now the beta features are gone', () {
       final marked = {
         for (final tab in AppTab.values)
           if (tab.mark != null) tab,
       };
-      expect(marked, {
-        AppTab.remoteDesktop,
-        AppTab.agent,
-        AppTab.benchmark,
-        AppTab.virt,
-      });
+      expect(marked, isEmpty);
+
+      final markedBtns = {
+        for (final btn in ServerFuncBtn.values)
+          if (btn.mark != null) btn,
+      };
+      expect(markedBtns, isEmpty);
     });
 
     test('a tab with no mark is listed as plain text', () {
       expect(AppTab.server.mark, isNull);
       expect(AppTab.server.listTitle, isA<Text>());
-      expect(AppTab.virt.listTitle, isNot(isA<Text>()));
     });
-  });
-
-  group('the server function marks', () {
-    test('only the remote desktop entry is still in beta', () {
-      final marked = {
-        for (final btn in ServerFuncBtn.values)
-          if (btn.mark != null) btn,
-      };
-      expect(marked, {ServerFuncBtn.remoteDesktop});
-    });
-  });
-}
-
-/// The bottom bar hides a tab's label unless it is selected, so a beta tab
-/// is marked on its pill's corner instead.
-void _bottomBarMarks() {
-  setUp(() async {
-    await openTestDb();
-    getIt.registerSingleton<SettingStore>(SettingStore('setting_test'));
-  });
-  tearDown(() async {
-    await getIt.reset();
-    await closeTestDb();
-  });
-
-  testWidgets('a beta tab carries the mark while selected, another never', (
-    tester,
-  ) async {
-    var selected = 0;
-    Future<void> pump() => tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          bottomNavigationBar: AppNavBar(
-            selectedIndex: selected,
-            onSelected: (_) {},
-            items: [AppTab.ssh.navRailItem(), AppTab.virt.navRailItem()],
-          ),
-        ),
-      ),
-    );
-    await pump();
-    await tester.pumpAndSettle();
-    // Not selected: no mark.
-    expect(find.byType(BetaTag), findsNothing);
-    selected = 1;
-    await pump();
-    await tester.pumpAndSettle();
-    // The terminal is not a beta tab, so the one mark is the selected one's.
-    expect(find.byType(BetaTag), findsOneWidget);
   });
 }

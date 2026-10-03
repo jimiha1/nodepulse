@@ -113,14 +113,6 @@ dependencies:
   device_info_plus: ^13.2.0
   aptabase_flutter: ^0.5.0
   material_ui: ^1.5.0
-  # The LLM layer, shared with GPT Box: pi's agent loop and providers in
-  # QuickJS, built by its own hook like `sbm_ffi` (`fl_pi_llm`), and the
-  # chats, tools and provider settings over it (`fl_pi_llm_ui`). A submodule
-  # like fl_lib.
-  fl_pi_llm:
-    path: packages/fl_pi_llm
-  fl_pi_llm_ui:
-    path: packages/fl_pi_llm/ui
   # Imported by the app itself, not only through the packages that bring them
   # in: a transitive dependency can drop or change one under it.
   ffi: ^2.2.0
@@ -138,9 +130,6 @@ dependency_overrides:
   # fl_pi_llm_ui asks for fl_lib from git; the submodule is the one.
   fl_lib:
     path: packages/fl_lib
-  # For flutter_markdown_plus_latex, in fl_pi_llm_ui: only the root can
-  # override it.
-  flutter_math_fork: ^0.7.4
 
 dev_dependencies:
   integration_test:
@@ -206,19 +195,6 @@ flutter:
     # Store themes shipped with the app, installed once on first launch as if
     # from the store — see `ThemePackages.seedBundled`.
     - assets/store_themes/
-    # Yet Another Bench Script, vendored verbatim under WTFPL and pinned by
-    # `YabsScript.upstreamCommit`. Shipped rather than piped from the network
-    # on the server: `curl | bash` fixes no version and verifies nothing, and
-    # raw.githubusercontent.com is unreachable from a good share of the hosts
-    # people run this against. Refresh with `scripts/update-yabs.sh`.
-    #
-    # base64, because App Store validation rejects a bundled `.sh` — see
-    # `YabsScript.assetPath`. A shell script cannot be added to this list.
-    - assets/yabs.b64
-    # The Agent's built-in skill, the very files Claude Code reads in this
-    # repository — one copy, see `LlmHost.builtinSkills`.
-    - .claude/skills/serverbox-help/
-    - .claude/skills/serverbox-help/references/
     # The directory, not each file: `Dist.markAsset` names them by enum name.
     # Only distributions whose logo carries an explicit copyright licence are
     # in there — see the README beside them, which Flutter leaves out because

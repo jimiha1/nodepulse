@@ -3,15 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:server_box/core/extension/context/locale.dart' as app_locale;
-import 'package:server_box/data/model/app/float_shell.dart';
-import 'package:server_box/data/provider/ai/agent_shell.dart';
 import 'package:server_box/data/provider/app/terminal_shell.dart';
 import 'package:server_box/data/res/store.dart';
 import 'package:server_box/data/ssh/terminal_session.dart';
 import 'package:server_box/data/ssh/terminal_source.dart';
 import 'package:server_box/data/store/setting.dart';
 import 'package:server_box/generated/l10n/l10n.dart';
-import 'package:server_box/view/page/floating_panels.dart';
 import 'package:server_box/view/page/ssh/float.dart';
 import 'package:server_box/view/page/ssh/page/page.dart';
 import 'package:xterm/ui.dart';
@@ -19,7 +16,7 @@ import 'package:xterm/ui.dart';
 import '../helpers/fake_shell.dart';
 import '../helpers/test_db.dart';
 
-/// A terminal popped out of its tab, and the two windows sharing a screen.
+/// A terminal popped out of its tab, and the page handing it over cleanly.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -164,106 +161,6 @@ void main() {
       await settle(tester);
 
       expect(container.read(terminalShellProvider), isNull);
-    });
-  });
-
-  group('both windows at once', () {
-    Future<(ProviderContainer, TerminalSession)> pumpPanels(
-      WidgetTester tester, {
-      required Size view,
-    }) async {
-      tester.view.physicalSize = view;
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-
-      final session = TerminalSession(
-        source: const LocalSource(),
-        backend: FakeShellBackend(),
-      );
-      final it = container();
-
-      await tester.pumpWidget(app(it, (area) => FloatingPanels(area: area)));
-      await settle(tester);
-      return (it, session);
-    }
-
-    testWidgets('a phone keeps one expanded, because a sheet is the screen', (
-      tester,
-    ) async {
-      final (container, session) = await pumpPanels(
-        tester,
-        view: const Size(390, 844),
-      );
-
-      container
-          .read(terminalShellProvider.notifier)
-          .float(session, title: 'shell');
-      await settle(tester);
-      expect(
-        container.read(terminalShellProvider).mode,
-        FloatShellMode.expanded,
-      );
-
-      container.read(agentShellProvider.notifier).expand();
-      await settle(tester);
-
-      expect(
-        container.read(terminalShellProvider)?.collapsed,
-        isTrue,
-        reason: 'the Agent covered a terminal that could not be got back',
-      );
-      expect(container.read(agentShellProvider), FloatShellMode.expanded);
-
-      // And the other way round.
-      container.read(terminalShellProvider.notifier).expand();
-      await settle(tester);
-
-      expect(container.read(agentShellProvider), FloatShellMode.collapsed);
-      expect(
-        container.read(terminalShellProvider).mode,
-        FloatShellMode.expanded,
-      );
-    });
-
-    testWidgets('and never conjures a window that was not open', (
-      tester,
-    ) async {
-      // `collapse` on a hidden Agent would *show* it: the three modes are one
-      // value, and collapsed is a way of being on screen.
-      final (container, session) = await pumpPanels(
-        tester,
-        view: const Size(390, 844),
-      );
-      // Floating until closed; closed here, as a user would.
-      container.read(agentShellProvider.notifier).hide();
-      await settle(tester);
-      expect(container.read(agentShellProvider), FloatShellMode.hidden);
-
-      container
-          .read(terminalShellProvider.notifier)
-          .float(session, title: 'shell');
-      await settle(tester);
-
-      expect(container.read(agentShellProvider), FloatShellMode.hidden);
-    });
-
-    testWidgets('a desktop leaves both open', (tester) async {
-      final (container, session) = await pumpPanels(
-        tester,
-        view: const Size(1400, 900),
-      );
-
-      container
-          .read(terminalShellProvider.notifier)
-          .float(session, title: 'shell');
-      container.read(agentShellProvider.notifier).expand();
-      await settle(tester);
-
-      expect(container.read(agentShellProvider), FloatShellMode.expanded);
-      expect(
-        container.read(terminalShellProvider).mode,
-        FloatShellMode.expanded,
-      );
     });
   });
 }

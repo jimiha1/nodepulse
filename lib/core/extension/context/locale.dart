@@ -1,5 +1,4 @@
 import 'package:fl_lib/generated/l10n/lib_l10n.dart';
-import 'package:fl_pi_llm_ui/fl_pi_llm_ui.dart' show LlmLocalizations;
 import 'package:material_ui/material_ui.dart';
 import 'package:server_box/generated/l10n/l10n.dart';
 import 'package:server_box/generated/l10n/l10n_en.dart';
@@ -13,8 +12,6 @@ AppLocalizations l10n = AppLocalizationsEn();
 /// which material_ui's widgets do not read.
 const appLocalizationsDelegates = <LocalizationsDelegate<Object?>>[
   LibLocalizations.delegate,
-  // The Agent's chats, tools and provider settings — see fl_pi_llm_ui.
-  LlmLocalizations.delegate,
   AppLocalizations.delegate,
   ...GlobalMaterialLocalizations.delegates,
 ];

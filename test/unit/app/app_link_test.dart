@@ -70,12 +70,9 @@ void main() {
       expect(AppLink.parse('serverbox://tab/nope'), isNull);
     });
 
-    test('a snippet, with and without a server', () {
-      final bare = AppLink.parse('serverbox://snippet/s1') as SnippetLink;
-      expect(bare.serverId, isNull);
-      final on =
-          AppLink.parse('serverbox://snippet/s1?server=a%2Bb') as SnippetLink;
-      expect(on.serverId, 'a+b');
+    test('a snippet link is gone, like the feature', () {
+      expect(AppLink.parse('serverbox://snippet/s1'), isNull);
+      expect(AppLink.parse('serverbox://snippet/s1?server=a%2Bb'), isNull);
     });
 
     test('anything else is null, never a throw', () {
@@ -97,9 +94,7 @@ void main() {
       const ServerLink('abc'),
       const ServerLink('abc', func: ServerFuncBtn.terminal),
       const AddServerLink(host: 'h', port: 2222, user: 'u', name: 'n a m e'),
-      const TabLink(AppTab.virt),
-      const SnippetLink('s1'),
-      const SnippetLink('s1', serverId: 'a+b'),
+      const TabLink(AppTab.file),
     ];
     for (final link in links) {
       final back = AppLink.parse(link.toUri().toString());

@@ -1,10 +1,9 @@
 /// The settings fixups, now that they are a schema step rather than two
 /// methods each gating themselves on a flag key of their own.
 ///
-/// Both bodies are idempotent against data they have already converted, but
-/// that is not the whole of it: somebody who took Agent back out of their home
-/// tabs holds exactly the legacy four again, and the flag is the only thing
-/// that tells "never offered" from "offered and declined".
+/// The Agent half of the home-tabs fixup is gone with the Agent itself: the
+/// step no longer touches `homeTabs` at all, and what remains of that half is
+/// the flag key's retirement. The `sshConnectionMode` conversion is as it was.
 library;
 
 import 'package:fl_lib/fl_lib.dart' as lib show isMacOS;
@@ -33,60 +32,18 @@ void main() {
   });
 
   group('home tabs', () {
-    test('adds Agent to the legacy default set', () async {
+    test('the Agent half is gone: the stored set is left alone', () async {
       store.set('homeTabs', ['server', 'ssh', 'file', 'snippet']);
 
       await migration.apply();
 
-      expect(store.get<List>('homeTabs'), [
-        'server',
-        'ssh',
-        'file',
-        'snippet',
-        'agent',
-      ]);
-    });
-
-    test('leaves a custom configuration alone', () async {
-      store.set('homeTabs', ['server', 'ssh']);
-
-      await migration.apply();
-
-      expect(store.get<List>('homeTabs'), ['server', 'ssh']);
-    });
-
-    test('leaves a set that already contains Agent alone', () async {
-      store.set('homeTabs', ['server', 'ssh', 'file', 'snippet', 'agent']);
-
-      await migration.apply();
-
-      expect(store.get<List>('homeTabs'), [
-        'server',
-        'ssh',
-        'file',
-        'snippet',
-        'agent',
-      ]);
-    });
-
-    test('does not put Agent back after somebody removed it', () async {
-      // The case the flag exists for. The tab set is the legacy four again, so
-      // the body alone cannot tell this apart from an install that was never
-      // offered Agent — and re-adding it would overrule a deliberate choice.
-      store.set('homeTabsAgentMigrated', true);
-      store.set('homeTabs', ['server', 'ssh', 'file', 'snippet']);
-
-      await migration.apply();
-
+      // Nothing adds to it now the Agent tab no longer exists; the retired
+      // names in a stored set are dropped where the set is read.
       expect(store.get<List>('homeTabs'), ['server', 'ssh', 'file', 'snippet']);
     });
 
-    test('and running the step twice is the same as running it once', () async {
-      store.set('homeTabs', ['server', 'ssh', 'file', 'snippet']);
-      await migration.apply();
-      // The flag is gone by now, so the second pass is carried entirely by the
-      // body's own idempotence.
-      expect(store.get<bool>('homeTabsAgentMigrated'), isNull);
+    test('a set naming Agent is untouched here too', () async {
+      store.set('homeTabs', ['server', 'ssh', 'file', 'snippet', 'agent']);
 
       await migration.apply();
 

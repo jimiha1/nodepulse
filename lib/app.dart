@@ -5,7 +5,6 @@ import 'dart:math' as math;
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fl_lib/fl_lib.dart';
 import 'package:fl_lib/theme.dart';
-import 'package:fl_pi_llm_ui/fl_pi_llm_ui.dart' show LlmL10nX;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:material_ui/material_ui.dart';
@@ -15,7 +14,6 @@ import 'package:server_box/core/extension/context/locale.dart';
 import 'package:server_box/core/motion.dart';
 import 'package:server_box/core/service/diagnostics_upload.dart';
 import 'package:server_box/core/utils/local_server.dart';
-import 'package:server_box/data/model/app/tab.dart';
 import 'package:server_box/data/model/server/server_private_info.dart';
 import 'package:server_box/data/provider/server/all.dart';
 import 'package:server_box/data/res/build_data.dart';
@@ -203,7 +201,6 @@ class _MyAppState extends State<MyApp> {
         future: _introFuture,
         builder: (context, snapshot) {
           context.setLibL10n();
-          context.setLlmL10n();
           final appL10n = AppLocalizations.of(context);
           if (appL10n != null) l10n = appL10n;
 

@@ -13,9 +13,6 @@ typedef _IntroStep = ({Future<bool> Function() applies, IntroPageBuilder build})
 /// and this moves to it.
 const _kFeatureIntroVer = 2;
 
-/// The feature revision the Virtualization page arrived in.
-const _kVirtIntroSince = 2;
-
 final class _IntroPage extends StatelessWidget {
   const _IntroPage(this.pages);
 
@@ -38,13 +35,10 @@ final class _IntroPage extends StatelessWidget {
     (applies: _isFirstLaunch, build: _buildAppSettings),
     (applies: _needsBackupPassword, build: _buildBackupPasswordMigration),
     (applies: _needsDiagnosticsConsent, build: _buildDiagnostics),
-    // After the questions: these only say what the app can do.
-    (applies: () async => _featureUnseen(1), build: _buildRemoteDesktop),
     (
       applies: () async => LocalServer.isSupported && _featureUnseen(1),
       build: _buildLocalServer,
     ),
-    (applies: _virtUnseen, build: _buildVirt),
   ];
 
   /// The steps this launch should show.
@@ -93,18 +87,6 @@ final class _IntroPage extends StatelessWidget {
   /// changes, and a first launch knows neither.
   static bool _featureUnseen(int since) =>
       _setting.featureIntroVer.fetch() < since;
-
-  static Future<bool> _virtUnseen() async => _featureUnseen(_kVirtIntroSince);
-
-  /// What the Virtualization page adds for someone who had PVE configured.
-  ///
-  /// Read when the page is built, not stored: whether any server has a PVE
-  /// row, and whether the tab is in the bar, are both facts about now — a
-  /// flag written by the migration would go stale the moment either changed.
-  static ({bool pveMoved, bool inBar}) _virtFacts() => (
-    pveMoved: Stores.pve.fetchAll().isNotEmpty,
-    inBar: _setting.homeTabs.fetch().contains(AppTab.virt),
-  );
 
   // — Widget build ——————————————————————————————————————————————————
 
@@ -302,45 +284,6 @@ final class _IntroPage extends StatelessWidget {
     );
   }
 
-  /// What remote desktop is and how it reaches a machine.
-  ///
-  /// The two things worth knowing before the first try: that nothing has to
-  /// be opened to the network, and where the button is. How the touch
-  /// controls work is the viewer's own guide, reused here.
-  static Widget _buildRemoteDesktop(BuildContext ctx, double padTop) {
-    final l10n = ctx.l10n;
-
-    return _introList(
-      children: [
-        ..._head(
-          l10n.remoteDesktop,
-          padTop,
-          mark: const BetaTag(height: BetaTag.heading),
-        ),
-        _prose(l10n.remoteDesktopIntro),
-        ListTile(
-          leading: const Icon(Icons.desktop_windows_outlined, size: _kIconSize),
-          title: const Text('RDP · VNC'),
-          subtitle: Text(l10n.remoteDesktopIntroProfiles, style: UIs.textGrey),
-        ).cardx,
-        ListTile(
-          leading: const Icon(Icons.touch_app_outlined, size: _kIconSize),
-          title: Text(l10n.remoteDesktopGuideTouch),
-          subtitle: Text(l10n.remoteDesktopGuideTouchTip, style: UIs.textGrey),
-        ).cardx,
-        ListTile(
-          leading: const Icon(Icons.visibility_outlined, size: _kIconSize),
-          title: Text(l10n.remoteDesktopViewOnly),
-          subtitle: Text(
-            l10n.remoteDesktopGuideViewOnlyTip,
-            style: UIs.textGrey,
-          ),
-        ).cardx,
-        UIs.height77,
-      ],
-    );
-  }
-
   /// The device running the app, as a server — see `Spi.local`.
   ///
   /// Offers to add it here, since that is one tap and needs nothing typed.
@@ -375,54 +318,6 @@ final class _IntroPage extends StatelessWidget {
           UIs.height77,
         ],
       ),
-    );
-  }
-
-  /// The Virtualization tab: libvirt and PVE hosts, over any transport.
-  ///
-  /// For someone who had PVE configured it also says where the old page went
-  /// and where the tab is — the one thing they are otherwise left to find —
-  /// and that an API token can replace the password.
-  static Widget _buildVirt(BuildContext ctx, double padTop) {
-    final l10n = ctx.l10n;
-    final facts = _virtFacts();
-
-    return _introList(
-      children: [
-        ..._head(
-          l10n.virtualization,
-          padTop,
-          mark: const BetaTag(height: BetaTag.heading),
-        ),
-        _prose(l10n.virtIntro),
-        ListTile(
-          leading: const Icon(Icons.view_in_ar_outlined, size: _kIconSize),
-          title: const Text('libvirt · KVM'),
-          subtitle: Text(l10n.virtIntroLibvirt, style: UIs.textGrey),
-        ).cardx,
-        ListTile(
-          leading: const Icon(Icons.swap_horiz, size: _kIconSize),
-          title: const Text('SSH · Monitor'),
-          subtitle: Text(l10n.virtIntroTransports, style: UIs.textGrey),
-        ).cardx,
-        if (facts.pveMoved) ...[
-          ListTile(
-            leading: const Icon(FontAwesome.server_solid, size: _kIconSize),
-            title: const Text('Proxmox VE'),
-            subtitle: Text(
-              '${l10n.virtIntroPveMoved} '
-              '${facts.inBar ? l10n.virtIntroInBar : l10n.virtIntroInMore}',
-              style: UIs.textGrey,
-            ),
-          ).cardx,
-          ListTile(
-            leading: const Icon(Icons.key_outlined, size: _kIconSize),
-            title: Text(l10n.pveAuthToken),
-            subtitle: Text(l10n.virtIntroTokens, style: UIs.textGrey),
-          ).cardx,
-        ],
-        UIs.height77,
-      ],
     );
   }
 
@@ -498,11 +393,3 @@ final class _IntroPage extends StatelessWidget {
     Toast.show(ctx.l10n.backupPasswordSet);
   }
 }
-
-/// Whether this launch's intro shows the Virtualization page.
-@visibleForTesting
-Future<bool> introShowsVirt() => _IntroPage._virtUnseen();
-
-/// What that page adds, as it would be read now.
-@visibleForTesting
-({bool pveMoved, bool inBar}) introVirtFacts() => _IntroPage._virtFacts();

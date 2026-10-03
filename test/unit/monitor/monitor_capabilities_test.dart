@@ -203,13 +203,11 @@ void main() {
       }
     });
 
-    test('remote desktop and port forwarding follow the relay, not the grant '
-        'behind it', () {
-      // The endpoint is what both need — a local forward is dialled through
-      // it as a session is — and an agent that has the grant but not the
-      // endpoint cannot carry one.
+    test('port forwarding follows the relay, not the grant behind it', () {
+      // The endpoint is what a forward needs — a local forward is dialled
+      // through it as a session is — and an agent that has the grant but not
+      // the endpoint cannot carry one.
       for (final btn in [
-        ServerFuncBtn.remoteDesktop,
         ServerFuncBtn.portForward,
       ]) {
         expect(btn.availableWith(granted), isTrue, reason: btn.name);
@@ -259,7 +257,6 @@ void main() {
     test('a relay missing under full access is an agent to update', () {
       const beforeRelay = MonitorRemoteAccess(terminal: true, fullAccess: true);
       for (final btn in [
-        ServerFuncBtn.remoteDesktop,
         ServerFuncBtn.portForward,
       ]) {
         expect(

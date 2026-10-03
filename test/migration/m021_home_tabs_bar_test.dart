@@ -31,13 +31,16 @@ void main() {
     );
   });
 
-  test('moves the last item from the old five-tab arrangement', () async {
+  test('moves the last item from the old all-tabs arrangement', () async {
+    // A record written when the setting held every tab: it names tabs the
+    // deleted domains took away, which no longer parse and are dropped before
+    // the legacy set is recognized.
     store.set('homeTabs', [
       AppTab.server.name,
       AppTab.ssh.name,
       AppTab.file.name,
-      AppTab.agent.name,
-      AppTab.snippet.name,
+      'agent',
+      'snippet',
     ]);
 
     await migration.apply();
@@ -45,46 +48,36 @@ void main() {
     expect(store.get<List>('homeTabs'), [
       AppTab.server.name,
       AppTab.ssh.name,
-      AppTab.file.name,
-      AppTab.agent.name,
     ]);
   });
 
   test('preserves the stored order while moving its last item', () async {
     store.set('homeTabs', [
-      AppTab.snippet.name,
-      AppTab.file.name,
-      AppTab.agent.name,
       AppTab.server.name,
+      'snippet',
+      AppTab.file.name,
+      'agent',
       AppTab.ssh.name,
     ]);
 
     await migration.apply();
 
     expect(store.get<List>('homeTabs'), [
-      AppTab.snippet.name,
-      AppTab.file.name,
-      AppTab.agent.name,
       AppTab.server.name,
+      AppTab.file.name,
     ]);
   });
 
-  test('does not change a custom arrangement or a newer tab set', () async {
+  test('does not change a custom arrangement', () async {
     final custom = [AppTab.server.name, AppTab.ssh.name];
     store.set('homeTabs', custom);
     await migration.apply();
     expect(store.get<List>('homeTabs'), custom);
 
-    final newer = [
-      AppTab.server.name,
-      AppTab.ssh.name,
-      AppTab.file.name,
-      AppTab.agent.name,
-      AppTab.benchmark.name,
-    ];
-    store.set('homeTabs', newer);
+    final namesUnknown = ['unknown', AppTab.server.name, AppTab.ssh.name];
+    store.set('homeTabs', namesUnknown);
     await migration.apply();
-    expect(store.get<List>('homeTabs'), newer);
+    expect(store.get<List>('homeTabs'), namesUnknown);
   });
 
   test('is idempotent', () async {
@@ -92,8 +85,8 @@ void main() {
       AppTab.server.name,
       AppTab.ssh.name,
       AppTab.file.name,
-      AppTab.agent.name,
-      AppTab.snippet.name,
+      'agent',
+      'snippet',
     ]);
 
     await migration.apply();
@@ -102,8 +95,6 @@ void main() {
     expect(store.get<List>('homeTabs'), [
       AppTab.server.name,
       AppTab.ssh.name,
-      AppTab.file.name,
-      AppTab.agent.name,
     ]);
   });
 }

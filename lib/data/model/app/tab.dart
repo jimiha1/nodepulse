@@ -9,40 +9,11 @@ enum AppTab {
   @HiveField(1)
   ssh,
   @HiveField(2)
-  file,
-  @HiveField(3)
-  snippet,
-  @HiveField(4)
-  agent,
-  @HiveField(5)
-  benchmark,
-  @HiveField(6)
-  remoteDesktop,
-
-  /// Libvirt/KVM and Proxmox VE guests.
-  ///
-  /// Index 7 by position, the one `monitorSettings` held — see
-  /// [_retiredIndices], which is why an integer 7 still resolves to nothing
-  /// rather than to this.
-  @HiveField(7)
-  virt;
+  file;
 
   /// Indices that named a tab which no longer exists, and so are never
   /// resolved as an integer.
-  ///
-  /// 7 was `monitorSettings`, a whole tab for a `monitor` agent's own
-  /// configuration. It is reached from the agent's server instead — one button
-  /// in that page's bar — which is where someone already is when they want it.
-  ///
-  /// [values] is positional, so [virt], appended next, took index 7. It stays
-  /// listed anyway, and that is safe in both directions: every build since
-  /// the SQLite migration stores tabs by name, so no record written by one
-  /// holds an integer at all, and the builds that stored integers (Hive) came
-  /// before either tab existed. No stored bar can hold a 7, then, and one
-  /// that turns up anyway resolves to nothing rather than to a tab nobody
-  /// chose.
-  // TODO(migration): drop once no stored tab order can still hold it.
-  static const _retiredIndices = {7};
+  static const _retiredIndices = {3, 4, 5, 6, 7};
 
   /// The tabs a fresh install puts in the bar, and the fallback when a stored
   /// list cannot be read.

@@ -18,14 +18,12 @@ enum ServerFuncBtn {
   files(),
   container(),
   process(),
-  snippet(),
   iperf(),
   systemd(1051),
   portForward(1340),
   power(1491),
   users(1579),
   scheduledTasks(1579),
-  remoteDesktop(1617),
   firewall(1719);
 
   /// The last released build that did not contain this entry.
@@ -75,13 +73,11 @@ enum ServerFuncBtn {
     files,
     container,
     process,
-    snippet,
     systemd,
     portForward,
     power,
     users,
     scheduledTasks,
-    remoteDesktop,
     firewall,
   ].map((e) => e.name).toList();
 
@@ -187,15 +183,11 @@ enum ServerFuncBtn {
   /// line of 11pt text, and a pill beside a label there is taller than the
   /// label it stands next to — the row would grow a second line of height on
   /// every server, to say something only the first use needs to say.
-  Widget? get mark => switch (this) {
-    remoteDesktop => const BetaTag(),
-    _ => null,
-  };
+  Widget? get mark => null;
 
   IconData get icon => switch (this) {
     // The file tab's own icon, since that is where this entry lands.
     files => Icons.folder_open,
-    snippet => Icons.code,
     container => FontAwesome.docker_brand,
     process => Icons.list_alt_outlined,
     terminal => Icons.terminal,
@@ -205,7 +197,6 @@ enum ServerFuncBtn {
     power => Icons.power_settings_new,
     users => Icons.manage_accounts_outlined,
     scheduledTasks => Icons.schedule,
-    remoteDesktop => Icons.desktop_windows_outlined,
     firewall => Icons.shield_outlined,
   };
 
@@ -215,9 +206,8 @@ enum ServerFuncBtn {
   /// entry rather than once for all of them: these three needs are genuinely
   /// different, and a server reached over its monitor agent meets two of them.
   bool availableWith(ServerCapabilities caps) => switch (this) {
-    // All three end in the terminal — snippets and iperf hand it a command to
-    // start with, and nothing else.
-    terminal || snippet || iperf => caps.terminal,
+    // Both end in the terminal — iperf hands it a command to start with.
+    terminal || iperf => caps.terminal,
     container ||
     process ||
     systemd ||
@@ -234,7 +224,6 @@ enum ServerFuncBtn {
     // that are there. Asked of [ServerCapabilities.forwardsOf] — see
     // [availableOn].
     portForward => caps.tcpRelay || caps.remoteListen,
-    remoteDesktop => caps.tcpRelay,
   };
 
   /// [availableWith] for [spi], asked of the capabilities this entry runs on:
@@ -274,17 +263,14 @@ enum ServerFuncBtn {
       }
       final grant = switch (this) {
         files => grants.files,
-        remoteDesktop => grants.connect,
         _ => grants.shell,
       };
       return monitorGrantReason(toStr, grant) ?? generic;
     }
     final grant = switch (this) {
       files => '[remote_access.fs]',
-      // The relay is granted with `full_access`: one that has it and still
-      // does not relay is an agent from before the endpoint.
-      portForward || remoteDesktop when granted.fullAccess => null,
-      terminal || snippet || iperf when granted.fullAccess =>
+      portForward when granted.fullAccess => null,
+      terminal || iperf when granted.fullAccess =>
         '[remote_access.terminal]',
       _ => 'full_access',
     };
@@ -297,7 +283,6 @@ enum ServerFuncBtn {
     // Named after what it opens, not after the protocol that used to be the
     // only way to get there — the same word the file tab carries.
     files => libL10n.file,
-    snippet => libL10n.snippet,
     container => libL10n.container,
     process => libL10n.process,
     terminal => libL10n.terminal,
@@ -307,7 +292,6 @@ enum ServerFuncBtn {
     power => l10n.power,
     users => l10n.systemUsers,
     scheduledTasks => l10n.scheduledTasks,
-    remoteDesktop => l10n.remoteDesktop,
     firewall => l10n.firewall,
   };
 }

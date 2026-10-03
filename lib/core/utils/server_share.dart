@@ -8,7 +8,6 @@ import 'package:flutter/foundation.dart' show compute;
 import 'package:server_box/core/utils/server_dedup.dart';
 import 'package:server_box/data/model/app/share/server_share.dart';
 import 'package:server_box/data/model/server/private_key_info.dart';
-import 'package:server_box/data/model/server/pve_config.dart';
 import 'package:server_box/data/model/server/server_private_info.dart';
 import 'package:server_box/data/res/store.dart';
 
@@ -366,11 +365,6 @@ abstract final class ServerShareCodec {
       return ServerShare(
         version: ServerShare.formatVer,
         spi: Spi.fromJson(decoded),
-        // Such a QR carried PVE inside `custom`, which `ServerCustom` no
-        // longer reads.
-        // TODO(migration): remove after 5 releases, with
-        // `PveConfig.fromLegacyRecord`.
-        pve: PveConfig.fromLegacyRecord(decoded),
       );
     } catch (e) {
       throw ServerShareUnreadableException(e);
@@ -468,8 +462,6 @@ abstract final class ServerShareInstaller {
     spi.validateOrThrow();
 
     Stores.server.put(spi);
-    final pve = share.pve;
-    if (pve != null) Stores.pve.put(spi.id, pve);
     return ServerShareResult(spi: spi, addedKeys: added);
   }
 

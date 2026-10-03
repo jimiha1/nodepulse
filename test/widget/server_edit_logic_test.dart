@@ -10,8 +10,6 @@ import 'package:server_box/data/model/server/private_key_info.dart';
 import 'package:server_box/data/model/server/server_private_info.dart';
 import 'package:server_box/data/provider/private_key.dart';
 import 'package:server_box/data/provider/server/all.dart';
-import 'package:server_box/data/res/store.dart';
-import 'package:server_box/data/store/pve.dart';
 import 'package:server_box/generated/l10n/l10n.dart';
 import 'package:server_box/view/page/server/edit/edit.dart';
 
@@ -23,9 +21,6 @@ void main() {
   // own rather than part of the record the overridden provider persists.
   setUp(() async {
     await openTestDb();
-    if (!getIt.isRegistered<PveStore>()) {
-      getIt.registerSingleton<PveStore>(PveStore());
-    }
   });
   tearDown(closeTestDb);
 

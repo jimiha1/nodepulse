@@ -4,7 +4,6 @@ import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:server_box/core/llm/scope.dart';
 import 'package:server_box/core/service/widget_sync.dart';
 import 'package:server_box/core/sync.dart';
 import 'package:server_box/core/utils/refresh_interval.dart';
@@ -15,7 +14,6 @@ import 'package:server_box/data/model/server/server.dart';
 import 'package:server_box/data/model/server/server_private_info.dart';
 import 'package:server_box/data/model/server/try_limiter.dart';
 import 'package:server_box/data/provider/port_forward_provider.dart';
-import 'package:server_box/data/provider/remote_desktop.dart';
 import 'package:server_box/data/provider/server/refresh_scheduler.dart';
 import 'package:server_box/data/provider/server/selection.dart';
 import 'package:server_box/data/provider/server/single.dart';
@@ -362,7 +360,6 @@ class ServersNotifier extends _$ServersNotifier {
   Future<void> _delServer(String id) async {
     final deleting = state.servers[id];
     if (deleting == null) return;
-    await ref.read(remoteDesktopSessionsProvider.notifier).closeForServer(id);
     // Started here, because revoking is an authenticated call to the agent
     // and the credential is on the record. Neither publishes — see
     // `revokeServer`: a rebuild from a store that still holds this server
@@ -417,7 +414,6 @@ class ServersNotifier extends _$ServersNotifier {
 
   Future<void> _clearServerData(String id) async {
     await ref.read(portForwardProvider(id).notifier).clear();
-    await AgentChats.clearScope(AgentScope.terminal(id));
     await Stores.connectionStats.clearServerStats(id);
     Stores.selfAddr.forget(id);
   }
@@ -471,9 +467,6 @@ class ServersNotifier extends _$ServersNotifier {
 
     if (old != newSpi) {
       if (newSpi.id != old.id) {
-        await ref
-            .read(remoteDesktopSessionsProvider.notifier)
-            .closeForServer(old.id);
         // `EntityStore.update` explicitly rejects id changes; renaming must
         // move dependent rows and handle sync metadata itself.
         if (state.servers.containsKey(newSpi.id)) {

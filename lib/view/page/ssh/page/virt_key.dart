@@ -120,11 +120,6 @@ extension _VirtKey on SSHPageState {
         _terminal.keyInput(TerminalKey.backspace);
         break;
       case VirtualKeyFunc.snippet:
-        // The toolbar's picker, not a copy of it. The copy that used to be
-        // here returned without a word when there was no server, so the key
-        // did nothing at all on a shell on this device — while the button two
-        // rows up ran the snippets that name no server perfectly well.
-        await _pickSnippet();
         break;
       case VirtualKeyFunc.file:
         // Before anything is typed. This opens the files of the server the

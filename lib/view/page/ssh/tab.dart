@@ -11,7 +11,6 @@ import 'package:server_box/data/model/app/linux_distro.dart';
 import 'package:server_box/data/model/app/tab.dart';
 import 'package:server_box/data/model/server/dist.dart';
 import 'package:server_box/data/model/server/server_private_info.dart';
-import 'package:server_box/data/model/server/snippet.dart';
 import 'package:server_box/data/provider/app/session_requests.dart';
 import 'package:server_box/data/provider/app/terminal_shell.dart';
 import 'package:server_box/data/provider/server/all.dart';
@@ -286,14 +285,12 @@ extension _Sessions on _SSHTabPageState {
   /// Opens a shell on [spi].
   void _openServer(
     Spi spi, {
-    Snippet? snippet,
     TerminalSession? session,
     String? tmuxSession,
     int? tmuxWindow,
     bool select = true,
   }) => _open(
     ServerSource(spi),
-    snippet: snippet,
     session: session,
     tmuxSession: tmuxSession,
     tmuxWindow: tmuxWindow,
@@ -307,7 +304,6 @@ extension _Sessions on _SSHTabPageState {
   /// anyone left off.
   void _open(
     TerminalSource source, {
-    Snippet? snippet,
     TerminalSession? session,
     String? tmuxSession,
     int? tmuxWindow,
@@ -327,7 +323,6 @@ extension _Sessions on _SSHTabPageState {
             key: key,
             args: SshPageArgs(
               source: source,
-              initSnippet: snippet,
               session: session,
               notFromTab: false,
               // The tab's id, not its name: a connection can end long after
@@ -434,7 +429,6 @@ extension _Sessions on _SSHTabPageState {
     for (final request in pending) {
       _openServer(
         request.spi,
-        snippet: request.snippet,
         session: request.session,
       );
     }
@@ -585,10 +579,7 @@ extension _Actions on _SSHTabPageState {
   List<Widget> get _serverActions {
     final current = _sessions.current;
     if (current == null) return const [];
-    final onServer = current.data.page.args.spi != null;
-    return onServer
-        ? [_agentBtn, _snippetBtn, _settingsBtn, _floatBtn]
-        : [_snippetBtn, _settingsBtn, _floatBtn];
+    return [_settingsBtn, _floatBtn];
   }
 
   /// Sends the terminal on screen into the window that floats over every tab,
@@ -641,22 +632,6 @@ extension _Actions on _SSHTabPageState {
     // tab strip does.
     shell.float(state.session, title: tab.name);
   }
-
-  /// Opens the agent on the terminal that is on screen, the same way the
-  /// snippet picker beside it works.
-  Widget get _agentBtn => Btn.icon(
-    text: l10n.askAi,
-    icon: const Icon(Icons.auto_awesome, size: 18),
-    onTap: () =>
-        _sessions.current?.data.pageKey.currentState?.openAgentFromToolbar(),
-  );
-
-  Widget get _snippetBtn => Btn.icon(
-    text: libL10n.snippet,
-    icon: const Icon(Icons.code, size: 18),
-    onTap: () =>
-        _sessions.current?.data.pageKey.currentState?.pickSnippetFromToolbar(),
-  );
 
   Widget get _sortBtn => Btn.icon(
     text: libL10n.sort,

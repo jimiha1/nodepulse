@@ -6,9 +6,7 @@ import 'package:server_box/data/model/app/tab.dart';
 import 'package:server_box/data/model/server/server_private_info.dart';
 import 'package:server_box/data/provider/app/session_requests.dart';
 import 'package:server_box/data/provider/server/all.dart';
-import 'package:server_box/data/provider/snippet.dart';
 import 'package:server_box/view/page/server/edit/edit.dart';
-import 'package:server_box/view/widget/dist_icon.dart';
 import 'package:server_box/view/widget/server_func_btns.dart';
 
 /// Acts on a `serverbox://` link, and puts one on the clipboard.
@@ -50,20 +48,6 @@ abstract final class AppLinkUi {
         );
       case TabLink(:final tab):
         ref.read(homeTabRequestProvider.notifier).go(tab);
-      case SnippetLink(:final id, :final serverId):
-        final snippet = ref
-            .read(snippetProvider)
-            .snippets
-            .firstWhereOrNull((e) => e.id == id);
-        if (snippet == null) {
-          Toast.error(libL10n.notExistFmt('${libL10n.snippet} $id'));
-          return;
-        }
-        final spi = serverId == null
-            ? await _pickServer(context, ref)
-            : _server(ref, serverId);
-        if (spi == null || !context.mounted) return;
-        await confirmAndRunSnippet(context, ref, spi, snippet);
     }
   }
 
@@ -76,20 +60,5 @@ abstract final class AppLinkUi {
     final spi = ref.read(serversProvider).servers[id];
     if (spi == null) Toast.error(libL10n.notExistFmt('${libL10n.server} $id'));
     return spi;
-  }
-
-  static Future<Spi?> _pickServer(BuildContext context, WidgetRef ref) {
-    final servers = ref.read(serversProvider);
-    final spis = [for (final id in servers.serverOrder) ?servers.servers[id]];
-    if (spis.isEmpty) {
-      Toast.show(libL10n.empty);
-      return Future.value();
-    }
-    return context.showPickSingleDialog<Spi>(
-      title: libL10n.server,
-      items: spis,
-      display: (spi) => spi.name,
-      avatar: (spi) => distIcon(spi.id, size: 17),
-    );
   }
 }

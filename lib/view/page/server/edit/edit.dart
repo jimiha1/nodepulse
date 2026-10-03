@@ -10,7 +10,6 @@ import 'package:redfish/redfish.dart';
 import 'package:server_box/core/diag.dart';
 import 'package:server_box/core/extension/context/locale.dart';
 import 'package:server_box/core/route.dart';
-import 'package:server_box/core/utils/cert_fingerprint.dart';
 import 'package:server_box/core/utils/jump_chain.dart';
 import 'package:server_box/core/utils/local_server.dart';
 import 'package:server_box/core/utils/server_dedup.dart';
@@ -23,7 +22,6 @@ import 'package:server_box/data/model/server/custom.dart';
 import 'package:server_box/data/model/server/discovery_result.dart';
 import 'package:server_box/data/model/server/geo.dart';
 import 'package:server_box/data/model/server/monitor_http_credential.dart';
-import 'package:server_box/data/model/server/pve_config.dart';
 import 'package:server_box/data/model/server/server_private_info.dart';
 import 'package:server_box/data/model/server/ssh_credential.dart';
 import 'package:server_box/data/model/server/system.dart';
@@ -46,9 +44,7 @@ part 'widget.dart';
 /// A group of the editor to open on arrival, for a page that sent the user
 /// here to fill in that group.
 enum ServerEditSection {
-  /// Proxmox VE, from a server the Virtualization tab found running it.
-  /// Gets the local API address when nothing is configured yet.
-  pve,
+  none,
 }
 
 /// What a new server's form starts with, from outside the app. Nothing
@@ -97,31 +93,6 @@ class _ServerEditPageState extends ConsumerState<ServerEditPage>
   final _portController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _pveAddrCtrl = TextEditingController();
-
-  /// The PVE group, for [ServerEditSection.pve] to scroll to.
-  final _pveKey = GlobalKey();
-  final _pvePwdCtrl = TextEditingController();
-  final _pveTokenIdCtrl = TextEditingController();
-  final _pveTokenSecretCtrl = TextEditingController();
-
-  /// Whether PVE is logged in to with an API token (true) or a password.
-  ///
-  /// `PveConfig.auth`. Saving writes only the chosen method's credentials, so
-  /// there is never a token and a password competing. True for a new
-  /// configuration, which is what PVE recommends for an app: a token's
-  /// permissions are its own, and it needs no TOTP.
-  final _pveUseToken = ValueNotifier(true);
-
-  /// The PVE certificate fingerprint the user confirmed, or null.
-  ///
-  /// Shown and forgotten here, never set: the confirmation happens when the
-  /// app connects and sees the certificate, which this page does not.
-  final _pveCert = ValueNotifier<String?>(null);
-
-  /// Forget was pressed, so saving drops the pin — whatever is stored by
-  /// then. Otherwise saving keeps the stored one (see `_pveConfigToSave`).
-  bool _pveCertForgot = false;
   final _monitorAddrCtrl = TextEditingController();
   final _monitorUserCtrl = TextEditingController();
   final _monitorPwdCtrl = TextEditingController();
@@ -281,12 +252,6 @@ class _ServerEditPageState extends ConsumerState<ServerEditPage>
     _proxyCommandFocus.dispose();
     _portFocus.dispose();
     _usernameFocus.dispose();
-    _pveAddrCtrl.dispose();
-    _pvePwdCtrl.dispose();
-    _pveTokenIdCtrl.dispose();
-    _pveTokenSecretCtrl.dispose();
-    _pveUseToken.dispose();
-    _pveCert.dispose();
     _monitorAddrCtrl.dispose();
     _monitorUserCtrl.dispose();
     _monitorPwdCtrl.dispose();

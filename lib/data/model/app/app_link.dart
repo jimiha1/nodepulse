@@ -41,10 +41,6 @@ sealed class AppLink {
       ServerLink._host => ServerLink._parse(segs),
       AddServerLink._host when segs.isEmpty => AddServerLink._parse(query),
       TabLink._host when segs.length == 1 => TabLink._parse(segs.single),
-      SnippetLink._host when segs.length == 1 => SnippetLink(
-        segs.single,
-        serverId: _nonEmpty(query['server']),
-      ),
       _ => null,
     };
   }
@@ -144,23 +140,4 @@ final class TabLink extends AppLink {
   @override
   Uri toUri() =>
       Uri(scheme: AppLink.scheme, host: _host, pathSegments: [tab.name]);
-}
-
-/// A saved snippet, run on [serverId] — or on a server picked when it is null.
-/// Always shown and confirmed before it runs.
-final class SnippetLink extends AppLink {
-  const SnippetLink(this.id, {this.serverId});
-
-  static const _host = 'snippet';
-
-  final String id;
-  final String? serverId;
-
-  @override
-  Uri toUri() => Uri(
-    scheme: AppLink.scheme,
-    host: _host,
-    pathSegments: [id],
-    queryParameters: serverId == null ? null : {'server': serverId},
-  );
 }

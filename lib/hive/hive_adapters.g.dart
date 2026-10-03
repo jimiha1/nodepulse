@@ -62,8 +62,6 @@ class ServerFuncBtnAdapter extends TypeAdapter<ServerFuncBtn> {
         return ServerFuncBtn.container;
       case 3:
         return ServerFuncBtn.process;
-      case 5:
-        return ServerFuncBtn.snippet;
       case 6:
         return ServerFuncBtn.iperf;
       case 8:
@@ -76,8 +74,6 @@ class ServerFuncBtnAdapter extends TypeAdapter<ServerFuncBtn> {
         return ServerFuncBtn.users;
       case 13:
         return ServerFuncBtn.scheduledTasks;
-      case 14:
-        return ServerFuncBtn.remoteDesktop;
       case 15:
         return ServerFuncBtn.firewall;
       default:
@@ -96,8 +92,6 @@ class ServerFuncBtnAdapter extends TypeAdapter<ServerFuncBtn> {
         writer.writeByte(2);
       case ServerFuncBtn.process:
         writer.writeByte(3);
-      case ServerFuncBtn.snippet:
-        writer.writeByte(5);
       case ServerFuncBtn.iperf:
         writer.writeByte(6);
       case ServerFuncBtn.systemd:
@@ -110,8 +104,6 @@ class ServerFuncBtnAdapter extends TypeAdapter<ServerFuncBtn> {
         writer.writeByte(12);
       case ServerFuncBtn.scheduledTasks:
         writer.writeByte(13);
-      case ServerFuncBtn.remoteDesktop:
-        writer.writeByte(14);
       case ServerFuncBtn.firewall:
         writer.writeByte(15);
     }

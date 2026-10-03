@@ -9,7 +9,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:server_box/data/model/container/type.dart';
 import 'package:server_box/data/model/server/port_forward.dart';
-import 'package:server_box/data/model/server/pve_config.dart';
 import 'package:server_box/data/model/server/system.dart';
 import 'package:server_box/data/res/store.dart';
 import 'package:server_box/data/store/migrations/all.dart';
@@ -172,13 +171,12 @@ void main() {
           // PVE is a `server_pve` row now. `pveIgnoreCert: true` became "confirm
           // the certificate on the next connection", which is no pin at all —
           // and the login is the password one, the only kind this release had.
-          expect(
-            Stores.pve.fetch(spi.id),
-            const PveConfig(
-              addr: 'https://pve.example.com:8006',
-              auth: PveAuth.password,
-            ),
-          );
+          final pve = SqliteDb.instance
+              .select('SELECT * FROM server_pve WHERE server_id = ?;', [spi.id])
+              .single;
+          expect(pve['addr'], 'https://pve.example.com:8006');
+          expect(pve['auth'], 'password');
+          expect(pve['cert_sha256'], isNull);
           expect(custom.cmds, {'uptime': 'uptime -p', 'who': 'w'});
           expect(custom.preferTempDev, 'coretemp');
           expect(custom.tempIsCelsius, isFalse);
@@ -240,7 +238,7 @@ void main() {
           }
         });
 
-        test('private keys and snippets come across whole', () {
+        test('private keys come across whole', () {
           expect(
             Stores.key.fetchByName('key-ed25519')?.key,
             contains('BEGIN OPENSSH PRIVATE KEY'),
@@ -249,20 +247,6 @@ void main() {
             Stores.key.fetchByName('key-rsa')?.key,
             contains('BEGIN RSA PRIVATE KEY'),
           );
-
-          final deploy = Stores.snippet.fetchByName('deploy')!;
-          expect(deploy.script, contains('systemctl restart app'));
-          expect(deploy.tags, ['ops', 'risky']);
-          expect(deploy.note, 'run on the app hosts only');
-          // Sorted, like tags: an auto-run target is a row keyed by the pair.
-          expect(deploy.autoRunOn, ['srv-key', 'srv-pwd']);
-
-          // Non-ASCII, quotes, backslashes and newlines through Hive bytes and
-          // then through JSON and into a column.
-          final unicode = Stores.snippet.fetchByName('日本語 / emoji 🚀')!;
-          expect(unicode.note, 'ünïcödé');
-          expect(unicode.script, contains(r'引号 "双" \\ 反斜杠'));
-          expect(unicode.script.split('\n').length, 2);
         });
 
         test('settings keep their type, not just their value', () {

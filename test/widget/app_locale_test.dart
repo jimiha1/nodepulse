@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:server_box/app.dart';
 import 'package:server_box/data/res/store.dart';
-import 'package:server_box/data/store/pve.dart';
 import 'package:server_box/data/store/setting.dart';
 
 import '../helpers/test_db.dart';
@@ -19,7 +18,6 @@ void main() {
     await openTestDb();
     setting = SettingStore('setting_test');
     getIt.registerSingleton<SettingStore>(setting);
-    getIt.registerSingleton<PveStore>(PveStore());
     FlutterSecureStorage.setMockInitialValues({});
   });
 

@@ -7,14 +7,12 @@ import 'package:server_box/data/model/server/bmc_credential.dart';
 import 'package:server_box/data/model/server/custom.dart';
 import 'package:server_box/data/model/server/monitor_http_credential.dart';
 import 'package:server_box/data/model/server/server_private_info.dart';
-import 'package:server_box/data/model/server/snippet.dart';
 import 'package:server_box/data/model/server/ssh_credential.dart';
 import 'package:server_box/data/model/server/system.dart';
 import 'package:server_box/data/model/server/wol_cfg.dart';
 import 'package:server_box/data/store/bmc_credential.dart';
 import 'package:server_box/data/store/entity_store.dart';
 import 'package:server_box/data/store/server.dart';
-import 'package:server_box/data/store/snippet.dart';
 
 import '../../helpers/test_db.dart';
 
@@ -383,23 +381,9 @@ void main() {
       expect(store.fetchOneRaw('srv-1'), isNotNull);
     });
 
-    test('a merged server tombstone stamps cascaded relationship owners', () {
-      final snippets = SnippetStore();
+    test('a merged server tombstone stamps relationship owners', () {
       store.put(target);
       store.put(jumper);
-      snippets.put(
-        const Snippet(
-          id: 'snippet-1',
-          name: 'deploy',
-          script: 'deploy',
-          autoRunOn: ['srv-b'],
-        ),
-      );
-      final oldSnippetRev =
-          SqliteDb.instance.select('SELECT rev FROM snippet WHERE id = ?;', [
-                'snippet-1',
-              ]).single['rev']
-              as int;
       final oldOwnerRev =
           SqliteDb.instance.select('SELECT rev FROM server WHERE id = ?;', [
                 'srv-a',
@@ -412,17 +396,9 @@ void main() {
         EntityStore.lastModKey: {'srv-b': deletedAt},
       }, force: false);
       store.invalidate();
-      snippets.invalidate();
 
       expect(store.fetchOneRaw('srv-b'), isNull);
       expect(store.fetchOneRaw('srv-a')?.ssh?.resolvedJumpIds, isEmpty);
-      expect(snippets.fetch().single.autoRunOn, anyOf(isNull, isEmpty));
-      expect(
-        SqliteDb.instance.select('SELECT rev FROM snippet WHERE id = ?;', [
-          'snippet-1',
-        ]).single['rev'],
-        greaterThan(oldSnippetRev),
-      );
       expect(
         SqliteDb.instance.select('SELECT rev FROM server WHERE id = ?;', [
           'srv-a',

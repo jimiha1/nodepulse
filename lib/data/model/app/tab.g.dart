@@ -19,16 +19,6 @@ class AppTabAdapter extends TypeAdapter<AppTab> {
         return AppTab.ssh;
       case 2:
         return AppTab.file;
-      case 3:
-        return AppTab.snippet;
-      case 4:
-        return AppTab.agent;
-      case 5:
-        return AppTab.benchmark;
-      case 6:
-        return AppTab.remoteDesktop;
-      case 7:
-        return AppTab.virt;
       default:
         return AppTab.server;
     }
@@ -43,16 +33,6 @@ class AppTabAdapter extends TypeAdapter<AppTab> {
         writer.writeByte(1);
       case AppTab.file:
         writer.writeByte(2);
-      case AppTab.snippet:
-        writer.writeByte(3);
-      case AppTab.agent:
-        writer.writeByte(4);
-      case AppTab.benchmark:
-        writer.writeByte(5);
-      case AppTab.remoteDesktop:
-        writer.writeByte(6);
-      case AppTab.virt:
-        writer.writeByte(7);
     }
   }
 

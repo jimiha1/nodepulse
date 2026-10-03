@@ -118,7 +118,7 @@ final class CfServersProvider
   CfServers create() => CfServers();
 }
 
-String _$cfServersHash() => r'b5023329541edb7bb0d3750ff5c935109b261195';
+String _$cfServersHash() => r'f71c555a9f5e3a2be096c3f5858ae02a5c5dfa44';
 
 /// The node list of the CF site, polled; the state the CF pages read.
 

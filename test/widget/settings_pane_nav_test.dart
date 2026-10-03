@@ -25,7 +25,6 @@ import 'package:server_box/data/store/port_forward.dart';
 import 'package:server_box/data/store/private_key.dart';
 import 'package:server_box/data/store/server.dart';
 import 'package:server_box/data/store/setting.dart';
-import 'package:server_box/data/store/snippet.dart';
 import 'package:server_box/generated/l10n/l10n.dart';
 import 'package:server_box/view/page/setting/entry.dart';
 
@@ -96,7 +95,6 @@ void main() {
     getIt.registerSingleton<ContainerStore>(ContainerStore());
     getIt.registerSingleton<PrivateKeyStore>(PrivateKeyStore());
     getIt.registerSingleton<BmcCredentialStore>(BmcCredentialStore());
-    getIt.registerSingleton<SnippetStore>(SnippetStore());
     getIt.registerSingleton<HistoryStore>(HistoryStore('history_test'));
     getIt.registerSingleton<ConnectionStatsStore>(
       ConnectionStatsStore.instance,
@@ -174,7 +172,7 @@ void main() {
     expect(find.text('pushed editor'), findsOneWidget);
 
     // Any other section in the left menu.
-    final target = find.text(libL10n.ai);
+    final target = find.text(app_locale.l10n.cfSite);
     expect(target, findsWidgets, reason: 'the menu has to be on screen');
     await tester.tap(target.first);
     await tester.pump(const Duration(milliseconds: 500));
@@ -203,7 +201,7 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 500));
 
-    await tester.tap(find.text(libL10n.ai).first);
+    await tester.tap(find.text(app_locale.l10n.cfSite).first);
     await tester.pump(const Duration(milliseconds: 500));
 
     // `popUntil` stops at the first route whose settings is a `Page`. Popping

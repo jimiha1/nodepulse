@@ -23,11 +23,6 @@ mixin _$BackupV2 {
 /// one. A server whose `bmc.credId` names an account this map does not
 /// carry restores with the address and no account, which the editor shows.
  Map<String, Object?> get bmcCredentials;/// Each server's `PveConfig`, by server id — `PveStore.getAllMap`.
-///
-/// Absent from files written before PVE had a table of its own. Those
-/// carry it inside the server record's `custom` instead — and so does
-/// every file this build writes, for those builds to read. What [merge]
-/// makes of either is `_pveToRestore`'s rule.
  Map<String, Object?> get pve;
 /// Create a copy of BackupV2
 /// with the given fields replaced by the non-null parameter values.
@@ -233,7 +228,7 @@ return $default(_that.version,_that.date,_that.spis,_that.snippets,_that.keys,_t
 @JsonSerializable()
 
 class _BackupV2 extends BackupV2 {
-  const _BackupV2({required this.version, required this.date, required final  Map<String, Object?> spis, required final  Map<String, Object?> snippets, required final  Map<String, Object?> keys, required final  Map<String, Object?> container, required final  Map<String, Object?> history, required final  Map<String, Object?> settings, final  Map<String, Object?> portForwards = const <String, Object?>{}, final  Map<String, Object?> remoteDesktopProfiles = const <String, Object?>{}, final  Map<String, Object?> bmcCredentials = const <String, Object?>{}, final  Map<String, Object?> pve = const <String, Object?>{}}): _spis = spis,_snippets = snippets,_keys = keys,_container = container,_history = history,_settings = settings,_portForwards = portForwards,_remoteDesktopProfiles = remoteDesktopProfiles,_bmcCredentials = bmcCredentials,_pve = pve,super._();
+  const _BackupV2({required this.version, required this.date, required final  Map<String, Object?> spis, final  Map<String, Object?> snippets = const <String, Object?>{}, required final  Map<String, Object?> keys, required final  Map<String, Object?> container, required final  Map<String, Object?> history, required final  Map<String, Object?> settings, final  Map<String, Object?> portForwards = const <String, Object?>{}, final  Map<String, Object?> remoteDesktopProfiles = const <String, Object?>{}, final  Map<String, Object?> bmcCredentials = const <String, Object?>{}, final  Map<String, Object?> pve = const <String, Object?>{}}): _spis = spis,_snippets = snippets,_keys = keys,_container = container,_history = history,_settings = settings,_portForwards = portForwards,_remoteDesktopProfiles = remoteDesktopProfiles,_bmcCredentials = bmcCredentials,_pve = pve,super._();
   factory _BackupV2.fromJson(Map<String, dynamic> json) => _$BackupV2FromJson(json);
 
 @override final  int version;
@@ -246,7 +241,7 @@ class _BackupV2 extends BackupV2 {
 }
 
  final  Map<String, Object?> _snippets;
-@override Map<String, Object?> get snippets {
+@override@JsonKey() Map<String, Object?> get snippets {
   if (_snippets is EqualUnmodifiableMapView) return _snippets;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableMapView(_snippets);
@@ -316,18 +311,8 @@ class _BackupV2 extends BackupV2 {
 }
 
 /// Each server's `PveConfig`, by server id — `PveStore.getAllMap`.
-///
-/// Absent from files written before PVE had a table of its own. Those
-/// carry it inside the server record's `custom` instead — and so does
-/// every file this build writes, for those builds to read. What [merge]
-/// makes of either is `_pveToRestore`'s rule.
  final  Map<String, Object?> _pve;
 /// Each server's `PveConfig`, by server id — `PveStore.getAllMap`.
-///
-/// Absent from files written before PVE had a table of its own. Those
-/// carry it inside the server record's `custom` instead — and so does
-/// every file this build writes, for those builds to read. What [merge]
-/// makes of either is `_pveToRestore`'s rule.
 @override@JsonKey() Map<String, Object?> get pve {
   if (_pve is EqualUnmodifiableMapView) return _pve;
   // ignore: implicit_dynamic_type

@@ -10,7 +10,8 @@ _BackupV2 _$BackupV2FromJson(Map<String, dynamic> json) => _BackupV2(
   version: (json['version'] as num).toInt(),
   date: (json['date'] as num).toInt(),
   spis: json['spis'] as Map<String, dynamic>,
-  snippets: json['snippets'] as Map<String, dynamic>,
+  snippets:
+      json['snippets'] as Map<String, dynamic>? ?? const <String, Object?>{},
   keys: json['keys'] as Map<String, dynamic>,
   container: json['container'] as Map<String, dynamic>,
   history: json['history'] as Map<String, dynamic>,

@@ -77,7 +77,6 @@ void main() {
       (1491, ServerFuncBtn.power),
       (1579, ServerFuncBtn.users),
       (1579, ServerFuncBtn.scheduledTasks),
-      (1617, ServerFuncBtn.remoteDesktop),
       (1719, ServerFuncBtn.firewall),
     ];
 
@@ -99,17 +98,6 @@ void main() {
     ServerFuncBtn.autoAddNewFuncs(1580, 1600);
 
     expect(row(), [ServerFuncBtn.terminal.name]);
-  });
-
-  test('adds remote desktop after the last build without it', () async {
-    setting.serverFuncBtns.put([ServerFuncBtn.terminal.name]);
-
-    ServerFuncBtn.autoAddNewFuncs(1617, 1618);
-
-    expect(row(), [
-      ServerFuncBtn.terminal.name,
-      ServerFuncBtn.remoteDesktop.name,
-    ]);
   });
 
   test('adds the firewall after the last build without it', () async {
@@ -183,7 +171,6 @@ void main() {
         ServerFuncBtn.power.name,
         ServerFuncBtn.users.name,
         ServerFuncBtn.scheduledTasks.name,
-        ServerFuncBtn.remoteDesktop.name,
       ]),
     );
   });
@@ -253,9 +240,8 @@ void main() {
       );
 
       // No endpoint relays a connection to an address this app names, so port
-      // forwarding and remote desktop stay out however much else is granted.
+      // forwarding stays out however much else is granted.
       expect(btns, isNot(contains(ServerFuncBtn.portForward)));
-      expect(btns, isNot(contains(ServerFuncBtn.remoteDesktop)));
       expect(btns, contains(ServerFuncBtn.terminal));
       expect(btns, contains(ServerFuncBtn.files));
       expect(btns, contains(ServerFuncBtn.container));

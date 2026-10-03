@@ -41,10 +41,13 @@ void main() {
     });
 
     test('converts a stored button row to names', () {
+      // 8 is `power` in the nine-entry pre-m021 layout, which is what an
+      // untagged row of small indexes falls back to — see
+      // `legacyIndexNamesBeforeM021`.
       store.set(EnumNamesMigration.btnsKey, [
         ServerFuncBtn.terminal.index,
         ServerFuncBtn.container.index,
-        ServerFuncBtn.power.index,
+        8,
       ], updateLastUpdateTsOnSet: false);
 
       EnumNamesMigration().applySync();
@@ -56,9 +59,11 @@ void main() {
     });
 
     test('preserves post-feature users and scheduled tasks indexes', () {
+      // 8 and 9 are `users` and `scheduledTasks` in today's layout; 9 does not
+      // fit the pre-m021 nine-entry layout, so the whole row reads as current.
       store.set(
         EnumNamesMigration.btnsKey,
-        [9, 10],
+        [8, 9],
         updateLastUpdateTsOnSet: false,
       );
 
@@ -108,7 +113,7 @@ void main() {
       () {
         store.set(
           EnumNamesMigration.btnsKey,
-          [9, 10],
+          [8, 9],
           updateLastUpdateTsOnSet: false,
         );
 
@@ -163,7 +168,7 @@ void main() {
       );
       expect(
         ServerFuncBtn.byStored(
-          ServerFuncBtn.users.index,
+          ServerFuncBtn.scheduledTasks.index,
           legacyIntegerNames: ServerFuncBtn.legacyIndexNamesBeforeM021,
         ),
         isNull,

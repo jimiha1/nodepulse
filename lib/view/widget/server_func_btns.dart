@@ -12,10 +12,8 @@ import 'package:server_box/data/model/app/tab.dart';
 import 'package:server_box/data/model/server/capabilities.dart';
 import 'package:server_box/data/model/server/monitor_remote_access.dart';
 import 'package:server_box/data/model/server/server_private_info.dart';
-import 'package:server_box/data/model/server/snippet.dart';
 import 'package:server_box/data/provider/app/session_requests.dart';
 import 'package:server_box/data/provider/server/single.dart';
-import 'package:server_box/data/provider/snippet.dart';
 import 'package:server_box/data/res/store.dart';
 import 'package:server_box/view/page/container/container.dart';
 import 'package:server_box/view/page/firewall/firewall.dart';
@@ -24,7 +22,6 @@ import 'package:server_box/view/page/port_forward.dart';
 import 'package:server_box/view/page/process.dart';
 import 'package:server_box/view/page/scheduled_tasks.dart';
 import 'package:server_box/view/page/services.dart';
-import 'package:server_box/view/page/ssh/snippet_run.dart';
 import 'package:server_box/view/page/storage/server_file.dart';
 import 'package:server_box/view/page/users.dart';
 import 'package:server_box/view/widget/edge_fade_scroll.dart';
@@ -473,31 +470,6 @@ void runServerFunc(
         ref.read(sftpRequestsProvider.notifier).add(spi);
         ref.read(homeTabRequestProvider.notifier).go(AppTab.file);
         break;
-      case ServerFuncBtn.snippet:
-        final snippetState = ref.read(snippetProvider);
-        if (snippetState.snippets.isEmpty) {
-          Toast.show(libL10n.empty);
-          return;
-        }
-        final snippets = await context.showPickWithTagDialog<Snippet>(
-          title: libL10n.snippet,
-          tags: snippetState.tags.vn,
-          itemsBuilder: (e) {
-            if (e == TagSwitcher.kDefaultTag) {
-              return snippetState.snippets;
-            }
-            return snippetState.snippets
-                .where((element) => element.tags?.contains(e) ?? false)
-                .toList();
-          },
-          display: (e) => e.name,
-        );
-        if (snippets == null || snippets.isEmpty) return;
-        final snippet = snippets.firstOrNull;
-        if (snippet == null) return;
-        if (!context.mounted) return;
-        await confirmAndRunSnippet(context, ref, spi, snippet);
-        break;
       case ServerFuncBtn.container:
         if (!await _ensureExec(context, spi.id, ref)) return;
         if (!context.mounted) return;
@@ -555,24 +527,6 @@ void runServerFunc(
         if (!context.mounted) return;
         final args = SpiRequiredArgs(spi);
         unawaited(FirewallPage.route.go(context, args));
-        break;
-      case ServerFuncBtn.remoteDesktop:
-        // A monitor-backed server has nothing to connect here: the agent dials
-        // the target when the session opens, and the profile page works without
-        // it. Asking for an SSH client whenever SSH happens to be configured
-        // would refuse the transport this button was just made available on —
-        // a server carrying both can fall through to the agent, and only
-        // `_openTunnel` knows which one the session will end up using.
-        final hasOtherWayIn = spi.sshOn == null || spi.monitorOn != null;
-        if (!hasOtherWayIn && !await _ensureSshClient(context, spi.id, ref)) {
-          return;
-        }
-        if (!context.mounted) return;
-        // Into the tab, on this server, rather than a page of its own over the
-        // detail page: sessions live in the tab, and a pushed copy of its list
-        // had nowhere to go back to.
-        ref.read(remoteDesktopServerRequestProvider.notifier).go(spi.id);
-        ref.read(homeTabRequestProvider.notifier).go(AppTab.remoteDesktop);
         break;
   }
 }
@@ -645,55 +599,4 @@ Future<bool> _ensure(
     }
     return false;
   }
-}
-
-/// Shows [snippet] as it will run on [spi], and runs it only once the user
-/// confirms — behind a countdown, since this is what a `serverbox://` link
-/// reaches too, and a link can come from anywhere.
-///
-/// The function row picks the snippet first; a link names it.
-Future<void> confirmAndRunSnippet(
-  BuildContext context,
-  WidgetRef ref,
-  Spi spi,
-  Snippet snippet,
-) async {
-  final fmted = snippet.fmtWithSpi(spi);
-  final sure = await context.showRoundDialog<bool>(
-    title: libL10n.attention,
-    child: SingleChildScrollView(
-      child: SimpleMarkdown(data: '```shell\n$fmted\n```'),
-    ),
-    actions: [
-      CountDownBtn(
-        onTap: () => context.popDialog(true),
-        text: libL10n.run,
-        afterColor: Colors.red,
-      ),
-    ],
-  );
-  if (sure != true) return;
-  if (!context.mounted) return;
-  // Run here rather than on a page pushed over this one: a snippet is
-  // usually one command, and watching it finish should not mean leaving
-  // the server you are looking at. No pre-check — the dialog connects
-  // and reports its own failures, the same as tapping
-  // [ServerFuncBtn.terminal].
-  final session = await showSnippetRun(
-    context,
-    ref,
-    spi: spi,
-    snippet: snippet,
-  );
-  // Answered "carry on with it": the shell and everything it printed
-  // move to a tab, still connected.
-  if (session == null) return;
-  // Nowhere left to send it. Hanging up beats leaving a shell running
-  // with nothing that can ever show it again.
-  if (!context.mounted) {
-    session.close();
-    return;
-  }
-  ref.read(terminalRequestsProvider.notifier).add(spi, session: session);
-  ref.read(homeTabRequestProvider.notifier).go(AppTab.ssh);
 }

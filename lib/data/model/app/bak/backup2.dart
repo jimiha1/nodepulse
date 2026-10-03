@@ -15,16 +15,13 @@ import 'package:server_box/data/model/server/custom.dart';
 import 'package:server_box/data/model/server/monitor_http_credential.dart';
 import 'package:server_box/data/model/server/port_forward.dart';
 import 'package:server_box/data/model/server/private_key_info.dart';
-import 'package:server_box/data/model/server/pve_config.dart';
 import 'package:server_box/data/model/server/server_private_info.dart';
-import 'package:server_box/data/model/server/snippet.dart';
 import 'package:server_box/data/model/server/ssh_credential.dart';
 import 'package:server_box/data/model/server/wol_cfg.dart';
 import 'package:server_box/data/provider/bmc_credential.dart';
 import 'package:server_box/data/provider/container.dart';
 import 'package:server_box/data/provider/private_key.dart';
 import 'package:server_box/data/provider/server/all.dart';
-import 'package:server_box/data/provider/snippet.dart';
 import 'package:server_box/data/res/misc.dart';
 import 'package:server_box/data/res/store.dart';
 import 'package:server_box/data/store/migrations/m008_settings_fixups.dart';
@@ -32,7 +29,6 @@ import 'package:server_box/data/store/migrations/m009_grouped_settings.dart';
 import 'package:server_box/data/store/migrations/m011_virt_key_rows.dart';
 import 'package:server_box/data/store/migrations/m013_virt_key_names.dart';
 import 'package:server_box/data/store/migrations/m021_home_tabs_bar.dart';
-import 'package:server_box/data/store/migrations/m030_pve_virt.dart';
 import 'package:server_box/data/store/schema.dart';
 import 'package:server_box/data/store/setting.dart';
 
@@ -60,7 +56,7 @@ abstract class BackupV2 with _$BackupV2 implements Mergeable {
     required int version,
     required int date,
     required Map<String, Object?> spis,
-    required Map<String, Object?> snippets,
+    @Default(<String, Object?>{}) Map<String, Object?> snippets,
     required Map<String, Object?> keys,
     required Map<String, Object?> container,
     required Map<String, Object?> history,
@@ -80,11 +76,6 @@ abstract class BackupV2 with _$BackupV2 implements Mergeable {
     @Default(<String, Object?>{}) Map<String, Object?> bmcCredentials,
 
     /// Each server's `PveConfig`, by server id — `PveStore.getAllMap`.
-    ///
-    /// Absent from files written before PVE had a table of its own. Those
-    /// carry it inside the server record's `custom` instead — and so does
-    /// every file this build writes, for those builds to read. What [merge]
-    /// makes of either is `_pveToRestore`'s rule.
     @Default(<String, Object?>{}) Map<String, Object?> pve,
   }) = _BackupV2;
 
@@ -106,9 +97,7 @@ abstract class BackupV2 with _$BackupV2 implements Mergeable {
     late bool keysChanged;
     late bool credsChanged;
     late bool serversChanged;
-    late bool snippetsChanged;
     late bool forwardsChanged;
-    late bool remoteDesktopsChanged;
     late bool containerChanged;
     late Set<String> historyNotifications;
     late Set<String> settingNotifications;
@@ -131,18 +120,8 @@ abstract class BackupV2 with _$BackupV2 implements Mergeable {
         notify: false,
         appliedIds: appliedServerIds,
       );
-      snippetsChanged = Stores.snippet.merge(
-        _snippetsWithRestoredServerIds(restored.serverIds),
-        force: force,
-        notify: false,
-      );
       forwardsChanged = Stores.portForward.merge(
         _portForwardsWithRestoredServerIds(restored.serverIds),
-        force: force,
-        notify: false,
-      );
-      remoteDesktopsChanged = Stores.remoteDesktop.merge(
-        _remoteDesktopsWithRestoredServerIds(restored.serverIds),
         force: force,
         notify: false,
       );
@@ -158,11 +137,6 @@ abstract class BackupV2 with _$BackupV2 implements Mergeable {
           if (!_isInternalStoreKey(key)) key,
       };
       for (final serverId in containerIds) {
-        // A container host is a child of its server and carries no timestamp
-        // of its own — editing one stamps the parent. So the backup speaks for
-        // it exactly where it spoke for the parent. Applied to every server
-        // instead, this deleted a host configured here after the backup was
-        // taken, on a server `merge` had just correctly decided to keep.
         if (!appliedServerIds.contains(serverId)) continue;
         if (Stores.container.restoreOne(
           serverId,
@@ -170,24 +144,6 @@ abstract class BackupV2 with _$BackupV2 implements Mergeable {
           notify: false,
         )) {
           containerChanged = true;
-          serversChanged = true;
-        }
-      }
-
-      // Same rule as the container host just above: a child of its server,
-      // restored exactly where the server was — and only as far as the file
-      // can speak for it, see [_pveToRestore].
-      final restoredPve = _pveWithRestoredServerIds(restored.serverIds);
-      for (final serverId in containerIds.union(restoredPve.keys.toSet())) {
-        if (!appliedServerIds.contains(serverId)) continue;
-        final value = _pveToRestore(
-          serverId,
-          restoredPve,
-          restored.servers[serverId],
-          force: force,
-        );
-        if (value == null) continue;
-        if (Stores.pve.restoreOne(serverId, value, notify: false)) {
           serversChanged = true;
         }
       }
@@ -233,20 +189,9 @@ abstract class BackupV2 with _$BackupV2 implements Mergeable {
     if (credsChanged) Stores.bmcCredential.invalidate();
     if (serversChanged) {
       Stores.server.invalidate();
-      // A server tombstone cascades these rows even when their own merge pass
-      // has no later write to announce.
       Stores.portForward.invalidate();
-      Stores.remoteDesktop.invalidate();
-      Stores.snippet.invalidate();
-      // A PVE write sets [serversChanged]; a deleted server's row cascades
-      // without one, since `restoreOne` answers false for a server not here.
-      Stores.pve.invalidate();
     }
-    if (snippetsChanged && !serversChanged) Stores.snippet.invalidate();
     if (forwardsChanged && !serversChanged) Stores.portForward.invalidate();
-    if (remoteDesktopsChanged && !serversChanged) {
-      Stores.remoteDesktop.invalidate();
-    }
     _notifySqliteStore(Stores.history, historyNotifications);
     _notifySqliteStore(Stores.setting, settingNotifications);
 
@@ -254,9 +199,6 @@ abstract class BackupV2 with _$BackupV2 implements Mergeable {
     // reason to wait for.
     if (serversChanged) {
       unawaited(GlobalRef.gRef?.read(serversProvider.notifier).reload());
-    }
-    if (snippetsChanged) {
-      GlobalRef.gRef?.read(snippetProvider.notifier).reload();
     }
     if (keysChanged) GlobalRef.gRef?.read(privateKeyProvider.notifier).reload();
     if (credsChanged) {
@@ -279,14 +221,11 @@ abstract class BackupV2 with _$BackupV2 implements Mergeable {
     return BackupV2(
       version: formatVer,
       date: DateTimeX.timestamp,
-      spis: _withLegacyPve(Stores.server.getAllMap(), Stores.pve.fetchAll()),
-      snippets: Stores.snippet.getAllMap(),
+      spis: Stores.server.getAllMap(),
       keys: Stores.key.getAllMap(),
       bmcCredentials: Stores.bmcCredential.getAllMap(),
       portForwards: Stores.portForward.getAllMap(),
-      remoteDesktopProfiles: Stores.remoteDesktop.getAllMap(),
       container: Stores.container.getAllMap(),
-      pve: Stores.pve.getAllMap(),
       history: _backupStore(Stores.history),
       settings: includeSettings
           ? _backupStore(
@@ -571,24 +510,10 @@ abstract class BackupV2 with _$BackupV2 implements Mergeable {
     return out;
   }
 
-  Map<String, Object?> _snippetsWithRestoredServerIds(
-    Map<String, String> serverIds,
-  ) => {
-    for (final entry in snippets.entries)
-      entry.key: _snippetWithRestoredServerIds(entry.value, serverIds),
-  };
-
   Map<String, Object?> _portForwardsWithRestoredServerIds(
     Map<String, String> serverIds,
   ) => {
     for (final entry in portForwards.entries)
-      entry.key: _recordWithRestoredServerId(entry.value, serverIds),
-  };
-
-  Map<String, Object?> _remoteDesktopsWithRestoredServerIds(
-    Map<String, String> serverIds,
-  ) => {
-    for (final entry in remoteDesktopProfiles.entries)
       entry.key: _recordWithRestoredServerId(entry.value, serverIds),
   };
 
@@ -597,78 +522,6 @@ abstract class BackupV2 with _$BackupV2 implements Mergeable {
   ) => {
     for (final entry in container.entries)
       serverIds[entry.key] ?? entry.key: entry.value,
-  };
-
-  Map<String, Object?> _pveWithRestoredServerIds(
-    Map<String, String> serverIds,
-  ) => {
-    for (final entry in pve.entries)
-      if (!_isInternalStoreKey(entry.key))
-        serverIds[entry.key] ?? entry.key: entry.value,
-  };
-
-  /// Whether this file was written by a build with `server_pve`, and so has
-  /// a [pve] section that is the complete state: every server with PVE has an
-  /// entry, and one without an entry has none.
-  bool get carriesPveSection => version > PveVirtMigration.appliedAt;
-
-  /// What restoring [serverId]'s PVE configuration writes: an entry for
-  /// `PveStore.restoreOne` (empty removes the row, unreadable is skipped
-  /// there), or null to leave the row as it is.
-  ///
-  /// **A file with a [pve] section** ([carriesPveSection]) is the whole
-  /// truth: its entry, or none, which removes the row. That is how removing
-  /// PVE on one device reaches the others.
-  ///
-  /// **A file from an older build** has no section; its server records carry
-  /// the legacy `custom.pveAddr`/`pvePwd` instead, which express an address
-  /// and a password and nothing else.
-  /// - Present: applied onto the row here with `PveConfig.mergeLegacy`, so
-  ///   an older device handing back a record it got from this build leaves
-  ///   the token and the pinned certificate alone.
-  /// - Absent: in a sync, the row is left alone. An older build writes no
-  ///   PVE fields for a server whose record it has not seen with them, and
-  ///   cannot say "removed" in any other way than it says "never had", so
-  ///   reading absence as removal lets one old device delete what a new one
-  ///   configured. The cost is that removing PVE *on an older build* does not
-  ///   reach newer ones. [force] (restoring a backup) is the exception: the
-  ///   user asked for the file's state, and at the time it was written the
-  ///   server had no PVE.
-  // TODO(migration): after 5 releases every file has the section; reduce this
-  // to its first branch, with `PveConfig.fromLegacyRecord` and `mergeLegacy`.
-  Object? _pveToRestore(
-    String serverId,
-    Map<String, Object?> restoredPve,
-    Object? server, {
-    required bool force,
-  }) {
-    if (carriesPveSection) {
-      // A malformed entry is passed on for `PveStore.restoreOne` to skip:
-      // read as "none", it would delete the credentials here.
-      return restoredPve[serverId] ?? const <String, Object?>{};
-    }
-    final legacy = PveConfig.fromLegacyRecord(server);
-    if (legacy != null) {
-      return PveConfig.mergeLegacy(Stores.pve.fetch(serverId), legacy).toJson();
-    }
-    return force ? const <String, Object?>{} : null;
-  }
-
-  /// [spis] with each server's PVE configuration also written into its
-  /// record's `custom`, where a build from before `server_pve` reads it —
-  /// see `PveConfig.toLegacyCustom`. Such a build ignores the [pve] section
-  /// and writes back only what it read.
-  // TODO(migration): remove after 5 releases.
-  static Map<String, Object?> _withLegacyPve(
-    Map<String, Object?> spis,
-    Map<String, PveConfig> pve,
-  ) => {
-    for (final MapEntry(:key, :value) in spis.entries)
-      key: switch ((value, pve[key])) {
-        (final Map record, final PveConfig cfg) =>
-          PveConfig.withLegacyCustom(record, cfg),
-        _ => value,
-      },
   };
 
   Map<String, Object?> _historyWithRestoredServerIds(
@@ -756,21 +609,6 @@ Map<String, Object?> _sshWithRestoredIds(
     ];
   }
   return ssh;
-}
-
-Object? _snippetWithRestoredServerIds(
-  Object? value,
-  Map<String, String> serverIds,
-) {
-  if (value is! Map) return value;
-  final snippet = Map<String, Object?>.from(value);
-  final targets = snippet['autoRunOn'];
-  if (targets is List) {
-    snippet['autoRunOn'] = [
-      for (final id in targets) id is String ? serverIds[id] ?? id : id,
-    ];
-  }
-  return snippet;
 }
 
 Object? _recordWithRestoredServerId(
@@ -1004,7 +842,6 @@ Object? _toEncodable(Object? value) {
 
   return switch (value) {
     final Spi spi => spi.toJson(),
-    final Snippet snippet => snippet.toJson(),
     final PrivateKeyInfo key => key.toJson(),
     final PortForwardConfig forward => forward.toJson(),
     final ServerCustom custom => custom.toJson(),
@@ -1015,7 +852,6 @@ Object? _toEncodable(Object? value) {
     final SshCredential ssh => ssh.toJson(),
     final MonitorHttpCredential monitor => monitor.toJson(),
     final BmcCfg bmc => bmc.toJson(),
-    final PveConfig pve => pve.toJson(),
     _ => throw UnsupportedError(
       'Cannot JSON-encode ${value.runtimeType}: missing supported toJson()',
     ),

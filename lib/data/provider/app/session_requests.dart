@@ -1,7 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:server_box/data/model/app/tab.dart';
 import 'package:server_box/data/model/server/server_private_info.dart';
-import 'package:server_box/data/model/server/snippet.dart';
 import 'package:server_box/data/ssh/terminal_session.dart';
 
 part 'session_requests.g.dart';
@@ -22,11 +21,6 @@ class HomeTabRequest extends _$HomeTabRequest {
 }
 
 /// Which tab is on screen right now.
-///
-/// [HomeTabRequest] is where something asks to be taken; this is where the
-/// home page says where it ended up. The floating Agent needs it to stay out
-/// of the way of the Agent tab, which is the better view of the same thing
-/// whenever it is the one being looked at.
 @Riverpod(keepAlive: true)
 class CurrentHomeTab extends _$CurrentHomeTab {
   @override
@@ -81,48 +75,13 @@ class ServerDetailRequest extends _$ServerDetailRequest {
   void done() => state = null;
 }
 
-/// A host waiting to be selected on the Virtualization tab — what a server's
-/// PVE card asks for.
-///
-/// A request for the same reasons as [ServerDetailRequest]: the tab is built
-/// when first visited, so it may not exist yet, and which host it shows is its
-/// own state. It drains this when it appears and whenever it changes.
-@Riverpod(keepAlive: true)
-class VirtHostRequest extends _$VirtHostRequest {
-  @override
-  String? build() => null;
-
-  void go(String serverId) => state = serverId;
-
-  void done() => state = null;
-}
-
-/// A server whose remote desktop profiles the Remote desktop tab should show
-/// — what a server's function row asks for.
-///
-/// A request for the same reasons as [VirtHostRequest]: the tab is built when
-/// first visited, and which server it shows is its own state.
-@Riverpod(keepAlive: true)
-class RemoteDesktopServerRequest extends _$RemoteDesktopServerRequest {
-  @override
-  String? build() => null;
-
-  void go(String serverId) => state = serverId;
-
-  void done() => state = null;
-}
-
 /// A server waiting for a terminal, and what to put in it once it opens.
 class TerminalRequest {
-  const TerminalRequest(this.spi, {this.snippet, this.session});
+  const TerminalRequest(this.spi, {this.session});
 
   final Spi spi;
 
-  /// Run as soon as the shell is ready. Null for a plain terminal.
-  final Snippet? snippet;
-
-  /// A shell that is already running, to be shown rather than started — a
-  /// snippet begun in a dialog, carrying on where the user can watch it.
+  /// A shell that is already running, to be shown rather than started.
   final TerminalSession? session;
 }
 
@@ -137,9 +96,9 @@ class TerminalRequests extends _$TerminalRequests {
   @override
   List<TerminalRequest> build() => const [];
 
-  void add(Spi spi, {Snippet? snippet, TerminalSession? session}) => state = [
+  void add(Spi spi, {TerminalSession? session}) => state = [
     ...state,
-    TerminalRequest(spi, snippet: snippet, session: session),
+    TerminalRequest(spi, session: session),
   ];
 
   void clear() => state = const [];

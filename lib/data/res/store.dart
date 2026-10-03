@@ -1,5 +1,4 @@
 import 'package:fl_lib/fl_lib.dart';
-import 'package:fl_pi_llm_ui/fl_pi_llm_ui.dart' show LlmStores;
 import 'package:get_it/get_it.dart';
 import 'package:server_box/data/store/bmc_credential.dart';
 import 'package:server_box/data/store/connection_stats.dart';
@@ -9,14 +8,11 @@ import 'package:server_box/data/store/history.dart';
 import 'package:server_box/data/store/migrations/m003_hive_to_sqlite.dart';
 import 'package:server_box/data/store/port_forward.dart';
 import 'package:server_box/data/store/private_key.dart';
-import 'package:server_box/data/store/pve.dart';
-import 'package:server_box/data/store/remote_desktop.dart';
 import 'package:server_box/data/store/schema.dart';
 import 'package:server_box/data/store/self_addr.dart';
 import 'package:server_box/data/store/server.dart';
 import 'package:server_box/data/store/server_dist.dart';
 import 'package:server_box/data/store/setting.dart';
-import 'package:server_box/data/store/snippet.dart';
 import 'package:server_box/data/store/tables.dart';
 
 final GetIt getIt = GetIt.instance;
@@ -43,16 +39,12 @@ abstract final class Stores {
   static ServerStore get server => getIt<ServerStore>();
   static ContainerStore get container => getIt<ContainerStore>();
 
-  /// Each server's PVE configuration — a child of `server`, see [PveStore].
-  static PveStore get pve => getIt<PveStore>();
   static PrivateKeyStore get key => getIt<PrivateKeyStore>();
   static BmcCredentialStore get bmcCredential => getIt<BmcCredentialStore>();
-  static SnippetStore get snippet => getIt<SnippetStore>();
   static HistoryStore get history => getIt<HistoryStore>();
   static ConnectionStatsStore get connectionStats =>
       getIt<ConnectionStatsStore>();
   static PortForwardStore get portForward => getIt<PortForwardStore>();
-  static RemoteDesktopStore get remoteDesktop => getIt<RemoteDesktopStore>();
 
   /// What each server said its own address is.
   ///
@@ -85,23 +77,19 @@ abstract final class Stores {
     server,
     key,
     bmcCredential,
-    snippet,
     portForward,
-    remoteDesktop,
   ];
 
   static Future<void> init() async {
     getIt.registerLazySingleton<SettingStore>(() => SettingStore.instance);
     getIt.registerLazySingleton<ServerStore>(() => ServerStore.instance);
     getIt.registerLazySingleton<ContainerStore>(() => ContainerStore.instance);
-    getIt.registerLazySingleton<PveStore>(() => PveStore.instance);
     getIt.registerLazySingleton<PrivateKeyStore>(
       () => PrivateKeyStore.instance,
     );
     getIt.registerLazySingleton<BmcCredentialStore>(
       () => BmcCredentialStore.instance,
     );
-    getIt.registerLazySingleton<SnippetStore>(() => SnippetStore.instance);
     getIt.registerLazySingleton<HistoryStore>(() => HistoryStore.instance);
     getIt.registerLazySingleton<ServerDistStore>(
       () => ServerDistStore.instance,
@@ -111,9 +99,6 @@ abstract final class Stores {
     );
     getIt.registerLazySingleton<PortForwardStore>(
       () => PortForwardStore.instance,
-    );
-    getIt.registerLazySingleton<RemoteDesktopStore>(
-      () => RemoteDesktopStore.instance,
     );
     getIt.registerLazySingleton<SelfAddrStore>(() => SelfAddrStore.instance);
 
@@ -148,11 +133,6 @@ abstract final class Stores {
       // is is not something the user did, so it must not move the clock sync
       // reads.
       selfAddr.init(),
-      // The Agent's: its chats, providers, tool switches and memory. Not in
-      // `_kvStores` either — a conversation is a record of what was said, not
-      // an edit, and like the conversations before them they stay on this
-      // device.
-      ...LlmStores.all.map((store) => store.init()),
     ]);
 
     // Not a table to create — only the per-launch sweep of expired rows, and

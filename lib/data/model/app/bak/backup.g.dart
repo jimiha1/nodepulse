@@ -12,9 +12,11 @@ Backup _$BackupFromJson(Map<String, dynamic> json) => Backup(
   spis: (json['spis'] as List<dynamic>)
       .map((e) => Spi.fromJson(e as Map<String, dynamic>))
       .toList(),
-  snippets: (json['snippets'] as List<dynamic>)
-      .map((e) => Snippet.fromJson(e as Map<String, dynamic>))
-      .toList(),
+  snippets:
+      (json['snippets'] as List<dynamic>?)
+          ?.map((e) => e as Map<String, dynamic>)
+          .toList() ??
+      const [],
   keys: (json['keys'] as List<dynamic>)
       .map((e) => PrivateKeyInfo.fromJson(e as Map<String, dynamic>))
       .toList(),
@@ -22,11 +24,6 @@ Backup _$BackupFromJson(Map<String, dynamic> json) => Backup(
   history: json['history'] as Map<String, dynamic>,
   settings: json['settings'] as Map<String, dynamic>?,
   lastModTime: (json['lastModTime'] as num?)?.toInt(),
-  legacyPve:
-      (Backup._readLegacyPve(json, 'legacyPve') as List<dynamic>?)
-          ?.map((e) => e as Map<String, dynamic>?)
-          .toList() ??
-      const [],
 );
 
 Map<String, dynamic> _$BackupToJson(Backup instance) => <String, dynamic>{

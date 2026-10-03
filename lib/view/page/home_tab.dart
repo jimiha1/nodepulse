@@ -2,17 +2,11 @@ import 'package:fl_lib/fl_lib.dart';
 import 'package:fl_lib/theme.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:server_box/core/extension/context/locale.dart';
 import 'package:server_box/data/model/app/tab.dart';
 import 'package:server_box/data/res/store.dart';
-import 'package:server_box/view/page/agent/agent.dart';
-import 'package:server_box/view/page/benchmark/tab.dart';
-import 'package:server_box/view/page/remote_desktop/tab.dart';
 import 'package:server_box/view/page/server/cf_tab.dart';
-import 'package:server_box/view/page/snippet/list.dart';
 import 'package:server_box/view/page/ssh/tab.dart';
 import 'package:server_box/view/page/storage/tab.dart';
-import 'package:server_box/view/page/virt/tab.dart';
 import 'package:server_box/view/widget/conn_count_badge.dart';
 import 'package:server_box/view/widget/marked_title.dart';
 import 'package:server_box/view/widget/nav_rail.dart';
@@ -26,11 +20,6 @@ extension AppTabViewX on AppTab {
       AppTab.server => const CfHomePage(),
       AppTab.ssh => const SSHTabPage(),
       AppTab.file => const FileTabPage(),
-      AppTab.snippet => const SnippetListPage(),
-      AppTab.agent => const AgentPage(),
-      AppTab.benchmark => const BenchmarkTabPage(),
-      AppTab.remoteDesktop => const RemoteDesktopTabPage(),
-      AppTab.virt => const VirtTabPage(),
     };
   }
 
@@ -53,22 +42,12 @@ extension AppTabViewX on AppTab {
       // agent's own PTY, and the name had to stop naming the transport before
       // a shell on this device could live here too.
       AppTab.ssh => libL10n.terminal,
-      AppTab.snippet => libL10n.snippet,
       AppTab.file => libL10n.file,
-      AppTab.agent => 'Agent',
-      AppTab.benchmark => l10n.benchmark,
-      AppTab.remoteDesktop => l10n.remoteDesktop,
-      AppTab.virt => l10n.virtualization,
     };
   }
 
   /// Whether the tab is still in beta.
-  // TODO: move to the Feature abstraction (next PR).
-  bool get beta => switch (this) {
-    AppTab.remoteDesktop || AppTab.agent || AppTab.benchmark || AppTab.virt =>
-      true,
-    _ => false,
-  };
+  bool get beta => false;
 
   /// The mark a tab carries, where the tab is *listed* — the settings page
   /// that arranges them, and the sheet the bar opens for the ones it cannot
@@ -103,18 +82,7 @@ extension AppTabViewX on AppTab {
     );
   }
 
-  Widget _railIcon(Widget icon) {
-    if (this != AppTab.agent) return icon;
-    return SizedBox.square(
-      dimension: NavRailMetrics.iconSize,
-      child: Center(
-        child: IconTheme.merge(
-          data: const IconThemeData(size: 22),
-          child: icon,
-        ),
-      ),
-    );
-  }
+  Widget _railIcon(Widget icon) => icon;
 }
 
 class _AppTabIcon extends StatelessWidget {
@@ -145,16 +113,6 @@ class _AppTabIcon extends StatelessWidget {
                   selected
                       ? MingCute.folder_open_fill
                       : MingCute.folder_open_line,
-                AppTab.snippet =>
-                  selected ? MingCute.code_fill : MingCute.code_line,
-                AppTab.agent =>
-                  selected ? MingCute.magic_2_fill : MingCute.magic_2_line,
-                AppTab.benchmark =>
-                  selected ? MingCute.dashboard_fill : MingCute.dashboard_line,
-                AppTab.remoteDesktop =>
-                  selected ? MingCute.computer_fill : MingCute.computer_line,
-                AppTab.virt =>
-                  selected ? MingCute.box_3_fill : MingCute.box_3_line,
               }
             : switch (tab) {
                 AppTab.server =>
@@ -162,17 +120,6 @@ class _AppTabIcon extends StatelessWidget {
                 AppTab.ssh =>
                   selected ? Icons.terminal : Icons.terminal_outlined,
                 AppTab.file => selected ? Icons.folder : Icons.folder_open,
-                AppTab.snippet => selected ? Icons.code : Icons.code_outlined,
-                AppTab.agent =>
-                  selected ? Icons.auto_awesome : Icons.auto_awesome_outlined,
-                AppTab.benchmark =>
-                  selected ? Icons.speed : Icons.speed_outlined,
-                AppTab.remoteDesktop =>
-                  selected
-                      ? Icons.desktop_windows
-                      : Icons.desktop_windows_outlined,
-                AppTab.virt =>
-                  selected ? Icons.view_in_ar : Icons.view_in_ar_outlined,
               };
         return ThemeIconAsset(
           keyName: ThemeIcons.tabKey(tab.name, selected: selected),

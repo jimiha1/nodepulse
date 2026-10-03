@@ -1,5 +1,4 @@
 import 'package:fl_lib/fl_lib.dart';
-import 'package:server_box/data/model/app/tab.dart';
 import 'package:server_box/data/store/schema.dart';
 import 'package:server_box/data/store/setting.dart';
 
@@ -87,23 +86,12 @@ class SettingsFixupsMigration implements SchemaMigration {
     _write(store, key, value);
   }
 
-  /// Adds Agent to the home tabs of an install still on the legacy default.
-  ///
-  /// Idempotent on its own: it acts only when the tab set is exactly the four
-  /// legacy defaults, which it no longer is once Agent has been added.
+  /// Used to add Agent to the home tabs of an install still on the legacy
+  /// default. The Agent is gone, so there is nothing to add: the body keeps
+  /// the flag read so the key's retirement below stays gated the way it was,
+  /// and retired names in a stored set are dropped where the set is read.
   static void _migrateHomeTabsAgent(SettingStore store) {
     if (store.get<bool>(homeTabsFlagKey) == true) return;
-    const key = 'homeTabs';
-    const legacyDefaults = {
-      AppTab.server,
-      AppTab.ssh,
-      AppTab.file,
-      AppTab.snippet,
-    };
-    final tabs = AppTab.parseAppTabsFromObj(store.get<Object>(key));
-    if (tabs.length != legacyDefaults.length) return;
-    if (!tabs.toSet().containsAll(legacyDefaults)) return;
-    _write(store, key, [...tabs, AppTab.agent].map((tab) => tab.name).toList());
   }
 
   /// `set` answers `false` rather than throwing — a write that could not be
