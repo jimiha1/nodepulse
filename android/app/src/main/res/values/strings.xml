@@ -86,4 +86,11 @@
 
     <string name="widget_small_label">Server readings</string>
     <string name="widget_medium_label">Server charts</string>
+
+    <string name="widget_expiry_title">Data Expiry Alert</string>
+    <string name="widget_expiry_10m">10 minutes</string>
+    <string name="widget_expiry_30m">30 minutes (Default)</string>
+    <string name="widget_expiry_1h">1 hour</string>
+    <string name="widget_expiry_2h">2 hours</string>
+    <string name="widget_expiry_never">Disabled</string>
 </resources>

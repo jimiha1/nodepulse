@@ -4,4 +4,6 @@
     <color name="widgetBackground">#FFFFFF</color>
     <color name="widgetText">#000000</color>
     <color name="widgetSummaryText">#333333</color>
+    <color name="widgetTimeAging">#B45309</color>
+    <color name="widgetTimeStale">#DC2626</color>
 </resources>

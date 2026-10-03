@@ -3,4 +3,6 @@
     <color name="widgetBackground">#000000</color>
     <color name="widgetText">#FFFFFF</color>
     <color name="widgetSummaryText">#BBBBBB</color>
+    <color name="widgetTimeAging">#FFB340</color>
+    <color name="widgetTimeStale">#FF453A</color>
 </resources>
