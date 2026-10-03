@@ -119,3 +119,8 @@ android/app/.cxx
 
 # Written by the website build from store/ (scripts/store-tarball.sh).
 website/public/store.tar.gz
+
+# Local screenshots and dumps
+screenshot*.png
+phone_launch_screenshot.png
+

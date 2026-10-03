@@ -134,25 +134,33 @@ class MetricChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bars = <LineChartBarData>[];
-    for (final s in spec.series) {
+    for (var idx = 0; idx < spec.series.length; idx++) {
+      final s = spec.series[idx];
       final spots = s.spotsAgainst(spec.times);
       if (spots.isEmpty) continue;
+      // Staggered radii and stroke widths so concentric rings form when series overlap
+      final radius = switch (idx) {
+        0 => 5.0,
+        1 => 3.5,
+        _ => 2.0,
+      };
+      final strokeW = switch (idx) {
+        0 => 3.0,
+        1 => 2.0,
+        _ => 1.2,
+      };
       bars.add(
         LineChartBarData(
           spots: spots,
           isCurved: false,
-          barWidth: 1.5,
+          barWidth: strokeW,
           isStrokeCapRound: true,
-          color: s.color,
-          // A lone sample is a point, and there is nothing to draw a line
-          // between: with the dots off, the first poll's worth of a machine
-          // was a plot with nothing in it, for as long as the second took to
-          // arrive. From two on it is the line, and a dot per sample on it
-          // would be what is read instead.
+          color: s.color.withValues(alpha: 0.9),
+          // Staggered concentric points when series have identical/single spots
           dotData: FlDotData(
             show: spots.length == 1,
             getDotPainter: (_, _, _, _) =>
-                FlDotCirclePainter(radius: 2, color: s.color, strokeWidth: 0),
+                FlDotCirclePainter(radius: radius, color: s.color, strokeWidth: 0),
           ),
           belowBarData: BarAreaData(show: false),
         ),

@@ -40,12 +40,16 @@
     <string name="widget_metric_io">Disk I/O</string>
     <string name="widget_metric_conn">Connections</string>
     <string name="widget_metric_proc">Processes</string>
+    <string name="widget_metric_loss">Packet Loss</string>
 
     <string name="widget_mode_chart">Chart</string>
     <string name="widget_mode_reading">Reading</string>
     <string name="widget_mode_combined">Combined</string>
     <string name="widget_chart_1">Chart 1</string>
     <string name="widget_chart_2">Chart 2</string>
+    <string name="widget_chart_3">Chart 3</string>
+    <string name="widget_chart_4">Chart 4</string>
+    <string name="widget_chart_count">Number of Charts</string>
     <string name="widget_fields_title">Display Fields</string>
 
     <string name="widget_field_cpu">CPU</string>
@@ -59,6 +63,7 @@
     <string name="widget_field_ping">Ping</string>
     <string name="widget_field_uptime">Uptime</string>
     <string name="widget_field_expire">Expire Date</string>
+    <string name="widget_field_loss">Packet Loss</string>
 
     <string name="widget_err_not_configured">Tap to pick a server</string>
     <string name="widget_err_no_token">No credential — open ServerBox</string>

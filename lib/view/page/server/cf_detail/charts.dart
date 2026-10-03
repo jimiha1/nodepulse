@@ -160,21 +160,47 @@ List<HistorySeries> rowsToProcessSeries(List<CfHistoryRow> rows) {
 List<HistorySeries> rowsToPingSeries(List<CfHistoryRow> rows) {
   return [
     HistorySeries(
-      'CT (电信)',
+      '电信',
       Colors.blue,
       [for (final r in rows) r.pingCt],
     ),
     HistorySeries(
-      'CU (联通)',
+      '联通',
       Colors.green,
       [for (final r in rows) r.pingCu],
     ),
     HistorySeries(
-      'CM (移动)',
+      '移动',
       Colors.deepOrange,
       [for (final r in rows) r.pingCm],
     ),
   ];
+}
+
+List<HistorySeries> rowsToLossSeries(List<CfHistoryRow> rows) {
+  return [
+    HistorySeries(
+      '电信',
+      Colors.blue,
+      [for (final r in rows) r.lossCt],
+    ),
+    HistorySeries(
+      '联通',
+      Colors.green,
+      [for (final r in rows) r.lossCu],
+    ),
+    HistorySeries(
+      '移动',
+      Colors.deepOrange,
+      [for (final r in rows) r.lossCm],
+    ),
+  ];
+}
+
+bool hasAnyLoss(List<CfHistoryRow> rows) {
+  return rows.any(
+    (r) => r.lossCt != null || r.lossCu != null || r.lossCm != null,
+  );
 }
 
 bool hasAnyPing(List<CfHistoryRow> rows) {

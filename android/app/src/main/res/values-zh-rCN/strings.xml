@@ -22,12 +22,16 @@
     <string name="widget_metric_io">磁盘读写</string>
     <string name="widget_metric_conn">连接数</string>
     <string name="widget_metric_proc">进程数</string>
+    <string name="widget_metric_loss">丢包率</string>
 
     <string name="widget_mode_chart">图表模式</string>
     <string name="widget_mode_reading">数值模式</string>
     <string name="widget_mode_combined">组合模式</string>
     <string name="widget_chart_1">图表 1</string>
     <string name="widget_chart_2">图表 2</string>
+    <string name="widget_chart_3">图表 3</string>
+    <string name="widget_chart_4">图表 4</string>
+    <string name="widget_chart_count">图表数量</string>
     <string name="widget_fields_title">展示字段</string>
 
     <string name="widget_field_cpu">CPU</string>
@@ -41,6 +45,7 @@
     <string name="widget_field_ping">延迟 Ping</string>
     <string name="widget_field_uptime">运行时间</string>
     <string name="widget_field_expire">到期时间</string>
+    <string name="widget_field_loss">丢包率</string>
 
     <string name="widget_err_not_configured">点按选择服务器</string>
     <string name="widget_err_no_token">无凭据 —— 请打开 ServerBox</string>

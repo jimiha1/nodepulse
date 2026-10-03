@@ -42,70 +42,46 @@ class CfServerCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _header(context),
-              const SizedBox(height: 7),
-              _usage(
-                'CPU',
-                node.cpu,
-                node.cpuCores == null ? null : 'x${node.cpuCores}',
+              const SizedBox(height: 8),
+              _resourceBar(
+                context: context,
+                label: 'CPU',
+                percent: node.cpu,
+                detail: node.cpuCores == null ? '' : 'x${node.cpuCores}',
               ),
-              _usage(
-                libL10n.memory,
-                _pctOf(node.ramUsed, node.ramTotal),
-                '${_mb(node.ramUsed)} / ${_mb(node.ramTotal)}',
+              _resourceBar(
+                context: context,
+                label: libL10n.memory,
+                percent: _pctOf(node.ramUsed, node.ramTotal),
+                detail: '${_mb(node.ramUsed)} / ${_mb(node.ramTotal)}',
+                color: const Color(0xFF0A84FF),
               ),
-              _usage(
-                libL10n.disk,
-                _pctOf(node.diskUsed, node.diskTotal),
-                '${_mb(node.diskUsed)} / ${_mb(node.diskTotal)}',
+              _resourceBar(
+                context: context,
+                label: libL10n.disk,
+                percent: _pctOf(node.diskUsed, node.diskTotal),
+                detail: '${_mb(node.diskUsed)} / ${_mb(node.diskTotal)}',
+                color: const Color(0xFFFF9F0A),
               ),
-              const SizedBox(height: 7),
-              Wrap(
-                spacing: 13,
-                runSpacing: 5,
+              const SizedBox(height: 10),
+              // Modular 2x2 layout
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _os(context),
-                  _kv(l10n.cfLoad, node.load1.toStringAsFixed(2)),
-                  Text('↓ ${node.netInSpeed.bytes2Str}/s', style: UIs.text13),
-                  Text('↑ ${node.netOutSpeed.bytes2Str}/s', style: UIs.text13),
-                  _kv(
-                    libL10n.total,
-                    '↓ ${node.netRxMonthly.bytes2Str} ↑ ${node.netTxMonthly.bytes2Str}',
-                  ),
-                  _kv('TCP', '${node.tcpConn}'),
-                  _kv('UDP', '${node.udpConn}'),
+                  Expanded(child: _buildNetworkTile(context)),
+                  const SizedBox(width: 8),
+                  Expanded(child: _buildTrafficTile(context)),
                 ],
               ),
-              if (node.bootTime != null || node.trafficUsedRatio >= 0) ...[
-                const SizedBox(height: 5),
-                Wrap(
-                  spacing: 13,
-                  runSpacing: 5,
-                  children: [
-                    if (node.bootTime != null)
-                      _kv(libL10n.uptime, _uptime(node.bootTime!)),
-                    if (node.trafficUsedRatio >= 0)
-                      _kv(
-                        l10n.cfTrafficRemaining,
-                        (node.trafficLimitBytes - node.trafficUsedBytes)
-                            .clamp(0, 1 << 62)
-                            .bytes2Str,
-                      ),
-                  ],
-                ),
-              ],
-              if (_pings().isNotEmpty || (showExpire && node.expireDate != null))
-                ...[
-                  const SizedBox(height: 5),
-                  Wrap(
-                    spacing: 13,
-                    runSpacing: 5,
-                    children: [
-                      ..._pings(),
-                      if (showExpire && node.expireDate != null)
-                        _expireItem(context),
-                    ],
-                  ),
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _buildPingLossTile(context)),
+                  const SizedBox(width: 8),
+                  Expanded(child: _buildSystemTile(context)),
                 ],
+              ),
             ],
           ),
         ),
@@ -113,30 +89,425 @@ class CfServerCard extends StatelessWidget {
     );
   }
 
-  Widget _header(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: node.online ? Colors.lightGreen : Colors.grey,
+  Widget _tileContainer({required BuildContext context, required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.28),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildNetworkTile(BuildContext context) {
+    return _tileContainer(
+      context: context,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.speed_rounded, size: 12, color: _greyOf(context).withValues(alpha: 0.75)),
+              const SizedBox(width: 4),
+              Text(
+                '实时速率',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w400,
+                  color: _greyOf(context).withValues(alpha: 0.75),
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Text(
-            node.name,
-            style: UIs.text15Bold,
+          const SizedBox(height: 5),
+          Row(
+            children: [
+              Text('↓ ', style: TextStyle(fontSize: 12, color: _greyOf(context).withValues(alpha: 0.75))),
+              Expanded(
+                child: Text(
+                  '${node.netInSpeed.bytes2Str}/s',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Row(
+            children: [
+              Text('↑ ', style: TextStyle(fontSize: 11, color: _greyOf(context).withValues(alpha: 0.75))),
+              Expanded(
+                child: Text(
+                  '${node.netOutSpeed.bytes2Str}/s',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                    color: _greyOf(context).withValues(alpha: 0.9),
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrafficTile(BuildContext context) {
+    final remainingText = node.trafficUsedRatio >= 0
+        ? (node.trafficLimitBytes - node.trafficUsedBytes).clamp(0, 1 << 62).bytes2Str
+        : '∞';
+    return _tileContainer(
+      context: context,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.data_usage_rounded, size: 12, color: _greyOf(context).withValues(alpha: 0.75)),
+              const SizedBox(width: 4),
+              Text(
+                '月度流量',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w400,
+                  color: _greyOf(context).withValues(alpha: 0.75),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '${l10n.cfTrafficRemaining} ',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w400,
+                    color: _greyOf(context).withValues(alpha: 0.75),
+                  ),
+                ),
+                TextSpan(
+                  text: remainingText,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
+          const SizedBox(height: 2),
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '已用 ',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w400,
+                    color: _greyOf(context).withValues(alpha: 0.75),
+                  ),
+                ),
+                TextSpan(
+                  text: (node.netRxMonthly + node.netTxMonthly).bytes2Str,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                    color: _greyOf(context).withValues(alpha: 0.9),
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPingLossTile(BuildContext context) {
+    Widget line(String name, double? ping, double? loss) {
+      final pText = ping != null ? '$name ${ping.toInt()}ms' : '$name -';
+      final lText = loss != null ? '${loss.toInt()}%' : '-';
+      final hasLoss = (loss ?? 0) > 0;
+      return Row(
+        children: [
+          Expanded(
+            child: Text(
+              pText,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: Theme.of(context).colorScheme.onSurface,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            lText,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: hasLoss ? FontWeight.w700 : FontWeight.w400,
+              color: hasLoss ? Colors.redAccent : _greyOf(context).withValues(alpha: 0.65),
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      );
+    }
+
+    return _tileContainer(
+      context: context,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.network_ping_rounded, size: 12, color: _greyOf(context).withValues(alpha: 0.75)),
+              const SizedBox(width: 4),
+              Text(
+                '三网网络',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w400,
+                  color: _greyOf(context).withValues(alpha: 0.75),
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '丢包',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w400,
+                  color: _greyOf(context).withValues(alpha: 0.65),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          line('电信', node.pingCt, node.lossCt),
+          const SizedBox(height: 2.5),
+          line('联通', node.pingCu, node.lossCu),
+          const SizedBox(height: 2.5),
+          line('移动', node.pingCm, node.lossCm),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSystemTile(BuildContext context) {
+    return _tileContainer(
+      context: context,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.dns_outlined, size: 12, color: _greyOf(context).withValues(alpha: 0.75)),
+              const SizedBox(width: 4),
+              Text(
+                '运行状态',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w400,
+                  color: _greyOf(context).withValues(alpha: 0.75),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '${l10n.cfLoad} ',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w400,
+                    color: _greyOf(context).withValues(alpha: 0.75),
+                  ),
+                ),
+                TextSpan(
+                  text: node.load1.toStringAsFixed(2),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '连接 ',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w400,
+                    color: _greyOf(context).withValues(alpha: 0.75),
+                  ),
+                ),
+                TextSpan(
+                  text: 'TCP ${node.tcpConn}  UDP ${node.udpConn}',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                    color: _greyOf(context).withValues(alpha: 0.9),
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '进程 ',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w400,
+                    color: _greyOf(context).withValues(alpha: 0.75),
+                  ),
+                ),
+                TextSpan(
+                  text: '${node.processes}',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                    color: _greyOf(context).withValues(alpha: 0.9),
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _header(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: node.online ? const Color(0xFF34C759) : Colors.grey,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  node.name,
+                  style: UIs.text15Bold,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (node.region case final region?) ...[
+                const SizedBox(width: 5),
+                _regionBadge(context, region),
+              ],
+              if (node.group case final group? when group.isNotEmpty && group.toLowerCase() != 'default') ...[
+                const SizedBox(width: 5),
+                Flexible(
+                  child: Text(
+                    group,
+                    style: UIs.text12Grey,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+              const SizedBox(width: 6),
+              _os(context),
+              if (node.bootTime != null) ...[
+                const SizedBox(width: 5),
+                Flexible(
+                  child: Text(
+                    _uptime(node.bootTime!),
+                    style: UIs.text12Grey,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
-        if (node.region case final region?) _regionBadge(context, region),
-        if (node.group case final group?) ...[
-          const SizedBox(width: 5),
-          Text(group, style: UIs.text12Grey),
+        if (node.expireDate case final exp? when exp.isNotEmpty) ...[
+          const SizedBox(width: 8),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '到期 ',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w400,
+                  color: _greyOf(context).withValues(alpha: 0.75),
+                ),
+              ),
+              Text(
+                exp,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: _greyOf(context),
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+        ],
+        if (showPrice && node.price != null && node.price!.isNotEmpty) ...[
+          const SizedBox(width: 6),
+          Text(
+            node.price!,
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w500,
+              color: _greyOf(context).withValues(alpha: 0.9),
+            ),
+          ),
         ],
       ],
     );
@@ -155,49 +526,47 @@ class CfServerCard extends StatelessWidget {
     );
   }
 
-  /// One share of the machine, as a fixed-width reading: the label, the
-  /// percentage and whatever qualifies it, on one line.
-  Widget _usage(String label, double percent, String? detail) {
+  Widget _resourceBar({
+    required BuildContext context,
+    required String label,
+    required double percent,
+    required String detail,
+    Color? color,
+  }) {
+    final effectiveColor = color ?? switch (percent) {
+      > 85 => Colors.redAccent,
+      > 60 => Colors.orangeAccent,
+      _ => const Color(0xFF34C759),
+    };
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 1),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         children: [
           SizedBox(
-            width: 46,
-            child: Text(
-              label,
-              style: UIs.text12Grey,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+            width: 38,
+            child: Text(label, style: UIs.text12Grey),
           ),
           SizedBox(
-            width: 62,
-            child: Text(_percent(percent), style: UIs.text13),
+            width: 52,
+            child: Text(_percent(percent), style: UIs.text13Bold),
           ),
           Expanded(
-            child: Text(
-              detail ?? '',
-              style: UIs.text12Grey,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: LinearProgressIndicator(
+                value: (percent / 100).clamp(0.0, 1.0),
+                minHeight: 6,
+                backgroundColor: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.25),
+                valueColor: AlwaysStoppedAnimation(effectiveColor),
+              ),
             ),
           ),
+          if (detail.isNotEmpty) ...[
+            const SizedBox(width: 8),
+            Text(detail, style: UIs.text12Grey),
+          ],
         ],
       ),
-    );
-  }
-
-  Widget _kv(String label, String value) {
-    return Text.rich(
-      TextSpan(
-        children: [
-          TextSpan(text: '$label ', style: UIs.text12Grey),
-          TextSpan(text: value, style: UIs.text13),
-        ],
-      ),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
     );
   }
 
@@ -208,39 +577,8 @@ class CfServerCard extends StatelessWidget {
   Widget _os(BuildContext context) {
     final os = node.os;
     if (os == null || os.isEmpty) return const SizedBox.shrink();
-    return Row(mainAxisSize: MainAxisSize.min, children: [
-      distIconOf(_distOf(os), size: 14) ??
-          Icon(MingCute.linux_fill, size: 14, color: _greyOf(context)),
-      const SizedBox(width: 3),
-      Text(os, style: UIs.text12Grey),
-    ]);
-  }
-
-  /// The three mainland pings, the ones that exist. A null ping is a timeout
-  /// or an unconfigured probe — either way it has no number to show, so it
-  /// takes no slot: three dashes read as a row that is broken, and omitting
-  /// the ones that are absent reads as a row that is short.
-  List<Widget> _pings() {
-    Text? at(String label, double? ms) => switch (ms) {
-      null => null,
-      final v => Text(
-        '$label ${v < 10 ? v.toStringAsFixed(1) : v.toStringAsFixed(0)}ms',
-        style: UIs.text13,
-      ),
-    };
-    return [?at('CT', node.pingCt), ?at('CU', node.pingCu), ?at('CM', node.pingCm)];
-  }
-
-  Widget _expireItem(BuildContext context) {
-    final price = showPrice ? node.price : null;
-    return Row(mainAxisSize: MainAxisSize.min, children: [
-      Text('${l10n.cfExpire} ', style: UIs.text12Grey),
-      Text(node.expireDate ?? '--', style: UIs.text13),
-      if (price case final p? when p.isNotEmpty) ...[
-        const SizedBox(width: 5),
-        Text(p, style: UIs.text12Grey),
-      ],
-    ]);
+    return distIconOf(_distOf(os), size: 15) ??
+        Icon(MingCute.linux_fill, size: 15, color: _greyOf(context));
   }
 
   Color _greyOf(BuildContext context) =>

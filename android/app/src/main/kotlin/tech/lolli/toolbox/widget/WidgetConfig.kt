@@ -17,6 +17,7 @@ enum class WidgetField(val key: String) {
     TRAFFIC_LEFT("quota"),
     CONN("conn"),
     PING("ping"),
+    LOSS("loss"),
     UPTIME("uptime"),
     EXPIRE("expire");
 
@@ -53,18 +54,23 @@ data class WidgetConfig(
     val kind: WidgetKind = WidgetKind.SMALL,
     val mode: MediumMode = MediumMode.CHART,
     val fields: List<WidgetField> = emptyList(),
+    val chartCount: Int = 1,
     val chart: String = DEFAULT_CHART,
     val chart2: String = DEFAULT_CHART2,
+    val chart3: String = DEFAULT_CHART3,
+    val chart4: String = DEFAULT_CHART4,
 ) {
     companion object {
         private const val PREFS = "sbm_widget_config"
 
         const val CAP_SMALL_FIELDS = 4
-        const val CAP_MEDIUM_READING_FIELDS = 6
-        const val CAP_COMBINED_FIELDS = 3
+        const val CAP_MEDIUM_READING_FIELDS = 8
+        const val CAP_COMBINED_FIELDS = 4
 
         const val DEFAULT_CHART = "net"
         const val DEFAULT_CHART2 = "cpu"
+        const val DEFAULT_CHART3 = "mem"
+        const val DEFAULT_CHART4 = "disk"
 
         val DEFAULT_SMALL_FIELDS = listOf(
             WidgetField.CPU,
@@ -83,8 +89,11 @@ data class WidgetConfig(
             val metric = WidgetMetric.from(prefs.getString(key(appWidgetId, "metric"), null))
 
             val mode = MediumMode.fromKey(prefs.getString(key(appWidgetId, "mode"), null))
+            val chartCount = prefs.getInt(key(appWidgetId, "chart_count"), 1)
             val chart = prefs.getString(key(appWidgetId, "chart"), null) ?: DEFAULT_CHART
             val chart2 = prefs.getString(key(appWidgetId, "chart2"), null) ?: DEFAULT_CHART2
+            val chart3 = prefs.getString(key(appWidgetId, "chart3"), null) ?: DEFAULT_CHART3
+            val chart4 = prefs.getString(key(appWidgetId, "chart4"), null) ?: DEFAULT_CHART4
 
             val rawFields = prefs.getString(key(appWidgetId, "fields"), null)
             val cap = when {
@@ -116,8 +125,11 @@ data class WidgetConfig(
                 kind = kind,
                 mode = mode,
                 fields = fields,
+                chartCount = chartCount,
                 chart = chart,
                 chart2 = chart2,
+                chart3 = chart3,
+                chart4 = chart4,
             )
         }
 
@@ -140,8 +152,11 @@ data class WidgetConfig(
                 .putString(key(appWidgetId, "metric"), config.metric.name)
                 .putString(key(appWidgetId, "mode"), config.mode.key)
                 .putString(key(appWidgetId, "fields"), fieldKeys)
+                .putInt(key(appWidgetId, "chart_count"), config.chartCount)
                 .putString(key(appWidgetId, "chart"), config.chart)
                 .putString(key(appWidgetId, "chart2"), config.chart2)
+                .putString(key(appWidgetId, "chart3"), config.chart3)
+                .putString(key(appWidgetId, "chart4"), config.chart4)
                 .apply()
         }
 
@@ -156,8 +171,11 @@ data class WidgetConfig(
                 .remove(key(appWidgetId, "metric"))
                 .remove(key(appWidgetId, "mode"))
                 .remove(key(appWidgetId, "fields"))
+                .remove(key(appWidgetId, "chart_count"))
                 .remove(key(appWidgetId, "chart"))
                 .remove(key(appWidgetId, "chart2"))
+                .remove(key(appWidgetId, "chart3"))
+                .remove(key(appWidgetId, "chart4"))
                 .apply()
         }
 

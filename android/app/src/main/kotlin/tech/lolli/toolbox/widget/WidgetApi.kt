@@ -46,11 +46,13 @@ object WidgetApi {
         val trafficLeftText: String = "",
         val connText: String = "",
         val pingText: String = "",
+        val lossText: String = "",
         val uptimeText: String = "",
         val expireText: String = "",
         val load1: Double = 0.0,
         val diskIoText: String = "",
         val procText: String = "",
+        val avgLoss: Double? = null,
     )
 
     /** One bucket of history, oldest first. */
@@ -64,6 +66,7 @@ object WidgetApi {
         val io: Double = 0.0,
         val conn: Double = 0.0,
         val proc: Double = 0.0,
+        val loss: Double = 0.0,
     )
 
     private const val TIMEOUT_MS = 8_000
@@ -199,8 +202,20 @@ object WidgetApi {
             val ct = pingCt?.let { "${it.toInt()}" } ?: "-"
             val cu = pingCu?.let { "${it.toInt()}" } ?: "-"
             val cm = pingCm?.let { "${it.toInt()}" } ?: "-"
-            "$ct/$cu/${cm}ms"
+            "电$ct 联$cu 移$cm"
         } else "--"
+
+        // Loss
+        val lossCt = o.optDoubleOrNull("loss_ct")
+        val lossCu = o.optDoubleOrNull("loss_cu")
+        val lossCm = o.optDoubleOrNull("loss_cm")
+        val lossText = if (lossCt != null || lossCu != null || lossCm != null) {
+            fun fmtLoss(v: Double?): String = v?.let { "${it.toInt()}%" } ?: "-"
+            "电${fmtLoss(lossCt)} 联${fmtLoss(lossCu)} 移${fmtLoss(lossCm)}"
+        } else "--"
+
+        val losses = listOfNotNull(lossCt, lossCu, lossCm)
+        val avgLoss = if (losses.isNotEmpty()) losses.average() else null
 
         // Uptime
         val bootTime = o.optDoubleOrNull("boot_time")
@@ -231,11 +246,13 @@ object WidgetApi {
             trafficLeftText = trafficLeftText,
             connText = connText,
             pingText = pingText,
+            lossText = lossText,
             uptimeText = uptimeText,
             expireText = expireText,
             load1 = loads.firstOrNull() ?: 0.0,
             diskIoText = "--",
             procText = procText,
+            avgLoss = avgLoss,
         )
     }
 
@@ -258,6 +275,12 @@ object WidgetApi {
             val udpConn = o.optDoubleOrNull("udp_conn") ?: 0.0
             val proc = o.optDoubleOrNull("processes") ?: 0.0
 
+            val lCt = o.optDoubleOrNull("loss_ct")
+            val lCu = o.optDoubleOrNull("loss_cu")
+            val lCm = o.optDoubleOrNull("loss_cm")
+            val validLosses = listOfNotNull(lCt, lCu, lCm)
+            val avgL = if (validLosses.isNotEmpty()) validLosses.average() else 0.0
+
             HistoryPoint(
                 cpu = o.optDouble("cpu", 0.0),
                 memory = memPercent,
@@ -268,6 +291,7 @@ object WidgetApi {
                 io = diskR + diskW,
                 conn = tcpConn + udpConn,
                 proc = proc,
+                loss = avgL,
             )
         }
     }

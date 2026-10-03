@@ -33,6 +33,7 @@ class WidgetConfigureActivity : Activity() {
             "io",
             "conn",
             "proc",
+            "loss",
         )
     }
 
@@ -67,11 +68,17 @@ class WidgetConfigureActivity : Activity() {
 
         val mediumModeContainer = findViewById<LinearLayout>(R.id.medium_mode_container)
         val modeGroup = findViewById<RadioGroup>(R.id.mode_group)
+        val chartCountContainer = findViewById<LinearLayout>(R.id.chart_count_container)
+        val chartCountSpinner = findViewById<Spinner>(R.id.chart_count_spinner)
         val chartContainer = findViewById<LinearLayout>(R.id.chart_container)
         val chartLabel = findViewById<TextView>(R.id.chart_label)
         val metricSpinner = findViewById<Spinner>(R.id.metric_spinner)
         val chart2Container = findViewById<LinearLayout>(R.id.chart2_container)
         val chart2Spinner = findViewById<Spinner>(R.id.chart2_spinner)
+        val chart3Container = findViewById<LinearLayout>(R.id.chart3_container)
+        val chart3Spinner = findViewById<Spinner>(R.id.chart3_spinner)
+        val chart4Container = findViewById<LinearLayout>(R.id.chart4_container)
+        val chart4Spinner = findViewById<Spinner>(R.id.chart4_spinner)
         val fieldsContainer = findViewById<LinearLayout>(R.id.fields_container)
         val fieldsCapHint = findViewById<TextView>(R.id.fields_cap_hint)
         val fieldChecks = findViewById<LinearLayout>(R.id.field_checks)
@@ -85,11 +92,23 @@ class WidgetConfigureActivity : Activity() {
         )
         metricSpinner.adapter = spinnerAdapter
         chart2Spinner.adapter = spinnerAdapter
+        chart3Spinner.adapter = spinnerAdapter
+        chart4Spinner.adapter = spinnerAdapter
 
-        val initialChartIndex = CHART_METRICS.indexOf(existing.chart).coerceAtLeast(0)
-        metricSpinner.setSelection(initialChartIndex)
-        val initialChart2Index = CHART_METRICS.indexOf(existing.chart2).coerceAtLeast(0)
-        chart2Spinner.setSelection(initialChart2Index)
+        val chartCountOptions = listOf(1, 2, 4)
+        val chartCountAdapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_dropdown_item,
+            chartCountOptions.map { "$it" },
+        )
+        chartCountSpinner.adapter = chartCountAdapter
+        val initialCountIndex = chartCountOptions.indexOf(existing.chartCount).coerceAtLeast(0)
+        chartCountSpinner.setSelection(initialCountIndex)
+
+        metricSpinner.setSelection(CHART_METRICS.indexOf(existing.chart).coerceAtLeast(0))
+        chart2Spinner.setSelection(CHART_METRICS.indexOf(existing.chart2).coerceAtLeast(0))
+        chart3Spinner.setSelection(CHART_METRICS.indexOf(existing.chart3).coerceAtLeast(0))
+        chart4Spinner.setSelection(CHART_METRICS.indexOf(existing.chart4).coerceAtLeast(0))
 
         // Setup Field Checkboxes
         val checkBoxes = mutableMapOf<WidgetField, CheckBox>()
@@ -106,8 +125,11 @@ class WidgetConfigureActivity : Activity() {
         fun updateUI() {
             if (kind == WidgetKind.SMALL) {
                 mediumModeContainer.visibility = View.GONE
+                chartCountContainer.visibility = View.GONE
                 chartContainer.visibility = View.GONE
                 chart2Container.visibility = View.GONE
+                chart3Container.visibility = View.GONE
+                chart4Container.visibility = View.GONE
                 fieldsContainer.visibility = View.VISIBLE
                 fieldsCapHint.text = "(Max ${WidgetConfig.CAP_SMALL_FIELDS})"
             } else {
@@ -119,26 +141,43 @@ class WidgetConfigureActivity : Activity() {
                 }
                 when (selectedMode) {
                     MediumMode.CHART -> {
+                        chartCountContainer.visibility = View.VISIBLE
+                        val count = chartCountOptions.getOrElse(chartCountSpinner.selectedItemPosition) { 1 }
                         chartContainer.visibility = View.VISIBLE
-                        chartLabel.text = getString(R.string.widget_configure_metric)
-                        chart2Container.visibility = View.GONE
+                        chartLabel.text = if (count == 1) getString(R.string.widget_configure_metric) else getString(R.string.widget_chart_1)
+                        chart2Container.visibility = if (count >= 2) View.VISIBLE else View.GONE
+                        chart3Container.visibility = if (count >= 4) View.VISIBLE else View.GONE
+                        chart4Container.visibility = if (count >= 4) View.VISIBLE else View.GONE
                         fieldsContainer.visibility = View.GONE
                     }
                     MediumMode.READING -> {
+                        chartCountContainer.visibility = View.GONE
                         chartContainer.visibility = View.GONE
                         chart2Container.visibility = View.GONE
+                        chart3Container.visibility = View.GONE
+                        chart4Container.visibility = View.GONE
                         fieldsContainer.visibility = View.VISIBLE
                         fieldsCapHint.text = "(Max ${WidgetConfig.CAP_MEDIUM_READING_FIELDS})"
                     }
                     MediumMode.COMBINED -> {
+                        chartCountContainer.visibility = View.GONE
                         chartContainer.visibility = View.VISIBLE
                         chartLabel.text = getString(R.string.widget_chart_1)
                         chart2Container.visibility = View.VISIBLE
+                        chart3Container.visibility = View.GONE
+                        chart4Container.visibility = View.GONE
                         fieldsContainer.visibility = View.VISIBLE
                         fieldsCapHint.text = "(Max ${WidgetConfig.CAP_COMBINED_FIELDS})"
                     }
                 }
             }
+        }
+
+        chartCountSpinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
+                updateUI()
+            }
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
         }
 
         // Limit checkbox selection based on current cap
@@ -207,6 +246,9 @@ class WidgetConfigureActivity : Activity() {
 
             val chart1 = CHART_METRICS.getOrNull(metricSpinner.selectedItemPosition) ?: WidgetConfig.DEFAULT_CHART
             val chart2 = CHART_METRICS.getOrNull(chart2Spinner.selectedItemPosition) ?: WidgetConfig.DEFAULT_CHART2
+            val chart3 = CHART_METRICS.getOrNull(chart3Spinner.selectedItemPosition) ?: WidgetConfig.DEFAULT_CHART3
+            val chart4 = CHART_METRICS.getOrNull(chart4Spinner.selectedItemPosition) ?: WidgetConfig.DEFAULT_CHART4
+            val count = chartCountOptions.getOrElse(chartCountSpinner.selectedItemPosition) { 1 }
 
             WidgetConfig.save(
                 applicationContext,
@@ -216,8 +258,11 @@ class WidgetConfigureActivity : Activity() {
                     kind = kind,
                     mode = selectedMode,
                     fields = selectedFields,
+                    chartCount = count,
                     chart = chart1,
                     chart2 = chart2,
+                    chart3 = chart3,
+                    chart4 = chart4,
                 ),
             )
 
@@ -268,6 +313,7 @@ class WidgetConfigureActivity : Activity() {
         "io" -> getString(R.string.widget_metric_io)
         "conn" -> getString(R.string.widget_metric_conn)
         "proc" -> getString(R.string.widget_metric_proc)
+        "loss" -> getString(R.string.widget_metric_loss)
         else -> metric.uppercase()
     }
 
@@ -281,6 +327,7 @@ class WidgetConfigureActivity : Activity() {
         WidgetField.TRAFFIC_LEFT -> getString(R.string.widget_field_quota)
         WidgetField.CONN -> getString(R.string.widget_field_conn)
         WidgetField.PING -> getString(R.string.widget_field_ping)
+        WidgetField.LOSS -> getString(R.string.widget_field_loss)
         WidgetField.UPTIME -> getString(R.string.widget_field_uptime)
         WidgetField.EXPIRE -> getString(R.string.widget_field_expire)
     }

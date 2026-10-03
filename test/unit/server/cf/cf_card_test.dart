@@ -91,9 +91,9 @@ void main() {
     // CPU as the brief's fixture says.
     expect(find.text('3.2%'), findsOneWidget);
     // Only the pings that exist get a line: CU is null here.
-    expect(find.text('CT 165ms'), findsOneWidget);
-    expect(find.text('CM 190ms'), findsOneWidget);
-    expect(find.text('CU --'), findsNothing);
+    expect(find.text('电信 165ms'), findsOneWidget);
+    expect(find.text('移动 190ms'), findsOneWidget);
+    expect(find.text('联通 --'), findsNothing);
     // Expiry, with the price beside it.
     expect(find.text('2027-01-01'), findsOneWidget);
     expect(find.text('5.0'), findsOneWidget);
@@ -105,7 +105,38 @@ void main() {
   testWidgets('hides what the site says not to show and what is absent', (
     tester,
   ) async {
-    await _pump(tester, showExpire: false, showPrice: false);
+    await _pump(
+      tester,
+      showExpire: false,
+      showPrice: false,
+      node: const CfServer(
+        id: 'n1',
+        name: '日本节点',
+        group: '家宽',
+        region: 'jp',
+        os: 'Ubuntu 22.04',
+        online: true,
+        cpu: 3.2,
+        ramUsed: 1024,
+        ramTotal: 4096,
+        swapUsed: 0,
+        swapTotal: 0,
+        diskUsed: 20480,
+        diskTotal: 40960,
+        load1: 0.42,
+        load5: 0.3,
+        load15: 0.2,
+        netInSpeed: 1048576,
+        netOutSpeed: 262144,
+        netRxMonthly: 3221225472,
+        netTxMonthly: 1073741824,
+        netRx: 0,
+        netTx: 0,
+        tcpConn: 12,
+        udpConn: 3,
+        processes: 118,
+      ),
+    );
 
     expect(find.text('2027-01-01'), findsNothing);
     expect(find.text('5.0'), findsNothing);
@@ -144,5 +175,59 @@ void main() {
     expect(find.text('CT 165ms'), findsNothing);
     expect(find.text('CU --'), findsNothing);
     expect(find.text('CM 190ms'), findsNothing);
+  });
+
+  testWidgets('renders progress indicators and loss metrics for cf server', (tester) async {
+    const server = CfServer(
+      id: 's1',
+      name: 'Tokyo Node',
+      region: 'JP',
+      group: 'Edge',
+      os: 'Ubuntu 22.04',
+      online: true,
+      cpu: 45.0,
+      cpuCores: 4,
+      ramUsed: 4096,
+      ramTotal: 8192,
+      swapUsed: 0,
+      swapTotal: 2048,
+      diskUsed: 51200,
+      diskTotal: 102400,
+      load1: 0.15,
+      load5: 0.20,
+      load15: 0.18,
+      netInSpeed: 1024000,
+      netOutSpeed: 512000,
+      netRxMonthly: 1000000000,
+      netTxMonthly: 2000000000,
+      netRx: 1000000000,
+      netTx: 2000000000,
+      tcpConn: 85,
+      udpConn: 12,
+      processes: 120,
+      pingCt: 45.0,
+      pingCu: 38.0,
+      pingCm: 60.0,
+      lossCt: 0.0,
+      lossCu: 1.0,
+      lossCm: 0.0,
+      bootTime: 1750000000,
+    );
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: CfServerCard(node: server),
+        ),
+      ),
+    );
+
+    expect(find.text('Tokyo Node'), findsOneWidget);
+    expect(find.byType(LinearProgressIndicator), findsNWidgets(3));
+    expect(find.textContaining('电信 45ms'), findsOneWidget);
+    expect(find.textContaining('联通 38ms'), findsOneWidget);
+    expect(find.textContaining('移动 60ms'), findsOneWidget);
+    expect(find.text('0%'), findsNWidgets(2));
+    expect(find.text('1%'), findsOneWidget);
   });
 }

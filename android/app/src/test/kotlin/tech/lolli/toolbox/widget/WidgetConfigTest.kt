@@ -20,6 +20,12 @@ class WidgetConfigTest {
         val editorHandler = object : InvocationHandler {
             override fun invoke(proxy: Any?, method: Method, args: Array<out Any>?): Any? {
                 when (method.name) {
+                    "putInt" -> {
+                        val key = args?.get(0) as String
+                        val value = args?.get(1) as Int
+                        memoryStore[key] = value.toString()
+                        return proxy
+                    }
                     "putString" -> {
                         val key = args?.get(0) as String
                         val value = args?.get(1) as String
@@ -46,6 +52,11 @@ class WidgetConfigTest {
             override fun invoke(proxy: Any?, method: Method, args: Array<out Any>?): Any? {
                 when (method.name) {
                     "edit" -> return mockEditor
+                    "getInt" -> {
+                        val key = args?.get(0) as String
+                        val defVal = args?.get(1) as? Int ?: 0
+                        return memoryStore[key]?.toIntOrNull() ?: defVal
+                    }
                     "getString" -> {
                         val key = args?.get(0) as String
                         val defVal = args?.get(1) as? String
@@ -89,7 +100,11 @@ class WidgetConfigTest {
             serverId = "srv-2",
             kind = WidgetKind.MEDIUM,
             mode = MediumMode.CHART,
+            chartCount = 4,
             chart = "net",
+            chart2 = "cpu",
+            chart3 = "mem",
+            chart4 = "disk",
         )
 
         WidgetConfig.saveToPrefs(mockPrefs, appWidgetId, config)
@@ -98,7 +113,11 @@ class WidgetConfigTest {
         assertEquals("srv-2", loaded.serverId)
         assertEquals(WidgetKind.MEDIUM, loaded.kind)
         assertEquals(MediumMode.CHART, loaded.mode)
+        assertEquals(4, loaded.chartCount)
         assertEquals("net", loaded.chart)
+        assertEquals("cpu", loaded.chart2)
+        assertEquals("mem", loaded.chart3)
+        assertEquals("disk", loaded.chart4)
     }
 
     @Test
@@ -115,6 +134,8 @@ class WidgetConfigTest {
                 WidgetField.NET_SPEED,
                 WidgetField.CONN,
                 WidgetField.UPTIME,
+                WidgetField.EXPIRE,
+                WidgetField.PING,
             ),
         )
 
@@ -131,6 +152,8 @@ class WidgetConfigTest {
                 WidgetField.NET_SPEED,
                 WidgetField.CONN,
                 WidgetField.UPTIME,
+                WidgetField.EXPIRE,
+                WidgetField.PING,
             ),
             loaded.fields,
         )
@@ -145,7 +168,7 @@ class WidgetConfigTest {
             mode = MediumMode.COMBINED,
             chart = "cpu",
             chart2 = "mem",
-            fields = listOf(WidgetField.DISK, WidgetField.NET_SPEED, WidgetField.PING),
+            fields = listOf(WidgetField.DISK, WidgetField.NET_SPEED, WidgetField.PING, WidgetField.CONN),
         )
 
         WidgetConfig.saveToPrefs(mockPrefs, appWidgetId, config)
@@ -156,7 +179,7 @@ class WidgetConfigTest {
         assertEquals("cpu", loaded.chart)
         assertEquals("mem", loaded.chart2)
         assertEquals(
-            listOf(WidgetField.DISK, WidgetField.NET_SPEED, WidgetField.PING),
+            listOf(WidgetField.DISK, WidgetField.NET_SPEED, WidgetField.PING, WidgetField.CONN),
             loaded.fields,
         )
     }
@@ -185,7 +208,7 @@ class WidgetConfigTest {
             loadedSmall.fields,
         )
 
-        // Medium reading max is 6 fields
+        // Medium reading max is 8 fields
         val appWidgetIdMedReading = 47
         val configReading = WidgetConfig(
             serverId = "srv-reading",
@@ -200,13 +223,14 @@ class WidgetConfigTest {
                 WidgetField.UPTIME,
                 WidgetField.EXPIRE,
                 WidgetField.PING,
+                WidgetField.LOAD,
             ),
         )
         WidgetConfig.saveToPrefs(mockPrefs, appWidgetIdMedReading, configReading)
         val loadedReading = WidgetConfig.loadFromPrefs(mockPrefs, appWidgetIdMedReading, WidgetKind.MEDIUM)
-        assertEquals(6, loadedReading.fields.size)
+        assertEquals(8, loadedReading.fields.size)
 
-        // Medium combined max is 3 fields
+        // Medium combined max is 4 fields
         val appWidgetIdCombined = 48
         val configCombined = WidgetConfig(
             serverId = "srv-comb",
@@ -219,13 +243,14 @@ class WidgetConfigTest {
                 WidgetField.MEM,
                 WidgetField.DISK,
                 WidgetField.NET_SPEED,
+                WidgetField.PING,
             ),
         )
         WidgetConfig.saveToPrefs(mockPrefs, appWidgetIdCombined, configCombined)
         val loadedCombined = WidgetConfig.loadFromPrefs(mockPrefs, appWidgetIdCombined, WidgetKind.MEDIUM)
-        assertEquals(3, loadedCombined.fields.size)
+        assertEquals(4, loadedCombined.fields.size)
         assertEquals(
-            listOf(WidgetField.CPU, WidgetField.MEM, WidgetField.DISK),
+            listOf(WidgetField.CPU, WidgetField.MEM, WidgetField.DISK, WidgetField.NET_SPEED),
             loadedCombined.fields,
         )
     }

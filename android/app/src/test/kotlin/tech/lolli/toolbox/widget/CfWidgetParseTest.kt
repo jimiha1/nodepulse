@@ -24,6 +24,9 @@ class CfWidgetParseTest {
         "ping_ct": 165,
         "ping_cu": 78,
         "ping_cm": 310,
+        "loss_ct": 0,
+        "loss_cu": 5,
+        "loss_cm": 12,
         "boot_time": "1756000000000",
         "expire_date": "2027-10-02"
       }]
@@ -72,7 +75,8 @@ class CfWidgetParseTest {
         assertEquals(54.638, reading.disk!!, 0.01)
         assertTrue(reading.memText.contains("4.9g") || reading.memText.contains("4.8g"))
         assertTrue(reading.netText.contains("12.8k/s") || reading.netText.contains("12.9k/s"))
-        assertEquals("165/78/310ms", reading.pingText)
+        assertEquals("电165 联78 移310", reading.pingText)
+        assertEquals("电0% 联5% 移12%", reading.lossText)
         assertEquals("2027-10-02", reading.expireText)
     }
 

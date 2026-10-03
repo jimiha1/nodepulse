@@ -1,168 +1,71 @@
-简体中文 | [English](README.md)
+[English](README.md) | [简体中文](README_zh.md)
 
-<h2 align="center">Flutter Server Box</h2>
+<h2 align="center">CF ServerBox</h2>
 
 <div align="center">
-  <a href="https://cdn.lollipopkit.com/donate"><img alt="donate" src="https://img.shields.io/badge/捐赠-我-pink"></a>
-  <img alt="语言" src="https://img.shields.io/badge/语言-dart-cyan">
-  <img alt="license" src="https://img.shields.io/badge/证书-AGPLv3-yellow">
-  <a href="https://deepwiki.com/lollipopkit/flutter_server_box"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
+  <img alt="lang" src="https://img.shields.io/badge/language-Dart%20%7C%20Kotlin-blue">
+  <img alt="framework" src="https://img.shields.io/badge/framework-Flutter-cyan">
+  <img alt="platform" src="https://img.shields.io/badge/platform-Android%20%7C%20iOS%20%7C%20macOS%20%7C%20Linux%20%7C%20Windows-green">
+  <img alt="license" src="https://img.shields.io/badge/license-AGPLv3-yellow">
 </div>
 
 <p align="center">
-使用 Flutter 开发的 Linux, Unix, Windows 服务器工具箱，提供服务器状态图表和管理工具。
-<br>
-用户指南、架构说明和开发文档请参阅<a href="https://serverbox.lolli.tech/docs/">文档站</a>。
+专为 <b><a href="https://github.com/vaxilu/x-ui">CF-Server-Monitor</a></b>（基于 Cloudflare Workers 的无服务器探针）定制的现代轻量跨平台客户端与 Android 原生桌面小组件。
 </p>
 
+---
 
-## 致谢
+## ✨ 核心特性
 
-特别感谢 <a href="https://github.com/TerminalStudio/dartssh2">dartssh2</a> & <a href="https://github.com/TerminalStudio/xterm.dart">xterm.dart</a>。
-感谢我的对象提供的 精神+经济 支持。
-感谢 <a href="https://openai.com">OpenAI</a> 赠送的六个月 ChatGPT Pro 20x 订阅。
+- ⚡ **专一且轻量**：精简了庞杂的 SSH、本地脚本和终端依赖，开箱直连 CF-Server-Monitor 接口（`/api/servers`、`/api/history` 与实时 WebSocket 推送），秒级响应。
+- 📱 **Android 4x2 原生桌面小组件 (AppWidgets)**：
+  - **读数胶囊模式**：8 格精美胶囊网格，聚合 CPU、内存、硬盘、上下行网速、月度流量以及三网网络诊断。
+  - **图表走势模式**：2x2 多维指标历史折线走势，桌面随时掌握负载动态。
+  - **三网深度监控**：完整支持中国电信、中国联通、中国移动三网独立 Ping 延迟与丢包率解析及展示。
+- 🎨 **Monochrome Minimal 极致极简设计**：
+  - 模块化 2x2 信息卡片（实时速率、月度流量、三网网络/丢包、系统运行状态）。
+  - 等宽数字排版（`FontFeature.tabularFigures()`），信息对齐工整，字重反差层次分明。
+  - 负载自适应颜色条（正常绿色 / 警戒橙色 / 过载红色）。
+- 📊 **智能分层与同心圆图表**：解决三网丢包率同为 0.0% 时点位互相重叠遮挡的痛点，采用分级同心圆与阶梯线宽呈现。
+- 🔄 **WebSocket 长连接实时刷新**：内置心跳保活机制与断线指数退避重连算法。
 
+---
 
-## 截屏
+## 🚀 快速开始
 
-<!-- 按平台折叠，每张图都带 `loading="lazy"`：三个设备形态共 31 张，全部展开
-     会在读者决定要不要看之前就先加载几 MB。想让某一组默认展开，给对应的
-     `<details>` 加上 `open`。 -->
+### 开发环境要求
+- Flutter SDK `>=3.3.0`
+- Android SDK (用于编译 Android 客户端与桌面微件)
 
-<details>
-<summary><b>iPhone</b> — 11 张</summary>
-<br>
-<table>
-  <tr>
-    <td><img width="180px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/iphone/home.jpg" alt="服务器列表"></td>
-    <td><img width="180px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/iphone/server-details.jpg" alt="服务器详情"></td>
-    <td><img width="180px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/iphone/terminal.jpg" alt="终端"></td>
-    <td><img width="180px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/iphone/files.jpg" alt="文件"></td>
-  </tr>
-  <tr>
-    <td><img width="180px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/iphone/container.jpg" alt="容器"></td>
-    <td><img width="180px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/iphone/process.jpg" alt="进程"></td>
-    <td><img width="180px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/iphone/services.jpg" alt="服务"></td>
-    <td><img width="180px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/iphone/snippets.jpg" alt="代码片段"></td>
-  </tr>
-  <tr>
-    <td><img width="180px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/iphone/agent.jpg" alt="Agent"></td>
-    <td><img width="180px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/iphone/bench.jpg" alt="基准测试"></td>
-    <td><img width="180px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/iphone/settings.jpg" alt="设置"></td>
-    <td></td>
-  </tr>
-</table>
-</details>
+### 构建与运行
 
-<details>
-<summary><b>iPad</b> — 10 张</summary>
-<br>
-<table>
-  <tr>
-    <td><img width="280px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/ipad/home.jpg" alt="服务器列表"></td>
-    <td><img width="280px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/ipad/server-details.jpg" alt="服务器详情"></td>
-    <td><img width="280px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/ipad/terminal.jpg" alt="终端"></td>
-  </tr>
-  <tr>
-    <td><img width="280px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/ipad/files.jpg" alt="文件"></td>
-    <td><img width="280px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/ipad/container.jpg" alt="容器"></td>
-    <td><img width="280px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/ipad/process.jpg" alt="进程"></td>
-  </tr>
-  <tr>
-    <td><img width="280px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/ipad/services.jpg" alt="服务"></td>
-    <td><img width="280px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/ipad/globe.jpg" alt="地球"></td>
-    <td><img width="280px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/ipad/agent.jpg" alt="Agent"></td>
-  </tr>
-  <tr>
-    <td><img width="280px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/ipad/settings.jpg" alt="设置"></td>
-    <td></td>
-    <td></td>
-  </tr>
-</table>
-</details>
+```bash
+# 克隆仓库
+git clone https://github.com/jimiha1/cf_server_box.git
+cd cf_server_box
 
-<details>
-<summary><b>macOS</b> — 10 张</summary>
-<br>
-<table>
-  <tr>
-    <td><img width="380px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/mac/home.jpg" alt="服务器列表"></td>
-    <td><img width="380px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/mac/server-details.jpg" alt="服务器详情"></td>
-  </tr>
-  <tr>
-    <td><img width="380px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/mac/terminal.jpg" alt="终端"></td>
-    <td><img width="380px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/mac/files.jpg" alt="文件"></td>
-  </tr>
-  <tr>
-    <td><img width="380px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/mac/container.jpg" alt="容器"></td>
-    <td><img width="380px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/mac/process.jpg" alt="进程"></td>
-  </tr>
-  <tr>
-    <td><img width="380px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/mac/services.jpg" alt="服务"></td>
-    <td><img width="380px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/mac/globe.jpg" alt="地球"></td>
-  </tr>
-  <tr>
-    <td><img width="380px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/mac/agent.jpg" alt="Agent"></td>
-    <td><img width="380px" loading="lazy" src="https://cdn.lollipopkit.com/serverbox/screenshot/mac/settings.jpg" alt="设置"></td>
-  </tr>
-</table>
-</details>
+# 安装 Flutter 依赖
+flutter pub get
 
-## 安装
+# 在连接的真机或模拟器上运行
+flutter run
 
-| 平台 | 下载 |
-| --- | --- |
-| iOS | [AppStore](https://apps.apple.com/app/id1586449703) / [GitHub](https://github.com/lollipopkit/flutter_server_box/releases)（`_NoSign.ipa`，未签名，需自行签名后安装） |
-| macOS | [App Store](https://apps.apple.com/app/id1586449703)（仅支持 Apple silicon） / [GitHub](https://github.com/lollipopkit/flutter_server_box/releases)（按架构分别提供 `.dmg`） / `brew install --cask server-box` |
-| Android | [GitHub](https://github.com/lollipopkit/flutter_server_box/releases) / [CDN](https://cdn.lollipopkit.com/serverbox/pkg/?sort=time&order=desc&layout=grid) / [F-Droid](https://f-droid.org/packages/tech.lolli.toolbox) / [OpenAPK](https://www.openapk.net/serverbox/tech.lolli.toolbox/) |
-| Linux / Windows | [GitHub](https://github.com/lollipopkit/flutter_server_box/releases) / [CDN](https://cdn.lollipopkit.com/serverbox/pkg/?sort=time&order=desc&layout=grid) |
+# 编译 Android Release APK
+flutter build apk --release
+```
 
-请只从可信来源下载。
+---
 
-## 特点
+## 🛠️ 配置说明
 
-- 支持 CPU、传感器、GPU 等状态图表，SSH 终端，SFTP，[通过 SSH 使用 RDP 和 VNC](https://serverbox.lolli.tech/docs/zh/advanced/remote-desktop/)，Docker、进程和服务管理，以及 S.M.A.R.T。
-- 支持生物认证、推送通知、桌面小组件、watchOS App 和跟随系统颜色。
-- 支持 16 种语言。当前清单见 `lib/l10n/`，译者信息记录在该目录的 git history 中。
+1. 启动 **CF ServerBox** 应用；
+2. 进入 **设置** -> **CF 探针监控**；
+3. 填写您的 CF-Server-Monitor 服务地址（例如：`https://monitor.yourdomain.com`）；
+4. 若探针开启了登录鉴权，请输入对应管理员凭证或 API Token；
+5. 在手机桌面上长按添加 **4x2 尺寸微件**，选择目标服务器及展示模式（胶囊读数/走势图表）即可。
 
-## 帮助
+---
 
-<div align="center">
-  <a href="https://qm.qq.com/q/daCGa7eShG"><img alt="qq" src="https://img.shields.io/badge/QQ-群-pink"></a>
-  <a href="https://t.me/lpktg"><img alt="donate" src="https://img.shields.io/badge/Telegram-lpktg-green"></a>
-  <a href="https://discord.gg/SsVNbRhK7w"><img alt="discord" src="https://img.shields.io/badge/Discord-lpkt-purple"></a>
-</div>
+## 📄 开源许可
 
-- [ServerBox Monitor](https://github.com/lollipopkit/flutter_server_box/tree/main/monitor) 是安装在你服务器上的 agent。不打开 ServerBox app 时仍需工作的功能都依赖它 —— **推送服务**、**桌面小部件** 和 **手表 app**；它同时也是添加服务器的第二种方式：app 可以经 HTTP 而不是 SSH 访问它，适用于不便暴露 SSH 端口的主机，并且图表在 app 首次连接前就已有历史数据。它自己还提供一个网页面板。安装方法和各个远程访问开关的含义详见其[中文文档](https://github.com/lollipopkit/flutter_server_box/blob/main/monitor/README_zh.md)。  
-- **常见问题** 可以在 [app wiki](https://github.com/lollipopkit/flutter_server_box/wiki/主页) 查看。
-- **Agent skills：** 本仓库包含三份供 AI agent 使用的 skill。使用下面的命令添加：
-
-  ```sh
-  npx skills add lollipopkit/flutter_server_box
-  ```
-
-  命令会列出全部 skill 供你选择，也可以用 `--skill <名称>` 只添加其中一个：
-
-  - [`serverbox-help`](.claude/skills/serverbox-help)：使用 App，以及部署和配置 Monitor agent，例如添加服务器、某台服务器缺少某个功能的原因、权限、告警、小部件和备份。App 内置的 Agent 自带这份 skill。
-  - [`serverbox-onboarding`](.claude/skills/serverbox-onboarding)：参与开发，包括搭建 Flutter + Rust + Node 开发环境、构建与测试，以及项目的工作原理。
-  - [`serverbox-theme`](.claude/skills/serverbox-theme)：制作主题包（`.fsbt`），校验后发布到主题商店。
-
-  它们的源文件都在本仓库中，安装前可以先读一读它们会告诉你的 agent 什么。
-
-提交 issue 前请确认：
-
-1. 反馈问题请附带 log（点击首页右上角），并以 bug 模版提交。
-2. 确认问题确实由 ServerBox 引起。
-3. 欢迎具体、建设性的反馈。主观偏好，例如更喜欢其他 UI，可能不会被采纳。
-
-## 贡献
-
-任何正面的贡献都欢迎。[CONTRIBUTING.md](CONTRIBUTING.md) 说明了开发环境、commit 规范、提交前要跑的检查，以及翻译流程。
-
-贡献者需要签署一次 [CLA](CLA_zh.md)（[英文原文](CLA.md)，以英文为准）：在你的第一个 PR 下留一条评论即可。它授予的权利使你的工作可以随 App Store 版本一起发布，同时源码保持 AGPLv3——你自己的版权仍然属于你。
-
-如果我忘记在贡献者列表中添加你的名字，请在你打开的 issue 或 PR 中添加评论让我知道，我会尽快添加。
-
-## 协议
-
-`AGPL v3 lollipopkit & 所有贡献者`
+本项目遵循 GNU Affero General Public License v3.0 (AGPLv3) 开源协议。

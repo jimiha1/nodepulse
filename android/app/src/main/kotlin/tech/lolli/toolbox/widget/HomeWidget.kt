@@ -281,105 +281,180 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         if (kind == WidgetKind.SMALL) {
             // SMALL: up to 4 fields
             views.setViewVisibility(R.id.widget_charts_container, View.GONE)
-            views.setViewVisibility(R.id.widget_chart, View.GONE)
-            views.setViewVisibility(R.id.widget_chart2, View.GONE)
             views.setViewVisibility(R.id.widget_content, View.VISIBLE)
-            showFieldRows(context, views, config.fields.take(WidgetConfig.CAP_SMALL_FIELDS), reading)
+            showFieldCapsules(context, views, config.fields.take(WidgetConfig.CAP_SMALL_FIELDS), reading)
         } else {
             // MEDIUM: 3 modes (CHART, READING, COMBINED)
             when (config.mode) {
                 MediumMode.CHART -> {
                     views.setViewVisibility(R.id.widget_content, View.GONE)
                     views.setViewVisibility(R.id.widget_charts_container, View.VISIBLE)
-                    views.setViewVisibility(R.id.widget_chart, View.VISIBLE)
-                    views.setViewVisibility(R.id.widget_chart2, View.GONE)
 
-                    val seriesList = listOf(seriesForNamedMetric(context, config.chart, reading, history))
-                    val bitmap = WidgetChart.render(
-                        context = context,
-                        series = seriesList,
-                        widthPx = bounds.widthPx,
-                        heightPx = bounds.heightPx,
-                        density = bounds.density,
-                    )
-                    if (bitmap != null) {
-                        views.setImageViewBitmap(R.id.widget_chart, bitmap)
+                    val count = config.chartCount
+                    val charts = listOf(config.chart, config.chart2, config.chart3, config.chart4).take(count)
+
+                    when (count) {
+                        1 -> {
+                            views.setViewVisibility(R.id.widget_chart_row_1, View.VISIBLE)
+                            views.setViewVisibility(R.id.widget_chart_1, View.VISIBLE)
+                            views.setViewVisibility(R.id.widget_chart_2, View.GONE)
+                            views.setViewVisibility(R.id.widget_chart_row_2, View.GONE)
+
+                            val s = listOf(seriesForNamedMetric(context, charts[0], reading, history))
+                            val b = WidgetChart.render(context, s, bounds.widthPx, bounds.heightPx, bounds.density)
+                            if (b != null) views.setImageViewBitmap(R.id.widget_chart_1, b)
+                        }
+                        2 -> {
+                            views.setViewVisibility(R.id.widget_chart_row_1, View.VISIBLE)
+                            views.setViewVisibility(R.id.widget_chart_1, View.VISIBLE)
+                            views.setViewVisibility(R.id.widget_chart_2, View.VISIBLE)
+                            views.setViewVisibility(R.id.widget_chart_row_2, View.GONE)
+
+                            val halfW = ((bounds.widthPx - 8 * bounds.density) / 2).toInt().coerceAtLeast(1)
+                            val s1 = listOf(seriesForNamedMetric(context, charts[0], reading, history))
+                            val b1 = WidgetChart.render(context, s1, halfW, bounds.heightPx, bounds.density)
+                            if (b1 != null) views.setImageViewBitmap(R.id.widget_chart_1, b1)
+
+                            val s2 = listOf(seriesForNamedMetric(context, charts[1], reading, history))
+                            val b2 = WidgetChart.render(context, s2, halfW, bounds.heightPx, bounds.density)
+                            if (b2 != null) views.setImageViewBitmap(R.id.widget_chart_2, b2)
+                        }
+                        4 -> {
+                            views.setViewVisibility(R.id.widget_chart_row_1, View.VISIBLE)
+                            views.setViewVisibility(R.id.widget_chart_1, View.VISIBLE)
+                            views.setViewVisibility(R.id.widget_chart_2, View.VISIBLE)
+                            views.setViewVisibility(R.id.widget_chart_row_2, View.VISIBLE)
+
+                            val halfW = ((bounds.widthPx - 8 * bounds.density) / 2).toInt().coerceAtLeast(1)
+                            val halfH = ((bounds.heightPx - 8 * bounds.density) / 2).toInt().coerceAtLeast(1)
+
+                            val s1 = listOf(seriesForNamedMetric(context, charts[0], reading, history))
+                            val b1 = WidgetChart.render(context, s1, halfW, halfH, bounds.density)
+                            if (b1 != null) views.setImageViewBitmap(R.id.widget_chart_1, b1)
+
+                            val s2 = listOf(seriesForNamedMetric(context, charts[1], reading, history))
+                            val b2 = WidgetChart.render(context, s2, halfW, halfH, bounds.density)
+                            if (b2 != null) views.setImageViewBitmap(R.id.widget_chart_2, b2)
+
+                            val s3 = listOf(seriesForNamedMetric(context, charts[2], reading, history))
+                            val b3 = WidgetChart.render(context, s3, halfW, halfH, bounds.density)
+                            if (b3 != null) views.setImageViewBitmap(R.id.widget_chart_3, b3)
+
+                            val s4 = listOf(seriesForNamedMetric(context, charts[3], reading, history))
+                            val b4 = WidgetChart.render(context, s4, halfW, halfH, bounds.density)
+                            if (b4 != null) views.setImageViewBitmap(R.id.widget_chart_4, b4)
+                        }
+                        else -> {
+                            // Default 1 chart fallback
+                            views.setViewVisibility(R.id.widget_chart_row_1, View.VISIBLE)
+                            views.setViewVisibility(R.id.widget_chart_1, View.VISIBLE)
+                            views.setViewVisibility(R.id.widget_chart_2, View.GONE)
+                            views.setViewVisibility(R.id.widget_chart_row_2, View.GONE)
+                            val s = listOf(seriesForNamedMetric(context, charts[0], reading, history))
+                            val b = WidgetChart.render(context, s, bounds.widthPx, bounds.heightPx, bounds.density)
+                            if (b != null) views.setImageViewBitmap(R.id.widget_chart_1, b)
+                        }
                     }
                 }
                 MediumMode.READING -> {
                     views.setViewVisibility(R.id.widget_charts_container, View.GONE)
-                    views.setViewVisibility(R.id.widget_chart, View.GONE)
-                    views.setViewVisibility(R.id.widget_chart2, View.GONE)
                     views.setViewVisibility(R.id.widget_content, View.VISIBLE)
-                    showFieldRows(context, views, config.fields.take(WidgetConfig.CAP_MEDIUM_READING_FIELDS), reading)
+                    showFieldCapsules(context, views, config.fields.take(WidgetConfig.CAP_MEDIUM_READING_FIELDS), reading)
                 }
                 MediumMode.COMBINED -> {
                     views.setViewVisibility(R.id.widget_charts_container, View.VISIBLE)
-                    views.setViewVisibility(R.id.widget_chart, View.VISIBLE)
-                    views.setViewVisibility(R.id.widget_chart2, View.VISIBLE)
+                    views.setViewVisibility(R.id.widget_chart_row_1, View.VISIBLE)
+                    views.setViewVisibility(R.id.widget_chart_1, View.VISIBLE)
+                    views.setViewVisibility(R.id.widget_chart_2, View.VISIBLE)
+                    views.setViewVisibility(R.id.widget_chart_row_2, View.GONE)
                     views.setViewVisibility(R.id.widget_content, View.VISIBLE)
 
                     // Render mini charts side by side
-                    val halfWidth = (bounds.widthPx / 2).coerceAtLeast(1)
-                    val halfHeight = (bounds.heightPx * 0.55f).roundToInt().coerceAtLeast(1)
+                    val halfWidth = ((bounds.widthPx - 8 * bounds.density) / 2).toInt().coerceAtLeast(1)
+                    val chartHeight = (bounds.heightPx * 0.48f).roundToInt().coerceAtLeast(1)
 
                     val s1 = listOf(seriesForNamedMetric(context, config.chart, reading, history))
-                    val b1 = WidgetChart.render(context, s1, halfWidth, halfHeight, bounds.density)
-                    if (b1 != null) views.setImageViewBitmap(R.id.widget_chart, b1)
+                    val b1 = WidgetChart.render(context, s1, halfWidth, chartHeight, bounds.density)
+                    if (b1 != null) views.setImageViewBitmap(R.id.widget_chart_1, b1)
 
                     val s2 = listOf(seriesForNamedMetric(context, config.chart2, reading, history))
-                    val b2 = WidgetChart.render(context, s2, halfWidth, halfHeight, bounds.density)
-                    if (b2 != null) views.setImageViewBitmap(R.id.widget_chart2, b2)
+                    val b2 = WidgetChart.render(context, s2, halfWidth, chartHeight, bounds.density)
+                    if (b2 != null) views.setImageViewBitmap(R.id.widget_chart_2, b2)
 
-                    showFieldRows(context, views, config.fields.take(WidgetConfig.CAP_COMBINED_FIELDS), reading)
+                    showFieldCapsules(context, views, config.fields.take(WidgetConfig.CAP_COMBINED_FIELDS), reading)
                 }
             }
         }
         manager.updateAppWidget(appWidgetId, views)
     }
 
-    private val rowLayoutIds = listOf(
-        R.id.widget_row_1,
-        R.id.widget_row_2,
-        R.id.widget_row_3,
-        R.id.widget_row_4,
-        R.id.widget_row_5,
-        R.id.widget_row_6,
-    )
-    private val rowLabelIds = listOf(
-        R.id.widget_row_1_label,
-        R.id.widget_row_2_label,
-        R.id.widget_row_3_label,
-        R.id.widget_row_4_label,
-        R.id.widget_row_5_label,
-        R.id.widget_row_6_label,
-    )
-    private val rowValueIds = listOf(
-        R.id.widget_row_1_value,
-        R.id.widget_row_2_value,
-        R.id.widget_row_3_value,
-        R.id.widget_row_4_value,
-        R.id.widget_row_5_value,
-        R.id.widget_row_6_value,
+    private val cellRowLayoutIds = listOf(
+        R.id.widget_cell_row_1,
+        R.id.widget_cell_row_2,
+        R.id.widget_cell_row_3,
+        R.id.widget_cell_row_4,
     )
 
-    private fun showFieldRows(
+    private val cellLayoutIds = listOf(
+        R.id.widget_cell_1,
+        R.id.widget_cell_2,
+        R.id.widget_cell_3,
+        R.id.widget_cell_4,
+        R.id.widget_cell_5,
+        R.id.widget_cell_6,
+        R.id.widget_cell_7,
+        R.id.widget_cell_8,
+    )
+    private val cellLabelIds = listOf(
+        R.id.widget_cell_1_label,
+        R.id.widget_cell_2_label,
+        R.id.widget_cell_3_label,
+        R.id.widget_cell_4_label,
+        R.id.widget_cell_5_label,
+        R.id.widget_cell_6_label,
+        R.id.widget_cell_7_label,
+        R.id.widget_cell_8_label,
+    )
+    private val cellValueIds = listOf(
+        R.id.widget_cell_1_value,
+        R.id.widget_cell_2_value,
+        R.id.widget_cell_3_value,
+        R.id.widget_cell_4_value,
+        R.id.widget_cell_5_value,
+        R.id.widget_cell_6_value,
+        R.id.widget_cell_7_value,
+        R.id.widget_cell_8_value,
+    )
+
+    private fun showFieldCapsules(
         context: Context,
         views: RemoteViews,
         fields: List<WidgetField>,
         reading: WidgetApi.Reading,
     ) {
-        for (i in 0 until 6) {
-            val rowId = rowLayoutIds[i]
-            val labelId = rowLabelIds[i]
-            val valueId = rowValueIds[i]
-            if (i < fields.size) {
-                val field = fields[i]
-                views.setTextViewText(labelId, fieldShortLabel(context, field))
-                views.setTextViewText(valueId, fieldValueText(field, reading))
+        val totalCells = minOf(fields.size, 8)
+        val neededRows = (totalCells + 1) / 2
+
+        for (r in 0 until 4) {
+            val rowId = cellRowLayoutIds[r]
+            if (r < neededRows) {
                 views.setViewVisibility(rowId, View.VISIBLE)
             } else {
                 views.setViewVisibility(rowId, View.GONE)
+            }
+        }
+
+        for (i in 0 until 8) {
+            val cellId = cellLayoutIds[i]
+            val labelId = cellLabelIds[i]
+            val valueId = cellValueIds[i]
+            if (i < totalCells) {
+                val field = fields[i]
+                views.setTextViewText(labelId, fieldShortLabel(context, field))
+                views.setTextViewText(valueId, fieldValueText(field, reading))
+                views.setViewVisibility(cellId, View.VISIBLE)
+            } else {
+                views.setViewVisibility(cellId, View.GONE)
             }
         }
     }
@@ -394,6 +469,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         WidgetField.TRAFFIC_LEFT -> "Quota"
         WidgetField.CONN -> "Conn"
         WidgetField.PING -> "Ping"
+        WidgetField.LOSS -> "丢包"
         WidgetField.UPTIME -> "Uptime"
         WidgetField.EXPIRE -> "Expire"
     }
@@ -408,6 +484,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         WidgetField.TRAFFIC_LEFT -> reading.trafficLeftText
         WidgetField.CONN -> reading.connText
         WidgetField.PING -> reading.pingText
+        WidgetField.LOSS -> reading.lossText
         WidgetField.UPTIME -> reading.uptimeText
         WidgetField.EXPIRE -> reading.expireText
     }
@@ -428,8 +505,6 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         views.setViewVisibility(R.id.error_message, View.VISIBLE)
         views.setViewVisibility(R.id.widget_content, View.GONE)
         views.setViewVisibility(R.id.widget_charts_container, View.GONE)
-        views.setViewVisibility(R.id.widget_chart, View.GONE)
-        views.setViewVisibility(R.id.widget_chart2, View.GONE)
         views.setViewVisibility(R.id.widget_time, View.GONE)
         manager.updateAppWidget(appWidgetId, views)
     }
@@ -516,6 +591,15 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             valueText = reading.procText,
             valueShort = reading.procText,
             color = Color.parseColor("#FFD60A"),
+        )
+        "loss" -> WidgetChart.Series(
+            label = context.getString(R.string.widget_metric_loss),
+            values = history.map { it.loss },
+            secondary = emptyList(),
+            isPercent = true,
+            valueText = reading.lossText,
+            valueShort = reading.avgLoss?.let { String.format(java.util.Locale.US, "%.0f%%", it) } ?: "--",
+            color = Color.parseColor("#FF453A"),
         )
         else -> WidgetChart.Series(
             label = metric.uppercase(),

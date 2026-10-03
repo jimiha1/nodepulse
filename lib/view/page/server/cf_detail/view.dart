@@ -156,11 +156,11 @@ class _CfDetailPageState extends ConsumerState<CfDetailPage> {
               .bytes2Str,
         ),
       // Expiry & Price
-      if (showExpire && node.expireDate != null)
+      if (node.expireDate case final exp? when exp.isNotEmpty)
         (
           k: l10n.cfExpire,
           v: [
-            node.expireDate!,
+            exp,
             if (showPrice && node.price != null && node.price!.isNotEmpty)
               node.price!,
           ].join('  ·  '),
@@ -316,25 +316,6 @@ class _CfDetailPageState extends ConsumerState<CfDetailPage> {
 
     final times = [for (final r in rows) r.timestamp];
 
-    // Compute average ping losses if available
-    String? pingSubtitle;
-    if (hasAnyPing(rows)) {
-      final lossCts = [for (final r in rows) if (r.lossCt != null) r.lossCt!];
-      final lossCus = [for (final r in rows) if (r.lossCu != null) r.lossCu!];
-      final lossCms = [for (final r in rows) if (r.lossCm != null) r.lossCm!];
-
-      double avg(List<double> list) =>
-          list.isEmpty ? 0 : list.reduce((a, b) => a + b) / list.length;
-
-      final pings = <String>[];
-      if (lossCts.isNotEmpty) pings.add('CT: ${avg(lossCts).toStringAsFixed(1)}%');
-      if (lossCus.isNotEmpty) pings.add('CU: ${avg(lossCus).toStringAsFixed(1)}%');
-      if (lossCms.isNotEmpty) pings.add('CM: ${avg(lossCms).toStringAsFixed(1)}%');
-      if (pings.isNotEmpty) {
-        pingSubtitle = 'Loss: ${pings.join(' ')}';
-      }
-    }
-
     return Column(
       children: [
         // 1. CPU usage
@@ -406,13 +387,22 @@ class _CfDetailPageState extends ConsumerState<CfDetailPage> {
         ),
         if (hasAnyPing(rows)) ...[
           const SizedBox(height: 11),
-          // 9. Ping Latency (CT/CU/CM)
+          // 9. Ping Latency (电信 / 联通 / 移动)
           CfChartCard(
-            title: l10n.cfChartPing,
-            subtitle: pingSubtitle,
+            title: '三网延迟',
             series: rowsToPingSeries(rows),
             times: times,
             format: (v) => '${v.toStringAsFixed(0)}ms',
+          ),
+        ],
+        if (hasAnyLoss(rows)) ...[
+          const SizedBox(height: 11),
+          // 10. Packet Loss Rate (电信 / 联通 / 移动)
+          CfChartCard(
+            title: '三网丢包率',
+            series: rowsToLossSeries(rows),
+            times: times,
+            format: (v) => '${v.toStringAsFixed(1)}%',
           ),
         ],
       ],

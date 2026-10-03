@@ -91,6 +91,30 @@
                 </RadioGroup>
             </LinearLayout>
 
+            <!-- Chart Count Selector (for CHART mode) -->
+            <LinearLayout
+                android:id="@+id/chart_count_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/chart_count_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/widget_chart_count"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <Spinner
+                    android:id="@+id/chart_count_spinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+
             <!-- Chart 1 Spinner -->
             <LinearLayout
                 android:id="@+id/chart_container"
@@ -115,7 +139,7 @@
                     android:layout_marginTop="4dp" />
             </LinearLayout>
 
-            <!-- Chart 2 Spinner (Combined mode only) -->
+            <!-- Chart 2 Spinner -->
             <LinearLayout
                 android:id="@+id/chart2_container"
                 android:layout_width="match_parent"
@@ -134,6 +158,54 @@
 
                 <Spinner
                     android:id="@+id/chart2_spinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+
+            <!-- Chart 3 Spinner -->
+            <LinearLayout
+                android:id="@+id/chart3_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/chart3_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/widget_chart_3"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <Spinner
+                    android:id="@+id/chart3_spinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+
+            <!-- Chart 4 Spinner -->
+            <LinearLayout
+                android:id="@+id/chart4_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/chart4_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/widget_chart_4"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <Spinner
+                    android:id="@+id/chart4_spinner"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp" />
