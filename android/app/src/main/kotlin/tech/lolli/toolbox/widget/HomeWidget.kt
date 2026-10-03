@@ -81,7 +81,8 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         private const val HEADER_LINE_RATIO = 1.45f
 
         /**
-         * How far past the configured threshold each warning colour sits.
+         * Where the aging colour gives way to the stale one, as a multiple of
+         * the configured threshold.
          *
          * One threshold would only ever say "old"; the second step separates
          * "the last poll missed" from "this node has been gone a while".
@@ -304,8 +305,9 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
      * [showError], before a new widget is configured — stays hidden until
      * something sets it back.
      *
-     * [lastUpdated] of null while the widget is [WidgetKind.MEDIUM] means the
-     * reading is not in yet, which reads as `…` rather than as a stale `--`.
+     * [lastUpdated] of null renders `--`, except while [loading], which shows
+     * `…` — the reading is not in yet, and that is not the same as a node
+     * that reported no timestamp.
      */
     private fun showTime(
         context: Context,
