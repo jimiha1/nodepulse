@@ -75,8 +75,8 @@ class CfWidgetParseTest {
         assertEquals(54.638, reading.disk!!, 0.01)
         assertTrue(reading.memText.contains("4.9g") || reading.memText.contains("4.8g"))
         assertTrue(reading.netText.contains("12.8k/s") || reading.netText.contains("12.9k/s"))
-        assertEquals("电165 联78 移310", reading.pingText)
-        assertEquals("电0% 联5% 移12%", reading.lossText)
+        assertEquals("165/78/310ms", reading.pingText)
+        assertEquals("0/5/12%", reading.lossText)
         assertEquals("2027-10-02", reading.expireText)
     }
 

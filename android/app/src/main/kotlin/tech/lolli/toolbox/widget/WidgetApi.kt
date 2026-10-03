@@ -194,7 +194,7 @@ object WidgetApi {
             else -> "--"
         }
 
-        // Ping
+        // Ping: compact slash format "165/78/310ms"
         val pingCt = o.optDoubleOrNull("ping_ct")
         val pingCu = o.optDoubleOrNull("ping_cu")
         val pingCm = o.optDoubleOrNull("ping_cm")
@@ -202,16 +202,25 @@ object WidgetApi {
             val ct = pingCt?.let { "${it.toInt()}" } ?: "-"
             val cu = pingCu?.let { "${it.toInt()}" } ?: "-"
             val cm = pingCm?.let { "${it.toInt()}" } ?: "-"
-            "电$ct 联$cu 移$cm"
+            "$ct/$cu/${cm}ms"
         } else "--"
 
-        // Loss
+        // Loss: compact slash format "0/5/12%" or "0%" if all zeroes
         val lossCt = o.optDoubleOrNull("loss_ct")
         val lossCu = o.optDoubleOrNull("loss_cu")
         val lossCm = o.optDoubleOrNull("loss_cm")
         val lossText = if (lossCt != null || lossCu != null || lossCm != null) {
-            fun fmtLoss(v: Double?): String = v?.let { "${it.toInt()}%" } ?: "-"
-            "电${fmtLoss(lossCt)} 联${fmtLoss(lossCu)} 移${fmtLoss(lossCm)}"
+            val ctVal = lossCt?.toInt() ?: 0
+            val cuVal = lossCu?.toInt() ?: 0
+            val cmVal = lossCm?.toInt() ?: 0
+            if (ctVal == 0 && cuVal == 0 && cmVal == 0) {
+                "0%"
+            } else {
+                val ct = lossCt?.let { "${it.toInt()}" } ?: "-"
+                val cu = lossCu?.let { "${it.toInt()}" } ?: "-"
+                val cm = lossCm?.let { "${it.toInt()}" } ?: "-"
+                "$ct/$cu/$cm%"
+            }
         } else "--"
 
         val losses = listOfNotNull(lossCt, lossCu, lossCm)
