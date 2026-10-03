@@ -1,2 +1,0 @@
-error: Failed to resume domain 'cirros-run'
-error: Requested operation is not valid: domain is already running

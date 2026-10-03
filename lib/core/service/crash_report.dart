@@ -1,15 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:dartssh2/dartssh2.dart';
 import 'package:dio/dio.dart';
 import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter/foundation.dart';
 import 'package:server_box/core/service/diagnostics_upload.dart';
-import 'package:server_box/core/service/known_identifiers.dart';
 import 'package:server_box/core/service/native_exit.dart';
 import 'package:server_box/data/res/build_data.dart';
-import 'package:server_box/data/res/store.dart';
 
 /// The text a user pastes into an issue after a crash.
 ///
@@ -77,9 +74,6 @@ abstract final class CrashReport {
     // waking someone about.
     if (error is IOException) return false;
     if (error is TimeoutException) return false;
-
-    // Neither implements `Exception`, so neither is covered above.
-    if (error is SSHError || error is SftpError) return false;
     if (error is DioException) return false;
 
     return true;
@@ -91,7 +85,7 @@ abstract final class CrashReport {
     build: BuildData.build,
     os: '${Pfs.type.name} ${Platform.operatingSystemVersion}',
     locale: Platform.localeName,
-    identifiers: KnownIdentifiers.of(Stores.server.fetch()),
+    identifiers: const {},
     previousExit: NativeExitReport.shared.lastExit,
     previousExitTrace: NativeExitReport.shared.lastExitTrace,
   );
@@ -238,9 +232,7 @@ abstract final class CrashReport {
       buf.writeln('### Previous exit trace');
       buf.writeln();
       buf.writeln('```');
-      buf.writeln(
-        KnownIdentifiers.substitute(previousExitTrace.trimRight(), identifiers),
-      );
+      buf.writeln(previousExitTrace.trimRight());
       buf.writeln('```');
       buf.writeln();
     }
@@ -255,7 +247,7 @@ abstract final class CrashReport {
       return buf.toString();
     }
 
-    var body = KnownIdentifiers.substitute(log, identifiers);
+    var body = log;
     var truncated = false;
     if (body.length > maxLogChars) {
       body = body.substring(body.length - maxLogChars);

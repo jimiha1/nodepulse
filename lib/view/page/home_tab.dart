@@ -5,7 +5,6 @@ import 'package:material_ui/material_ui.dart';
 import 'package:server_box/data/model/app/tab.dart';
 import 'package:server_box/data/res/store.dart';
 import 'package:server_box/view/page/server/cf_tab.dart';
-import 'package:server_box/view/widget/conn_count_badge.dart';
 import 'package:server_box/view/widget/marked_title.dart';
 import 'package:server_box/view/widget/nav_rail.dart';
 
@@ -16,13 +15,10 @@ extension AppTabViewX on AppTab {
     };
   }
 
-  /// The tab's mark. Also what a page *listing* tabs draws — the settings page
-  /// that turns them on and reorders them.
   Widget get icon {
     return _AppTabIcon(tab: this, selected: false);
   }
 
-  /// The filled form, for the tab being looked at.
   Widget get selectedIcon {
     return _AppTabIcon(tab: this, selected: true);
   }
@@ -33,7 +29,6 @@ extension AppTabViewX on AppTab {
     };
   }
 
-  /// Whether the tab is still in beta.
   bool get beta => false;
 
   /// The mark a tab carries, where the tab is *listed* — the settings page
@@ -50,20 +45,17 @@ extension AppTabViewX on AppTab {
     return MarkedTitle(label, mark: mark_);
   }
 
-  /// The tab in the rail and the bottom bar.
-  ///
-  /// The count is not wrapped round the icon here: [AppNavRail] hangs it off
-  /// the indicator's corner instead, clear of the glyph. The menu is not
-  /// wrapped either — the rail carries it on the whole item, so a long press
-  /// on the label reaches it too.
+  Widget titleWithMark({bool selected = false}) {
+    final mark_ = beta ? const BetaTag() : null;
+    return MarkedTitle(label, mark: mark_);
+  }
+
   NavRailItem navRailItem({ContextMenuOpener? onMenu}) {
     return NavRailItem(
       icon: _railIcon(icon),
       selectedIcon: _railIcon(selectedIcon),
       label: label,
-      badge: this == AppTab.server
-          ? (opacity) => ConnCountRailBadge(opacity: opacity)
-          : null,
+      badge: null,
       mark: beta ? (opacity) => BetaTag(opacity: opacity) : null,
       onMenu: onMenu,
     );

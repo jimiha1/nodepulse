@@ -300,6 +300,10 @@ class CfServers extends _$CfServers {
     }
   }
 
+  void stopAutoRefresh() {
+    _stopAutoRefresh();
+  }
+
   void _stopAutoRefresh() {
     _generation++;
     _timer?.cancel();

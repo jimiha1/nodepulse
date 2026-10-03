@@ -1,10 +1,6 @@
 part of '../entry.dart';
 
 extension _App on _AppSettingsPageState {
-  void _showInvalidDialog() {
-    context.showRoundDialog(title: libL10n.fail, child: Text(libL10n.invalid));
-  }
-
   List<SettingsGroup> _buildApp() {
     return [
       SettingsGroup(libL10n.general, [_buildLocale(), _buildCollapseUI()]),
@@ -19,10 +15,6 @@ extension _App on _AppSettingsPageState {
         if (isAndroid) _buildBgRun(),
         if (isDesktop) _buildHideTitleBar(),
         _buildMotion(),
-        if (DmgNotice.applies) _buildDmgNotice(),
-        // Debug only, which is where it was moved to while these rows were
-        // flat. Naming the group does not put it back in a release build.
-        if (kDebugMode) _buildEditRawSettings(),
       ]),
     ];
   }
@@ -111,22 +103,6 @@ extension _App on _AppSettingsPageState {
     );
   }
 
-  /// The App Store build's one standing entry about the DMG build. The line in
-  /// the update dialog is asked to go away and does; this one stays, so there
-  /// is somewhere to read the whole thing afterwards.
-  SettingsRow _buildDmgNotice() {
-    final label = l10n.macDmgTitle;
-    return SettingsRow(
-      label,
-      () => ListTile(
-        leading: const Icon(MingCute.apple_fill),
-        title: Text(label),
-        trailing: const Icon(Icons.keyboard_arrow_right),
-        onTap: () => DmgNotice.show(context),
-      ),
-    );
-  }
-
   SettingsRow _buildCheckUpdate() {
     final label = libL10n.checkUpdate;
     return SettingsRow(
@@ -157,69 +133,11 @@ extension _App on _AppSettingsPageState {
             githubReleasesUrl: Urls.githubReleasesApi,
             storeUrl: Urls.appStore,
             force: BuildMode.isDebug,
-            noticeBuilder: (ctx) => DmgNotice.forUpdate(
-              ctx,
-              build: AppUpdateIface.newestBuild.value ?? BuildData.build,
-            ),
           ),
         ),
         trailing: StoreSwitch(prop: _setting.autoCheckAppUpdate),
       ),
-      // The version is on this row, so it is what somebody typing one is
-      // looking for.
       keywords: 'v${BuildData.build}',
-    );
-  }
-
-  SettingsRow _buildUpdateInterval() {
-    final label = l10n.updateServerStatusInterval;
-    return SettingsRow(
-      label,
-      () => ListTile(
-        leading: const Icon(Icons.timer_outlined),
-        title: Text(label),
-        onTap: () async {
-          final val = await context.showPickSingleDialog(
-            title: libL10n.setting,
-            items: List.generate(10, (idx) => idx == 1 ? null : idx),
-            initial: _setting.serverStatusUpdateInterval.fetch(),
-            display: (p0) => p0 == 0 ? libL10n.manual : '$p0 ${l10n.second}',
-          );
-          if (val != null) {
-            _setting.serverStatusUpdateInterval.put(val);
-          }
-        },
-        trailing: ValBuilder(
-          listenable: _setting.serverStatusUpdateInterval.listenable(),
-          builder: (val) => Text('$val ${l10n.second}', style: UIs.text15),
-        ),
-      ),
-    );
-  }
-
-  SettingsRow _buildMaxRetry() {
-    final label = l10n.maxRetryCount;
-    return SettingsRow(
-      label,
-      () => ValBuilder(
-        listenable: _setting.maxRetryCount.listenable(),
-        builder: (val) => ListTile(
-          leading: const Icon(Icons.replay),
-          title: Text(label),
-          onTap: () async {
-            final selected = await context.showPickSingleDialog(
-              title: label,
-              items: List.generate(10, (index) => index),
-              display: (p0) => '$p0 ${l10n.times}',
-              initial: val,
-            );
-            if (selected != null) {
-              _setting.maxRetryCount.put(selected);
-            }
-          },
-          trailing: Text('$val ${l10n.times}', style: UIs.text15),
-        ),
-      ),
     );
   }
 
@@ -436,187 +354,6 @@ extension _App on _AppSettingsPageState {
             await SystemUIs.updateTitleBarStyle(hideTitleBar: value);
           },
         ),
-      ),
-    );
-  }
-
-  SettingsRow _buildEditRawSettings() {
-    const label = '(Dev) Edit raw json';
-    return SettingsRow(
-      label,
-      () => ListTile(
-        leading: const Icon(Icons.data_object),
-        title: const Text(label),
-        trailing: const Icon(Icons.keyboard_arrow_right),
-        onTap: _editRawSettings,
-      ),
-    );
-  }
-
-  Future<void> _editRawSettings() async {
-    final rawMap = Stores.setting.getAllMap(includeInternalKeys: true);
-    final map = Map<String, Object?>.from(rawMap);
-    final initialKeys = Set<String>.from(map.keys);
-    Map<String, Object?> mapForEditor = map;
-    String? encryptedKey;
-    String? passwordUsed;
-
-    Future<String?> resolvePassword() async {
-      final saved = await _setting.backupPassword.read();
-      if (saved?.isNotEmpty == true) return saved;
-      final backupPwd = await SecureStoreProps.bakPwd.read();
-      if (backupPwd?.isNotEmpty == true) return backupPwd;
-      final controller = TextEditingController();
-      final result = await context.showRoundDialog<String>(
-        title: libL10n.pwd,
-        child: DisposeWith(
-          notifiers: [controller],
-          child: Input(
-            controller: controller,
-            label: libL10n.pwd,
-            obscureText: true,
-            onSubmitted: (_) => context.popDialog(controller.text.trim()),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => context.popDialog(null),
-            child: Text(libL10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => context.popDialog(controller.text.trim()),
-            child: Text(libL10n.ok),
-          ),
-        ],
-      );
-      return result?.trim();
-    }
-
-    for (final entry in map.entries) {
-      final value = entry.value;
-      if (value is String && Cryptor.isEncrypted(value)) {
-        final password = await resolvePassword();
-        if (password == null || password.isEmpty) {
-          Toast.show(libL10n.cancel);
-          return;
-        }
-        try {
-          final decrypted = Cryptor.decrypt(value, password);
-          final decoded = json.decode(decrypted);
-          if (decoded is Map<String, dynamic>) {
-            mapForEditor = Map<String, Object?>.from(decoded);
-            encryptedKey = entry.key;
-            passwordUsed = password;
-            break;
-          } else {
-            _showInvalidDialog();
-            return;
-          }
-        } catch (e, stack) {
-          final msg =
-              e.toString().contains('Failed to decrypt') ||
-                  e.toString().contains('incorrect password')
-              ? l10n.backupPasswordWrong
-              : '${libL10n.error}:\n$e';
-          Loggers.app.warning('Decrypt raw settings failed', e, stack);
-          if (!mounted) return;
-          await context.showRoundDialog(title: libL10n.fail, child: Text(msg));
-          return;
-        }
-      }
-    }
-
-    void onSave(EditorPageRet ret) {
-      if (ret.typ != EditorPageRetType.text) {
-        _showInvalidDialog();
-        return;
-      }
-      try {
-        final newSettings = json.decode(ret.val) as Map<String, dynamic>;
-        if (encryptedKey != null) {
-          final pwd = passwordUsed;
-          if (pwd == null || pwd.isEmpty) {
-            _showInvalidDialog();
-            return;
-          }
-          final encrypted = Cryptor.encrypt(json.encode(newSettings), pwd);
-          // Not stamping `lastUpdateTs`, which is what going straight to the
-          // box used to do.
-          //
-          // TODO: decide whether that was intentional. Editing the raw settings
-          // is a user edit, so leaving the timestamps alone means sync will not
-          // carry it to another device until something else is changed.
-          Stores.setting.set(
-            encryptedKey,
-            encrypted,
-            updateLastUpdateTsOnSet: false,
-          );
-        } else {
-          // One transaction, as `Backup.merge` does: this rewrites the whole
-          // settings store, and half of an edit is not a state to leave behind.
-          SqliteStore.transact(() {
-            for (final entry in newSettings.entries) {
-              final value = entry.value;
-              // A key set to null means "clear this". Skipping it instead left
-              // the previous value in place, and the key being present kept it
-              // out of `removedKeys` below too — so the edit reported success and
-              // changed nothing.
-              if (value == null) {
-                Stores.setting.remove(
-                  entry.key,
-                  updateLastUpdateTsOnRemove: false,
-                );
-                continue;
-              }
-              Stores.setting.set(
-                entry.key,
-                value as Object,
-                updateLastUpdateTsOnSet: false,
-              );
-            }
-            final newKeys = newSettings.keys.toSet();
-            // Internal keys are shown by the editor (it reads with
-            // `includeInternalKeys: true`) but are not the user's to delete: one
-            // of them records that the Hive import already ran, and dropping it
-            // makes the next launch copy the retained boxes back over everything.
-            final removedKeys = initialKeys.where(
-              (e) => !newKeys.contains(e) && !Stores.setting.isInternalKey(e),
-            );
-            for (final key in removedKeys) {
-              Stores.setting.remove(key, updateLastUpdateTsOnRemove: false);
-            }
-          });
-        }
-      } catch (e, trace) {
-        context.showRoundDialog(
-          title: libL10n.error,
-          child: Text('${libL10n.save}:\n$e'),
-        );
-        Loggers.app.warning('Update json settings failed', e, trace);
-      }
-    }
-
-    /// Encode [map] to String with indent `\t`
-    final text = jsonIndentEncoder.convert(mapForEditor);
-    final editorFont = _setting.editorFontFamily.fetch();
-    await EditorPage.route.go(
-      context,
-      target: _SettingsWidth.pageTarget(context),
-      args: EditorPageArgs(
-        text: text,
-        lang: ProgLang.json,
-        title: libL10n.setting,
-        onSave: onSave,
-        closeAfterSave: _setting.closeAfterSave.fetch(),
-        softWrap: _setting.editorSoftWrap.fetch(),
-        enableHighlight: _setting.editorHighlight.fetch(),
-        lightTheme: HighlightTheme.fromThemeMapKey(
-          _setting.editorTheme.fetch(),
-        ),
-        darkTheme: HighlightTheme.fromThemeMapKey(
-          _setting.editorDarkTheme.fetch(),
-        ),
-        fontFamily: editorFont.isEmpty ? null : editorFont,
       ),
     );
   }

@@ -71,20 +71,12 @@ dependencies:
   # exception by type.
   icloud_storage_plus: ^4.0.0
   url_launcher: ^6.2.6
-  dartssh2:
-    path: packages/dartssh2
   circle_chart:
     path: packages/circle_chart
   icons_plus:
     git:
       url: https://github.com/lollipopkit/icons_plus
       ref: main
-  xterm:
-    path: packages/xterm
-  # Extracted from this app — see `docs/principles/bmc.md`. A path dependency
-  # like the other vendored packages; not on pub.dev while the API is moving.
-  redfish:
-    path: packages/redfish
   computer:
     git:
       url: https://github.com/lollipopkit/dart_computer
@@ -95,14 +87,6 @@ dependencies:
     path: packages/plain_notification_token
   fl_lib:
     path: packages/fl_lib
-  # Forked to swap five per-platform build integrations for one build hook,
-  # which is what takes the last pod out of the iOS and macOS builds.
-  flutter_pty:
-    path: packages/flutter_pty
-  flutter_rust_bridge: 2.13.0
-  # Drives the build hook below. `sbm_ffi` is no longer a Flutter plugin — the
-  # hook compiles the crate directly, so there is nothing to depend on.
-  flutter_rust_bridge_hooks: 2.13.0
   sentry: ^9.30.0
   # Runtime for the generated reader in `lib/src/proto`, which is how Android's
   # crash tombstone is decoded. Pure Dart, and its own dependencies —

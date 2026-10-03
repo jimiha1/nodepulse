@@ -73,12 +73,7 @@ extension _HomePageTabs on _HomePageState {
       final at = _tabs.indexWhere((tab) => tab.name == name);
       return at < 0 ? null : at;
     }
-    // TODO: delete with `HistoryStore.homeTabIndex`. An install upgrading from
-    // a build that stored the position has one and no name; reading it once
-    // is what keeps that launch on the tab it was left on.
-    final saved = Stores.history.homeTabIndex.fetch();
-    if (saved < 0 || saved >= _tabs.length) return null;
-    return saved;
+    return null;
   }
 
   void _onDestinationSelected(int index) {

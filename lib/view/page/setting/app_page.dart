@@ -6,60 +6,28 @@ part of 'entry.dart';
 /// controllers on it — survives moving between them.
 enum SettingsSection {
   app,
-  /// What the app looks like: the theme in all of its parts, and the font.
   appearance,
   privacy,
-  server,
-  linux,
-  container,
-  editor,
   fullScreen;
 
-  /// What this group is called when it is a page of its own.
-  ///
-  /// The *subject's* name rather than the leaf's. Inside the settings the menu
-  /// beside a group already says which subject you are in, so three of those
-  /// leaves are called "General" — which on a page with nothing beside it names
-  /// nothing at all.
   String get title => switch (this) {
     SettingsSection.app => libL10n.app,
     SettingsSection.appearance => libL10n.appearanceSettings,
     SettingsSection.privacy => l10n.privacy,
-    SettingsSection.server => libL10n.server,
-    // Not localized: the id is what the settings search matches on, and Linux
-    // is the same word in every locale this ships in.
-    SettingsSection.linux => 'Linux',
-    SettingsSection.container => libL10n.container,
-    SettingsSection.editor => libL10n.editor,
     SettingsSection.fullScreen => l10n.fullScreen,
   };
 
-  /// Whether [title] carries a `BetaTag` where it is shown.
-  // TODO: from the Feature abstraction (#1587).
-  bool get beta => this == SettingsSection.linux;
+  bool get beta => false;
 
-  /// The page this group is, inside the subject it is under.
-  ///
-  /// What the search puts over a row it found: three of these pages are called
-  /// "General", and the subject is the half that tells them apart.
   String get breadcrumb => switch (this) {
     SettingsSection.app => '${libL10n.app} › ${libL10n.general}',
     SettingsSection.appearance => '${libL10n.app} › ${libL10n.appearanceSettings}',
     SettingsSection.privacy => '${libL10n.app} › ${l10n.privacy}',
     SettingsSection.fullScreen => '${libL10n.app} › ${l10n.fullScreen}',
-    SettingsSection.server => '${libL10n.server} › ${libL10n.general}',
-    SettingsSection.linux => '${libL10n.terminal} › Linux',
-    SettingsSection.editor => '${libL10n.file} › ${libL10n.editor}',
-    SettingsSection.container => libL10n.container,
   };
 
-  /// Whether this build has this group at all.
-  ///
-  /// The search walks every one of them, and a group the menu never offers is
-  /// one whose rows cannot be reached from a result either.
   bool get available => switch (this) {
     SettingsSection.fullScreen => isMobile,
-    SettingsSection.linux => Rootfs.isAvailable,
     _ => true,
   };
 }
@@ -168,22 +136,7 @@ final class _AppSettingsPageState extends ConsumerState<AppSettingsPage> {
   @override
   void initState() {
     super.initState();
-    // Which releases are installable is fetched rather than compiled in, and
-    // this page is where someone is about to act on the answer: the version
-    // beside "add", the update button on a profile. Launch already tries once;
-    // this catches the case where it failed or the release moved since.
-    //
-    // Not awaited and not shown. What is in force already works, and a refresh
-    // that changes nothing — the ordinary case — should look like nothing.
-    if (widget.section == SettingsSection.linux && Rootfs.isAvailable) {
-      RootfsManifestSource.refresh().then((changed) {
-        if (changed && mounted) setState(() {});
-      });
-    }
 
-    // Both of these decide whether a whole group exists, so they are answered
-    // once here rather than by a builder inside a row: a row that arrived a
-    // frame later left a heading and a hairline with nothing under them.
     unawaited(
       CrashReport.saved().then((report) {
         if (!mounted || report == null) return;
@@ -206,18 +159,10 @@ final class _AppSettingsPageState extends ConsumerState<AppSettingsPage> {
     super.dispose();
   }
 
-  /// What a group of settings is made of, named and in order.
-  ///
-  /// A function of the section rather than a field, because the search walks
-  /// every one of them — see [_buildSearch].
   List<SettingsGroup> _groupsOf(SettingsSection section) => switch (section) {
     SettingsSection.app => _buildApp(),
     SettingsSection.appearance => _buildAppearance(),
     SettingsSection.privacy => _buildPrivacy(),
-    SettingsSection.server => _buildServer(),
-    SettingsSection.linux => _buildLinux(),
-    SettingsSection.container => _buildContainer(),
-    SettingsSection.editor => _buildEditor(),
     SettingsSection.fullScreen => _buildFullScreen(),
   };
 
@@ -322,20 +267,12 @@ final class _AppSettingsPageState extends ConsumerState<AppSettingsPage> {
       spacing: _kGridSpacing,
       bottomInset: MediaQuery.paddingOf(context).bottom,
       children: [
-        // A group can come out empty — every row in it is behind a platform
-        // test — and an empty one is a heading with a rule and nothing under.
         for (final group in _groupsOf(widget.section))
           if (group.rows.isNotEmpty) SettingsGroupView(group),
       ],
     );
 
-    // See [_Linux._buildLinux]: its rows are about whichever profile is
-    // selected, and nothing else here notifies when that changes.
-    if (widget.section != SettingsSection.linux) return grid();
-    return ValBuilder(
-      listenable: _setting.linuxProfile.listenable(),
-      builder: (_) => grid(),
-    );
+    return grid();
   }
 
   /// Redraws after something a listenable does not cover.

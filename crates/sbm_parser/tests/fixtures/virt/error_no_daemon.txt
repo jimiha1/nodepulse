@@ -1,2 +1,0 @@
-error: failed to connect to the hypervisor
-error: Failed to connect socket to '/var/run/libvirt/virtqemud-sock': No such file or directory

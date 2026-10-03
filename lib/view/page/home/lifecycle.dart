@@ -53,76 +53,27 @@ extension _HomePageLifecycle on _HomePageState {
   /// The launch notices and then the guide, one after another and behind
   /// the lock screen — see [_HomePageState.afterFirstLayout].
   Future<void> _showLaunchNotices(Future<void> authed) async {
-    // Behind the lock screen, not beside it. Every one of these is a
-    // root-navigator dialog, and the lock page is on that navigator too —
-    // see [_goAuth]. Completes immediately when no lock is configured.
     await authed;
     if (!mounted) return;
-    // Says so when this launch took over the sandboxed build's data, or
-    // when it could not — see [SandboxImport].
-    await SandboxImportNotice.showIfNeeded(context);
-    if (!mounted) return;
-    // Says so when this upgrade took a feature away — see
-    // [LegacyStatusUrlsMigration].
-    await LegacyStatusNotice.showIfNeeded(context);
-    if (!mounted) return;
-    // Nothing about the previous run is raised here any more. A crash used
-    // to put a toast in front of somebody who had just opened the app to do
-    // something else, once, on the one launch that read the marker; the
-    // report is now kept and waits under **Settings → Privacy** — see
-    // [CrashReportDialog]. The two notices above stay: both are about data
-    // this launch changed, which is not something to find out about later.
-    // A share opened from AirDrop or the Files app while this app was not
-    // running: the platform launched it with the URL, and the native side
-    // has been holding the bytes since before the first frame.
-    //
-    // **Before the guide, not after.** The guide is an overlay above every
-    // route and skips itself when something else is up — which only works if
-    // the something else is already there. With this second, a launch that
-    // had both drew the hint on top of the passphrase prompt the user had
-    // just asked for, and the guide's own button sat over the dialog's.
-    // Answering the file the user opened comes first either way.
     await _consumePending();
     if (!mounted) return;
     await _maybeShowNavGuide();
   }
 
-  /// Takes in what the platform handed this app, if anything is waiting: a
-  /// `.sbxsrv`, then a `serverbox://` link.
-  ///
-  /// One method for both because they share every constraint below — the
-  /// lock screen, the launch ordering, the re-entry guard — and two copies
-  /// would be two places for those to drift.
   Future<void> _consumePending() async {
     if (_consumingPending) return;
-    // Before the launch path has decided whether there is a lock, [_authed] is
-    // null and awaiting it waits for nothing — so a `resumed` edge arriving
-    // first (a cold launch on macOS, where opening the file is what activates
-    // the app) would put the passphrase prompt on the same root navigator as
-    // the lock page, over it. Returning costs nothing: the launch path calls
-    // this itself once it has assigned it, and taking the guard below would
-    // have made that call a no-op instead.
     if (_authed == null) return;
     _consumingPending = true;
     try {
-      final text = await MethodChans.takeOpenedShare();
       final link = await MethodChans.takeOpenedLink();
-      final hasText = text != null && text.isNotEmpty;
-      if ((!hasText && link == null) || !mounted) return;
-      // Behind the lock screen for the same reason the launch notices are: it
-      // is a root-navigator dialog, and the lock page is on that navigator.
-      //
-      // Read here rather than captured on entry, and that ordering matters:
-      // this method is called from the top of `didChangeAppLifecycleState`,
-      // before the branch that starts the lock. The platform call above is a
-      // channel round trip, so the rest of that method — including assigning
-      // the new [_authed] — has run by the time this line does.
+      if (link == null || !mounted) return;
       await _authed;
       if (!mounted) return;
-      if (hasText) {
-        await ServerShareUi.consume(context, ref, text, digitsOnly: false);
+      final parsed = AppLink.parse(link);
+      if (parsed is TabLink && mounted) {
+        final idx = _tabs.indexOf(parsed.tab);
+        if (idx >= 0) _onDestinationSelected(idx);
       }
-      if (link != null && mounted) await AppLinkUi.open(context, ref, link);
     } catch (e, s) {
       Loggers.app.warning('Consume what was opened', e, s);
     } finally {
@@ -232,7 +183,7 @@ extension _HomePageLifecycle on _HomePageState {
       Loggers.app.warning('Initial server refresh failed', error, stackTrace);
     }
     if (!mounted || cycle != _serverRefreshCycle || !_canRefreshServers) return;
-    await _notifier.startAutoRefresh();
+    _notifier.startAutoRefresh();
   }
 
   void _stopServerRefreshCycle() {

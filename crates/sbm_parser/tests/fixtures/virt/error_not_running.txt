@@ -1,2 +1,0 @@
-error: Failed to suspend domain 'it's-"odd"'
-error: Requested operation is not valid: domain is not running

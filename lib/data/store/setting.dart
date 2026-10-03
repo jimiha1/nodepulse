@@ -3,26 +3,11 @@ import 'dart:convert';
 import 'package:fl_lib/fl_lib.dart';
 import 'package:fl_lib/theme.dart';
 import 'package:server_box/data/model/app/diagnostics_level.dart';
-import 'package:server_box/data/model/app/float_shell_config.dart';
-import 'package:server_box/data/model/app/linux_distro.dart';
-import 'package:server_box/data/model/app/menu/server_func.dart';
 import 'package:server_box/data/model/app/motion.dart';
-import 'package:server_box/data/model/app/server_sort.dart';
 import 'package:server_box/data/model/app/tab.dart';
-import 'package:server_box/data/model/app/tray.dart';
-import 'package:server_box/data/model/ssh/virtual_key.dart';
 import 'package:server_box/data/res/default.dart';
 import 'package:server_box/data/store/field_prop.dart';
-import 'package:server_box/data/store/migrations/m008_settings_fixups.dart';
-import 'package:server_box/data/store/migrations/m011_virt_key_rows.dart';
-import 'package:server_box/data/store/schema.dart';
 
-/// The virtual-key lists, read as names and nothing else.
-///
-/// `whereType`, so a row still holding the indices these replaced reads as
-/// empty rather than throwing while a page is building. Empty is a value the
-/// readers already handle — it falls back to the default order — and
-/// [VirtKeyNamesMigration] is what stops it being reached.
 List<String> _virtKeyNames(Object? raw) =>
     raw is List ? raw.whereType<String>().toList() : const [];
 
@@ -100,31 +85,13 @@ class SettingStore extends SqliteStore with ThemeSettings {
   /// closing the window ends the app.
   late final trayKeepRunning = propertyDefault('trayKeepRunning', isDesktop);
 
-  /// Which readings each row of the tray menu carries, by [TrayMetric.name].
-  ///
-  /// A list rather than a set of switches: the order is the order they are
-  /// drawn in, and a row has only so much width.
   late final trayMetrics = listProperty<String>(
     'trayMetrics',
-    defaultValue: [TrayMetric.cpu.name, TrayMetric.mem.name],
+    defaultValue: ['cpu', 'mem'],
   );
 
-  /// Which series the row's chart draws, by [TrayMetric.name]. The empty name
-  /// draws none.
-  ///
-  /// Stored as a name rather than as the enum, and this is the one setting here
-  /// that is: the value it holds has one more member than [TrayMetric] does.
-  /// `propertyDefault` takes a non-nullable element type, so "draws nothing"
-  /// has nowhere to live in one and is spelled as the absent name.
-  /// [TrayMetric.byName] reads the setting back, answering null for that name
-  /// and for one this build does not know alike — both draw nothing, which is
-  /// the same answer either way.
-  late final trayChart = propertyDefault('trayChart', TrayMetric.cpu.name);
+  late final trayChart = propertyDefault('trayChart', 'cpu');
 
-  /// One line per server instead of two, and no chart.
-  ///
-  /// What the menu was before it could do better, and what a list of twenty
-  /// servers wants. Also all Linux can draw — see `TrayService`.
   late final trayCompact = propertyDefault('trayCompact', false);
 
   // Server order
@@ -179,23 +146,11 @@ class SettingStore extends SqliteStore with ThemeSettings {
   /// same distribution can be installed side by side.
   late final linuxProfile = propertyDefault('linuxProfile', '');
 
-  /// Which distribution a *new* profile would be of, by `LinuxDistro.id`.
-  ///
-  /// By name, never by index: an index silently changes meaning when a case is
-  /// inserted, and this outlives the build that wrote it. Read through
-  /// `linuxDistro()`, which falls back for a name no build knows.
   late final linuxDistro = propertyDefault(
     'linuxDistro',
-    LinuxDistro.alpine.id,
+    'alpine',
   );
 
-  /// Each distribution's mirror, keyed by `LinuxDistro.id`.
-  ///
-  /// A map rather than one string, because a mirror of one distribution is not
-  /// a mirror of another — switching away and back would otherwise drop what
-  /// was typed. Absent means "the distribution's own default", so nothing here
-  /// pins a default against a release that moves it. Read and written through
-  /// `linuxMirror()` / `setLinuxMirror()`.
   late final linuxMirrors = propertyDefault<Map<String, String>>(
     'linuxMirrors',
     const {},
@@ -228,19 +183,9 @@ class SettingStore extends SqliteStore with ThemeSettings {
 
   late final fullScreenJitter = propertyDefault('fullScreenJitter', true);
 
-  /// The order the virtual keys are drawn in, by [VirtKey.name].
-  ///
-  /// By name, never by index. An index changes meaning the moment a case is
-  /// inserted into [VirtKey] — every stored arrangement then names different
-  /// keys, silently, with nothing to say it happened — and this value outlives
-  /// the build that wrote it, through a backup and through a sync. It was a
-  /// list of indices; [VirtKeyNamesMigration] is the one pass that converts.
-  ///
-  /// A name this build cannot place reads as absent rather than as a key,
-  /// which is what [VirtKeyX.loadFromStore] drops.
   late final sshVirtKeys = listProperty<String>(
     'sshVirtKeys',
-    defaultValue: VirtKeyX.defaultOrder.map((e) => e.name).toList(),
+    defaultValue: const [],
     fromObj: _virtKeyNames,
   );
 
@@ -517,47 +462,9 @@ class SettingStore extends SqliteStore with ThemeSettings {
   ///
   /// Eight keys before this. See [FloatShellConfig] for the nesting and
   /// [FloatShellProps] for the [FieldProp]s onto it.
-  late final agentShell = FloatShellProps(
-    propertyDefault<FloatShellConfig>(
-      'agentShell',
-      const FloatShellConfig(),
-      fromObj: (raw) => raw is Map
-          ? FloatShellConfig.fromJson(Map<String, dynamic>.from(raw))
-          : null,
-      toObj: (val) => val?.toJson(),
-    ),
-  );
-
-  /// The floating terminal's placement and size. Same shape, own row.
-  ///
-  /// Two defaults differ from the Agent's, and both are about not landing on
-  /// top of it. The window is wider and shorter because a terminal is measured
-  /// in columns and a conversation in messages; the pill sits higher up the
-  /// edge, which is the only thing that keeps two collapsed panels apart on a
-  /// phone, where the position is the whole of what tells them apart.
-  late final terminalShell = FloatShellProps(
-    propertyDefault<FloatShellConfig>(
-      'terminalShell',
-      const FloatShellConfig(
-        window: FloatShellWindow(width: 560, height: 400),
-        pill: FloatShellPill(y: 0.38),
-      ),
-      fromObj: (raw) => raw is Map
-          ? FloatShellConfig.fromJson(Map<String, dynamic>.from(raw))
-          : null,
-      toObj: (val) => val?.toJson(),
-    ),
-  );
-
   late final serverFuncBtns = listProperty<String>(
     'serverBtns',
-    defaultValue: ServerFuncBtn.defaultNames,
-    // Tolerates the `Enum.index` list this used to hold, which a device on an
-    // older build still syncs over. Tagged rows carry their layout provenance;
-    // bare legacy rows remain readable for old backups and post-feature
-    // indices 9 and 10 continue to use the current layout.
-    fromObj: ServerFuncBtn.namesFromStored,
-    toObj: ServerFuncBtn.toStored,
+    defaultValue: const [],
   );
 
   /// Whether container commands use Podman instead of Docker.
@@ -853,8 +760,7 @@ class SettingStore extends SqliteStore with ThemeSettings {
   /// arrangement itself.
   late final serverPageSortBy = propertyDefault<String>(
     'serverPageSortBy',
-    ServerSortField.manual.name,
-    fromObj: (obj) => ServerSortField.fromStored(obj).name,
+    'manual',
   );
   late final serverPageSortAsc = propertyDefault('serverPageSortAsc', true);
 
@@ -1003,161 +909,28 @@ class SettingStore extends SqliteStore with ThemeSettings {
   /// installs are cleaned without another migration flag becoming permanent
   /// state of its own.
   Future<void> removeRetiredKeys() async {
-    // Nothing is deleted from storage this build cannot read. `Stores.init`
-    // calls this before `SchemaVersion.migrate` gets to refuse the downgrade,
-    // so without this the refusal arrived after the keys were already gone —
-    // and "retired here" says nothing about whether the build that wrote them
-    // still reads them.
-    if (schemaVersion.fetch() > SchemaVersion.current) return;
-
     for (final key in const [
       'moveOutServerTabFuncBtns',
       'forceSinglePane',
-      // These settings were removed without a schema step. They have no
-      // reader now, so keeping them only inflates backups and raw dumps.
       'fgService',
       'noNotiPerm',
       'showDistIcon',
-      // The platform now selects launcher icon appearances automatically.
       'appIconPreset',
-      // The detail page no longer has a user-defined card order. Its remaining
-      // optional cards follow the declaration order, so this row has no reader.
       'detailCardOrder',
-      // The plain-key schema version. It moved to an internal key so that a
-      // backup stops carrying it; this drops the copy a Hive import brought
-      // across, which nothing reads and a backup would still export.
       'schemaVersion',
-      // The three settings the sharded geo data needed. `geoShards` was
-      // consent to a request per lookup, `geoShardEndpoint` sent those
-      // requests elsewhere, and `geoCacheLimit` capped what they piled up.
-      // One download answers all three, so all three are dead — and a backup
-      // taken before this release would otherwise keep restoring them.
       'geoShards',
       'geoShardEndpoint',
       'geoCacheLimit',
-      // Server page options the current cards and detail page no longer read
-      // (the per-core CPU bars went with the last two).
       'netViewType',
       'serverTabPreferDiskAmount',
       'doubleColumnServersPage',
       'cpuViewAsProgress',
       'displayCpuIndex',
-      // Opening a terminal in the system's own `ssh` instead of this app's:
-      // the switch, the password copied for it, and the Linux emulator it ran
-      // in. `SettingsFixupsMigration` still converts the first from an int,
-      // which is harmless once this has dropped it.
       'sshConnectionMode',
       'desktopSshAutoCopyPassword',
       'desktopTerminal',
     ]) {
       remove(key, updateLastUpdateTsOnRemove: false);
     }
-
-    // The flags `SettingsFixupsMigration` reads, dropped once it has had its
-    // pass. The version is what says so: this runs from `Stores.init`, before
-    // `SchemaVersion.migrate`, so removing them unconditionally would delete
-    // them in the very launch that has to read them. Past that version they
-    // have no reader, and a restore of an older backup writes them back long
-    // after the step could run again — which is why this is here rather than
-    // at the end of the step.
-    //
-    // TODO: delete with the flag reads in `SettingsFixupsMigration`.
-    if (schemaVersion.fetch() > SettingsFixupsMigration.appliedAt) {
-      remove(
-        SettingsFixupsMigration.sshFlagKey,
-        updateLastUpdateTsOnRemove: false,
-      );
-      remove(
-        SettingsFixupsMigration.homeTabsFlagKey,
-        updateLastUpdateTsOnRemove: false,
-      );
-    }
-
-    // The switch `virtKeyRows` replaced, for the same reason and on the same
-    // terms: the step that reads it runs after this does, and a restore of an
-    // older backup writes it back long after that step can run again.
-    //
-    // TODO: delete with the read in `VirtKeyRowsMigration`.
-    if (schemaVersion.fetch() > VirtKeyRowsMigration.appliedAt) {
-      remove(VirtKeyRowsMigration.legacyKey, updateLastUpdateTsOnRemove: false);
-    }
   }
-}
-
-/// One floating panel's row, and the eight fields onto it.
-///
-/// Written once for the two panels that use it. Eight [FieldProp]s declared
-/// twice is eight chances for the Agent's window and the terminal's to come to
-/// mean different things by `pill.y`, and the whole reason they share
-/// [FloatShellConfig] is that they do not.
-///
-/// [get] and [set] pass through to the row itself, so this reads like the
-/// property it wraps for the migration that writes the grouped value.
-final class FloatShellProps {
-  FloatShellProps(this.config)
-    : mode = FieldProp<FloatShellConfig, String>(
-        config,
-        'mode',
-        // Empty for a panel never opened or closed.
-        read: (c) => c.mode ?? '',
-        write: (c, v) => c.copyWith(mode: v),
-      ),
-      left = FieldProp<FloatShellConfig, double>(
-        config,
-        'window.left',
-        read: (c) => c.window.left,
-        write: (c, v) => c.copyWith(window: c.window.copyWith(left: v)),
-      ),
-      top = FieldProp<FloatShellConfig, double>(
-        config,
-        'window.top',
-        read: (c) => c.window.top,
-        write: (c, v) => c.copyWith(window: c.window.copyWith(top: v)),
-      ),
-      width = FieldProp<FloatShellConfig, double>(
-        config,
-        'window.width',
-        read: (c) => c.window.width,
-        write: (c, v) => c.copyWith(window: c.window.copyWith(width: v)),
-      ),
-      height = FieldProp<FloatShellConfig, double>(
-        config,
-        'window.height',
-        read: (c) => c.window.height,
-        write: (c, v) => c.copyWith(window: c.window.copyWith(height: v)),
-      ),
-      pillOnRight = FieldProp<FloatShellConfig, bool>(
-        config,
-        'pill.onRight',
-        read: (c) => c.pill.onRight,
-        write: (c, v) => c.copyWith(pill: c.pill.copyWith(onRight: v)),
-      ),
-      pillY = FieldProp<FloatShellConfig, double>(
-        config,
-        'pill.y',
-        read: (c) => c.pill.y,
-        write: (c, v) => c.copyWith(pill: c.pill.copyWith(y: v)),
-      ),
-      sheetHeight = FieldProp<FloatShellConfig, double>(
-        config,
-        'pill.sheetHeight',
-        read: (c) => c.pill.sheetHeight,
-        write: (c, v) => c.copyWith(pill: c.pill.copyWith(sheetHeight: v)),
-      );
-
-  /// The `kv` row the eight fields are views onto.
-  final StorePropDefault<FloatShellConfig> config;
-
-  final FieldProp<FloatShellConfig, String> mode;
-
-  final FieldProp<FloatShellConfig, double> left;
-  final FieldProp<FloatShellConfig, double> top;
-  final FieldProp<FloatShellConfig, double> width;
-  final FieldProp<FloatShellConfig, double> height;
-
-  final FieldProp<FloatShellConfig, bool> pillOnRight;
-  final FieldProp<FloatShellConfig, double> pillY;
-  final FieldProp<FloatShellConfig, double> sheetHeight;
-
-  FloatShellConfig get() => config.get();
 }

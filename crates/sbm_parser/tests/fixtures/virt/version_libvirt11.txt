@@ -1,4 +1,0 @@
-Compiled against library: libvirt 11.3.0
-Using library: libvirt 11.3.0
-Using API: QEMU 11.3.0
-Running hypervisor: QEMU 10.0.13
