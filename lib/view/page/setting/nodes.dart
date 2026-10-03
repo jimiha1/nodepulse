@@ -25,12 +25,6 @@ List<SettingsNode> _buildNodes() {
           icon: Icons.privacy_tip_outlined,
           page: () => const AppSettingsPage(section: SettingsSection.privacy),
         ),
-        SettingsNode.leaf(
-          id: 'app.homeTabs',
-          title: l10n.homeTabs,
-          icon: Icons.tab_outlined,
-          page: () => const HomeTabsConfigPage(embedded: true),
-        ),
         if (isMobile)
           SettingsNode.leaf(
             id: 'app.fullScreen',

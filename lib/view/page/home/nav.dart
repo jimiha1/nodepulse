@@ -82,14 +82,6 @@ extension _HomePageStrip on _HomePageState {
           ),
         const Divider(height: 1),
         ListTile(
-          leading: const Icon(Icons.tab_outlined),
-          title: Text(l10n.homeTabs),
-          onTap: () {
-            Navigator.of(ctx).pop();
-            HomeTabsConfigPage.route.go(context);
-          },
-        ),
-        ListTile(
           leading: const Icon(Icons.settings),
           title: Text(libL10n.setting),
           onTap: () {
