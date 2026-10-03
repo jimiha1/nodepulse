@@ -14,6 +14,7 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -78,6 +79,39 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
 
         private const val FOOTER_DP = 13f
         private const val HEADER_LINE_RATIO = 1.45f
+
+        /**
+         * How far past the configured threshold each warning colour sits.
+         *
+         * One threshold would only ever say "old"; the second step separates
+         * "the last poll missed" from "this node has been gone a while".
+         */
+        private const val AGING_MULTIPLIER = 4
+
+        /**
+         * The colour the header time should use for data of this age.
+         *
+         * Warning is off entirely under [WidgetExpiry.NEVER], and a missing
+         * timestamp has no age to judge — both keep the plain summary colour
+         * rather than claiming a freshness the widget cannot know.
+         */
+        fun resolveTimeColorRes(
+            lastUpdated: Long?,
+            expiry: WidgetExpiry,
+            now: Long = System.currentTimeMillis(),
+        ): Int {
+            if (lastUpdated == null || lastUpdated <= 0 || expiry == WidgetExpiry.NEVER) {
+                return R.color.widgetSummaryText
+            }
+            // A device clock that moved backwards would otherwise read as stale.
+            val ageMs = (now - lastUpdated).coerceAtLeast(0)
+            val thresholdMs = expiry.minutes * 60_000L
+            return when {
+                ageMs <= thresholdMs -> R.color.widgetSummaryText
+                ageMs <= AGING_MULTIPLIER * thresholdMs -> R.color.widgetTimeAging
+                else -> R.color.widgetTimeStale
+            }
+        }
     }
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, appWidgetIds: IntArray) {
@@ -126,7 +160,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             bounds.headerSp,
         )
 
-        showLoading(views, manager, appWidgetId, server.name)
+        showLoading(context, views, manager, appWidgetId, server.name)
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -250,15 +284,53 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
     // MARK: - States
 
     private fun showLoading(
+        context: Context,
         views: RemoteViews,
         manager: AppWidgetManager,
         appWidgetId: Int,
         name: String,
     ) {
         views.setTextViewText(R.id.widget_name, name)
-        views.setTextViewText(R.id.widget_time, "…")
+        showTime(context, views, null, WidgetExpiry.NEVER, loading = true)
         views.setViewVisibility(R.id.error_message, View.GONE)
         manager.updateAppWidget(appWidgetId, views)
+    }
+
+    /**
+     * The header time slot, which only the 4x2 widget uses.
+     *
+     * Every branch sets the visibility explicitly: RemoteViews applies its
+     * actions to a view tree that outlives them, so a slot hidden once — by
+     * [showError], before a new widget is configured — stays hidden until
+     * something sets it back.
+     *
+     * [lastUpdated] of null while the widget is [WidgetKind.MEDIUM] means the
+     * reading is not in yet, which reads as `…` rather than as a stale `--`.
+     */
+    private fun showTime(
+        context: Context,
+        views: RemoteViews,
+        lastUpdated: Long?,
+        expiry: WidgetExpiry,
+        loading: Boolean = false,
+    ) {
+        if (kind != WidgetKind.MEDIUM) {
+            views.setViewVisibility(R.id.widget_time, View.GONE)
+            return
+        }
+        views.setViewVisibility(R.id.widget_time, View.VISIBLE)
+        val text = when {
+            loading -> "…"
+            lastUpdated == null || lastUpdated <= 0 -> "--"
+            else -> android.text.format.DateFormat
+                .format("HH:mm", java.util.Date(lastUpdated))
+                .toString()
+        }
+        views.setTextViewText(R.id.widget_time, text)
+        views.setTextColor(
+            R.id.widget_time,
+            ContextCompat.getColor(context, resolveTimeColorRes(lastUpdated, expiry)),
+        )
     }
 
     private fun showData(
@@ -272,10 +344,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         bounds: Bounds,
     ) {
         views.setTextViewText(R.id.widget_name, reading.name)
-        views.setTextViewText(
-            R.id.widget_time,
-            android.text.format.DateFormat.format("HH:mm", java.util.Date()).toString(),
-        )
+        showTime(context, views, reading.lastUpdated, config.expiry)
         views.setViewVisibility(R.id.error_message, View.GONE)
 
         if (kind == WidgetKind.SMALL) {

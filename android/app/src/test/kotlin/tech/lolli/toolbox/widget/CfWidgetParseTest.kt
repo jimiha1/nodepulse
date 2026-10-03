@@ -5,6 +5,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.lolli.toolbox.R
 
 class CfWidgetParseTest {
     private val rawServersJson = """
@@ -167,5 +168,77 @@ class CfWidgetParseTest {
         assertEquals(WidgetExpiry.M30, WidgetExpiry.fromKey("nonsense"))
         assertEquals(0, WidgetExpiry.NEVER.minutes)
         assertEquals(30, WidgetExpiry.DEFAULT.minutes)
+    }
+
+    @Test
+    fun resolveTimeColorResTiers() {
+        val now = 1_759_410_000_000L
+        val t30m = 30 * 60 * 1000L
+
+        // Fresh: inside the threshold keeps the plain summary colour.
+        assertEquals(
+            R.color.widgetSummaryText,
+            HomeWidget.resolveTimeColorRes(now - 10 * 60 * 1000L, WidgetExpiry.M30, now),
+        )
+        // Exactly at the threshold is still fresh.
+        assertEquals(
+            R.color.widgetSummaryText,
+            HomeWidget.resolveTimeColorRes(now - t30m, WidgetExpiry.M30, now),
+        )
+        // Aging: past the threshold, up to 4x it.
+        assertEquals(
+            R.color.widgetTimeAging,
+            HomeWidget.resolveTimeColorRes(now - t30m - 1, WidgetExpiry.M30, now),
+        )
+        assertEquals(
+            R.color.widgetTimeAging,
+            HomeWidget.resolveTimeColorRes(now - 4 * t30m, WidgetExpiry.M30, now),
+        )
+        // Stale: past 4x the threshold.
+        assertEquals(
+            R.color.widgetTimeStale,
+            HomeWidget.resolveTimeColorRes(now - 4 * t30m - 1, WidgetExpiry.M30, now),
+        )
+        assertEquals(
+            R.color.widgetTimeStale,
+            HomeWidget.resolveTimeColorRes(now - 10 * 60 * 60 * 1000L, WidgetExpiry.M30, now),
+        )
+    }
+
+    @Test
+    fun resolveTimeColorResEdgeCases() {
+        val now = 1_759_410_000_000L
+
+        // No timestamp at all: plain colour, never a warning.
+        assertEquals(
+            R.color.widgetSummaryText,
+            HomeWidget.resolveTimeColorRes(null, WidgetExpiry.M30, now),
+        )
+        assertEquals(
+            R.color.widgetSummaryText,
+            HomeWidget.resolveTimeColorRes(0L, WidgetExpiry.M30, now),
+        )
+
+        // NEVER never warns, however old the data is.
+        assertEquals(
+            R.color.widgetSummaryText,
+            HomeWidget.resolveTimeColorRes(now - 10 * 24 * 60 * 60 * 1000L, WidgetExpiry.NEVER, now),
+        )
+
+        // A clock that ran backwards must not read as stale.
+        assertEquals(
+            R.color.widgetSummaryText,
+            HomeWidget.resolveTimeColorRes(now + 60_000L, WidgetExpiry.M30, now),
+        )
+
+        // The threshold follows the configured preset, not a fixed value.
+        assertEquals(
+            R.color.widgetTimeAging,
+            HomeWidget.resolveTimeColorRes(now - 11 * 60 * 1000L, WidgetExpiry.M10, now),
+        )
+        assertEquals(
+            R.color.widgetSummaryText,
+            HomeWidget.resolveTimeColorRes(now - 11 * 60 * 1000L, WidgetExpiry.H2, now),
+        )
     }
 }
