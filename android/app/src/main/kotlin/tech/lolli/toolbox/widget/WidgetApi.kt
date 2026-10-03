@@ -53,6 +53,8 @@ object WidgetApi {
         val diskIoText: String = "",
         val procText: String = "",
         val avgLoss: Double? = null,
+        /** When the node last reported, epoch ms. Null when the site omits it. */
+        val lastUpdated: Long? = null,
     )
 
     /** One bucket of history, oldest first. */
@@ -235,6 +237,9 @@ object WidgetApi {
         val proc = o.optIntOrNull("processes")
         val procText = proc?.toString() ?: "--"
 
+        val lastUpdatedRaw = o.optLong("last_updated", 0L)
+        val lastUpdated = if (lastUpdatedRaw > 0) lastUpdatedRaw else null
+
         return Reading(
             name = o.optString("name").ifEmpty { server.name },
             cpu = cpu,
@@ -255,6 +260,7 @@ object WidgetApi {
             diskIoText = "--",
             procText = procText,
             avgLoss = avgLoss,
+            lastUpdated = lastUpdated,
         )
     }
 

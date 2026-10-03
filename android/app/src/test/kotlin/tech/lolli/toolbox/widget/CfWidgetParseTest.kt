@@ -2,6 +2,7 @@ package tech.lolli.toolbox.widget
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -123,5 +124,48 @@ class CfWidgetParseTest {
         assertEquals("node-1", server1!!.id)
         assertEquals("东京节点", server1.name)
         assertEquals("JP", server1.region)
+    }
+
+    @Test
+    fun parseCfServerNodeLastUpdated() {
+        val server = WidgetStore.WidgetServer(
+            id = "fd978320-c32c-474d-857a-3412a7526a7b",
+            name = "日本节点",
+            region = "JP",
+        )
+        val jsonWithLastUpdated = """
+        {
+          "servers": [{
+            "id": "fd978320-c32c-474d-857a-3412a7526a7b",
+            "name": "日本节点",
+            "cpu": 5.0,
+            "last_updated": 1759410000000
+          }]
+        }
+        """.trimIndent()
+        val reading = WidgetApi.parseCfMetrics(server, jsonWithLastUpdated)
+        assertEquals(1759410000000L, reading.lastUpdated)
+    }
+
+    @Test
+    fun parseCfServerWithoutLastUpdatedYieldsNull() {
+        val server = WidgetStore.WidgetServer(
+            id = "fd978320-c32c-474d-857a-3412a7526a7b",
+            name = "日本节点",
+            region = "JP",
+        )
+        val reading = WidgetApi.parseCfMetrics(server, rawServersJson)
+        assertNull(reading.lastUpdated)
+    }
+
+    @Test
+    fun widgetExpiryFromKeyRoundTripsAndDefaults() {
+        for (expiry in WidgetExpiry.entries) {
+            assertEquals(expiry, WidgetExpiry.fromKey(expiry.key))
+        }
+        assertEquals(WidgetExpiry.M30, WidgetExpiry.fromKey(null))
+        assertEquals(WidgetExpiry.M30, WidgetExpiry.fromKey("nonsense"))
+        assertEquals(0, WidgetExpiry.NEVER.minutes)
+        assertEquals(30, WidgetExpiry.DEFAULT.minutes)
     }
 }

@@ -41,6 +41,30 @@ enum class MediumMode(val key: String) {
 }
 
 /**
+ * How old the widget's data may get before the header time starts warning.
+ *
+ * The ladder is anchored to Android's floor on `updatePeriodMillis`: the
+ * system will not broadcast an update more often than every 30 minutes, so
+ * a shorter threshold would leave a healthy widget permanently in warning.
+ */
+enum class WidgetExpiry(val minutes: Int, val key: String) {
+    M10(10, "10m"),
+    M30(30, "30m"),
+    H1(60, "1h"),
+    H2(120, "2h"),
+
+    /** Never warn: the time keeps the plain summary colour. */
+    NEVER(0, "never");
+
+    companion object {
+        val DEFAULT = M30
+
+        fun fromKey(key: String?): WidgetExpiry =
+            entries.firstOrNull { it.key == key } ?: DEFAULT
+    }
+}
+
+/**
  * What one placed widget was configured to show.
  *
  * Keyed by `appWidgetId`, which is the system's identity for a widget instance
@@ -59,6 +83,7 @@ data class WidgetConfig(
     val chart2: String = DEFAULT_CHART2,
     val chart3: String = DEFAULT_CHART3,
     val chart4: String = DEFAULT_CHART4,
+    val expiry: WidgetExpiry = WidgetExpiry.DEFAULT,
 ) {
     companion object {
         private const val PREFS = "sbm_widget_config"
@@ -94,6 +119,7 @@ data class WidgetConfig(
             val chart2 = prefs.getString(key(appWidgetId, "chart2"), null) ?: DEFAULT_CHART2
             val chart3 = prefs.getString(key(appWidgetId, "chart3"), null) ?: DEFAULT_CHART3
             val chart4 = prefs.getString(key(appWidgetId, "chart4"), null) ?: DEFAULT_CHART4
+            val expiry = WidgetExpiry.fromKey(prefs.getString(key(appWidgetId, "expiry"), null))
 
             val rawFields = prefs.getString(key(appWidgetId, "fields"), null)
             val cap = when {
@@ -130,6 +156,7 @@ data class WidgetConfig(
                 chart2 = chart2,
                 chart3 = chart3,
                 chart4 = chart4,
+                expiry = expiry,
             )
         }
 
@@ -157,6 +184,7 @@ data class WidgetConfig(
                 .putString(key(appWidgetId, "chart2"), config.chart2)
                 .putString(key(appWidgetId, "chart3"), config.chart3)
                 .putString(key(appWidgetId, "chart4"), config.chart4)
+                .putString(key(appWidgetId, "expiry"), config.expiry.key)
                 .apply()
         }
 
@@ -176,6 +204,7 @@ data class WidgetConfig(
                 .remove(key(appWidgetId, "chart2"))
                 .remove(key(appWidgetId, "chart3"))
                 .remove(key(appWidgetId, "chart4"))
+                .remove(key(appWidgetId, "expiry"))
                 .apply()
         }
 
