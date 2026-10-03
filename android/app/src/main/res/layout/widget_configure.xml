@@ -242,6 +242,62 @@
                     android:orientation="vertical" />
             </LinearLayout>
 
+            <!-- Data Expiry Selector (MEDIUM only) -->
+            <LinearLayout
+                android:id="@+id/expiry_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/expiry_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/widget_expiry_title"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <RadioGroup
+                    android:id="@+id/expiry_group"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:orientation="vertical">
+
+                    <RadioButton
+                        android:id="@+id/expiry_10m"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/widget_expiry_10m" />
+
+                    <RadioButton
+                        android:id="@+id/expiry_30m"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/widget_expiry_30m" />
+
+                    <RadioButton
+                        android:id="@+id/expiry_1h"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/widget_expiry_1h" />
+
+                    <RadioButton
+                        android:id="@+id/expiry_2h"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/widget_expiry_2h" />
+
+                    <RadioButton
+                        android:id="@+id/expiry_never"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/widget_expiry_never" />
+                </RadioGroup>
+            </LinearLayout>
+
             <Button
                 android:id="@+id/save_button"
                 android:layout_width="match_parent"

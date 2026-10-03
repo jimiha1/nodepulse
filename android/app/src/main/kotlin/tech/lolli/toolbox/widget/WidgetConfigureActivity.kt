@@ -82,6 +82,8 @@ class WidgetConfigureActivity : Activity() {
         val fieldsContainer = findViewById<LinearLayout>(R.id.fields_container)
         val fieldsCapHint = findViewById<TextView>(R.id.fields_cap_hint)
         val fieldChecks = findViewById<LinearLayout>(R.id.field_checks)
+        val expiryContainer = findViewById<LinearLayout>(R.id.expiry_container)
+        val expiryGroup = findViewById<RadioGroup>(R.id.expiry_group)
 
         // Setup Spinners for Charts
         val metricLabels = CHART_METRICS.map { metricLabel(it) }
@@ -132,8 +134,10 @@ class WidgetConfigureActivity : Activity() {
                 chart4Container.visibility = View.GONE
                 fieldsContainer.visibility = View.VISIBLE
                 fieldsCapHint.text = "(Max ${WidgetConfig.CAP_SMALL_FIELDS})"
+                expiryContainer.visibility = View.GONE
             } else {
                 mediumModeContainer.visibility = View.VISIBLE
+                expiryContainer.visibility = View.VISIBLE
                 val selectedMode = when (modeGroup.checkedRadioButtonId) {
                     R.id.mode_reading -> MediumMode.READING
                     R.id.mode_combined -> MediumMode.COMBINED
@@ -214,6 +218,14 @@ class WidgetConfigureActivity : Activity() {
             modeGroup.setOnCheckedChangeListener { _, _ ->
                 updateUI()
             }
+
+            when (existing.expiry) {
+                WidgetExpiry.M10 -> expiryGroup.check(R.id.expiry_10m)
+                WidgetExpiry.M30 -> expiryGroup.check(R.id.expiry_30m)
+                WidgetExpiry.H1 -> expiryGroup.check(R.id.expiry_1h)
+                WidgetExpiry.H2 -> expiryGroup.check(R.id.expiry_2h)
+                WidgetExpiry.NEVER -> expiryGroup.check(R.id.expiry_never)
+            }
         }
 
         setupCheckboxListeners()
@@ -250,6 +262,18 @@ class WidgetConfigureActivity : Activity() {
             val chart4 = CHART_METRICS.getOrNull(chart4Spinner.selectedItemPosition) ?: WidgetConfig.DEFAULT_CHART4
             val count = chartCountOptions.getOrElse(chartCountSpinner.selectedItemPosition) { 1 }
 
+            val selectedExpiry = if (kind == WidgetKind.SMALL) {
+                WidgetExpiry.DEFAULT
+            } else {
+                when (expiryGroup.checkedRadioButtonId) {
+                    R.id.expiry_10m -> WidgetExpiry.M10
+                    R.id.expiry_1h -> WidgetExpiry.H1
+                    R.id.expiry_2h -> WidgetExpiry.H2
+                    R.id.expiry_never -> WidgetExpiry.NEVER
+                    else -> WidgetExpiry.M30
+                }
+            }
+
             WidgetConfig.save(
                 applicationContext,
                 appWidgetId,
@@ -263,6 +287,7 @@ class WidgetConfigureActivity : Activity() {
                     chart2 = chart2,
                     chart3 = chart3,
                     chart4 = chart4,
+                    expiry = selectedExpiry,
                 ),
             )
 
