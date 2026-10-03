@@ -42,6 +42,7 @@
     <string name="widget_metric_proc">Processes</string>
     <string name="widget_metric_loss">Packet Loss</string>
 
+    <string name="widget_configure_mode">Display Mode</string>
     <string name="widget_mode_chart">Chart</string>
     <string name="widget_mode_reading">Reading</string>
     <string name="widget_mode_combined">Combined</string>

@@ -58,7 +58,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Mode"
+                    android:text="@string/widget_configure_mode"
                     android:textSize="13sp"
                     android:textStyle="bold" />
 
@@ -67,26 +67,24 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:orientation="horizontal">
+                    android:orientation="vertical">
 
                     <RadioButton
                         android:id="@+id/mode_chart"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/widget_mode_chart" />
 
                     <RadioButton
                         android:id="@+id/mode_reading"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
                         android:text="@string/widget_mode_reading" />
 
                     <RadioButton
                         android:id="@+id/mode_combined"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
                         android:text="@string/widget_mode_combined" />
                 </RadioGroup>
             </LinearLayout>

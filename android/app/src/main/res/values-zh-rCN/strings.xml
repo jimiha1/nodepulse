@@ -24,6 +24,7 @@
     <string name="widget_metric_proc">进程数</string>
     <string name="widget_metric_loss">丢包率</string>
 
+    <string name="widget_configure_mode">展示模式</string>
     <string name="widget_mode_chart">图表模式</string>
     <string name="widget_mode_reading">数值模式</string>
     <string name="widget_mode_combined">组合模式</string>
