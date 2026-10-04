@@ -155,6 +155,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
         for (id in appWidgetIds) {
             WidgetConfig.forget(context, id)
+            WidgetSnapshot.forget(context, id)
             WidgetRetry.cancel(context, id)
         }
     }
@@ -188,7 +189,18 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             bounds.headerSp,
         )
 
-        showLoading(context, views, manager, appWidgetId, server.name)
+        // What this widget last put on screen, redrawn rather than blanked to
+        // the loading state: the numbers are still the last thing the node
+        // reported, and the header time beside them already says how old they
+        // are — its colour follows the configured expiry. A widget with
+        // nothing to hold, or one just repointed at another server, still gets
+        // the loading state.
+        val held = WidgetSnapshot.load(context, appWidgetId, server.id)
+        if (held != null) {
+            showData(context, views, manager, appWidgetId, config, held.reading, held.history, bounds)
+        } else {
+            showLoading(context, views, manager, appWidgetId, server.name)
+        }
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -199,6 +211,11 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
                         // to fix is fixed, and leaving it queued would only put
                         // the widget through a fetch it does not need.
                         WidgetRetry.cancel(context, appWidgetId)
+                        WidgetSnapshot.save(
+                            context,
+                            appWidgetId,
+                            WidgetSnapshot.Shown(server.id, reading, history),
+                        )
                         withContext(Dispatchers.Main) {
                             showData(context, views, manager, appWidgetId, config, reading, history, bounds)
                         }
@@ -216,28 +233,61 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
                             is IOException -> R.string.widget_err_network
                             else -> R.string.widget_err_network
                         }
+                        // A failure only the user can fix — a rejected
+                        // credential — is shown as an error and not retried:
+                        // no retry produces a different answer, and keeping
+                        // the old numbers up would hide the one thing that
+                        // needs doing. A transient one keeps them, and is
+                        // retried, because the periodic update is half an hour
+                        // away at best and a vendor build may stretch that.
+                        val transient = WidgetRetryPolicy.isTransient(e)
                         withContext(Dispatchers.Main) {
-                            showError(context, views, manager, appWidgetId, message, server.name)
+                            if (transient) {
+                                showHeld(context, views, manager, appWidgetId, config, held, bounds, message, server.name)
+                            } else {
+                                showError(context, views, manager, appWidgetId, message, server.name)
+                            }
                         }
-                        // The periodic update is half an hour away at best, and
-                        // a vendor build may stretch that further, so an error
-                        // left to it can sit on screen for hours. A failure only
-                        // the user can fix — a rejected credential — is left
-                        // alone: no retry produces a different answer.
-                        if (WidgetRetryPolicy.isTransient(e)) {
-                            WidgetRetry.schedule(context, appWidgetId)
-                        }
+                        if (transient) WidgetRetry.schedule(context, appWidgetId)
                     }
                 } ?: run {
                     Log.w(TAG, "Widget $appWidgetId update timed out")
                     withContext(Dispatchers.Main) {
-                        showError(context, views, manager, appWidgetId, R.string.widget_err_timeout, server.name)
+                        showHeld(
+                            context, views, manager, appWidgetId, config, held, bounds,
+                            R.string.widget_err_timeout, server.name,
+                        )
                     }
                     WidgetRetry.schedule(context, appWidgetId)
                 }
             } finally {
                 activeUpdates.release(appWidgetId)
             }
+        }
+    }
+
+    /**
+     * After a failed fetch: the last reading back on screen when there is one,
+     * so the numbers and the time beside them stay together and the age
+     * colour carries the warning; the error when there is nothing to hold.
+     */
+    private fun showHeld(
+        context: Context,
+        views: RemoteViews,
+        manager: AppWidgetManager,
+        appWidgetId: Int,
+        config: WidgetConfig,
+        held: WidgetSnapshot.Shown?,
+        bounds: Bounds,
+        messageRes: Int,
+        name: String?,
+    ) {
+        if (held == null) {
+            showError(context, views, manager, appWidgetId, messageRes, name)
+        } else {
+            // Redrawn rather than left alone so the age colour is recomputed
+            // now, which is the moment the data became one update older.
+            showData(context, views, manager, appWidgetId, config, held.reading, held.history, bounds)
         }
     }
 
