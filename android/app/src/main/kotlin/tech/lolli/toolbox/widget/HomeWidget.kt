@@ -25,7 +25,6 @@ import org.json.JSONException
 import tech.lolli.toolbox.R
 import java.io.IOException
 import java.net.SocketTimeoutException
-import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.roundToInt
 
 /**
@@ -52,6 +51,23 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             }
         }
 
+        /**
+         * Updates one widget, when it still exists.
+         *
+         * Returns false for an id the system has forgotten — a widget the user
+         * dragged off the home screen — so a retry loop can stop rather than
+         * keep itself alive for nothing.
+         */
+        fun requestUpdate(context: Context, appWidgetId: Int): Boolean {
+            val widget = when (kindOf(context, appWidgetId)) {
+                WidgetKind.SMALL -> StatusWidgetSmall()
+                WidgetKind.MEDIUM -> StatusWidgetMedium()
+                null -> return false
+            }
+            widget.update(context, AppWidgetManager.getInstance(context), appWidgetId)
+            return true
+        }
+
         /** Which widget an id belongs to, or null when the system has forgotten it. */
         fun kindOf(context: Context, appWidgetId: Int): WidgetKind? {
             val provider = AppWidgetManager.getInstance(context)
@@ -67,7 +83,15 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
 
         private const val COROUTINE_TIMEOUT = 20_000L
 
-        private val activeUpdates = ConcurrentHashMap<Int, Boolean>()
+        /**
+         * How long an in-flight claim may stand before a later update takes it
+         * over. Comfortably past [COROUTINE_TIMEOUT], so a slow-but-alive fetch
+         * is never double-run, and short enough that a claim stranded by a
+         * frozen process does not outlive the next periodic update.
+         */
+        private const val UPDATE_CLAIM_STALE_MS = 60_000L
+
+        private val activeUpdates = UpdateGuard(UPDATE_CLAIM_STALE_MS)
 
         private const val CHART_PADDING_DP = 10f
         private const val CHART_MARGIN_DP = 6f
@@ -129,11 +153,14 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
     }
 
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
-        for (id in appWidgetIds) WidgetConfig.forget(context, id)
+        for (id in appWidgetIds) {
+            WidgetConfig.forget(context, id)
+            WidgetRetry.cancel(context, id)
+        }
     }
 
-    private fun update(context: Context, manager: AppWidgetManager, appWidgetId: Int) {
-        if (activeUpdates.putIfAbsent(appWidgetId, true) == true) {
+    internal fun update(context: Context, manager: AppWidgetManager, appWidgetId: Int) {
+        if (!activeUpdates.begin(appWidgetId, System.currentTimeMillis())) {
             Log.d(TAG, "Widget $appWidgetId is already updating, skipping")
             return
         }
@@ -146,7 +173,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             ?.let { WidgetStore.server(context, it) }
         if (server == null) {
             showError(context, views, manager, appWidgetId, R.string.widget_err_not_configured)
-            activeUpdates.remove(appWidgetId)
+            activeUpdates.release(appWidgetId)
             return
         }
 
@@ -168,6 +195,10 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
                 withTimeoutOrNull(COROUTINE_TIMEOUT) {
                     try {
                         val (reading, history) = WidgetApi.load(context, server)
+                        // Data is on screen again: whatever the retry was going
+                        // to fix is fixed, and leaving it queued would only put
+                        // the widget through a fetch it does not need.
+                        WidgetRetry.cancel(context, appWidgetId)
                         withContext(Dispatchers.Main) {
                             showData(context, views, manager, appWidgetId, config, reading, history, bounds)
                         }
@@ -188,15 +219,24 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
                         withContext(Dispatchers.Main) {
                             showError(context, views, manager, appWidgetId, message, server.name)
                         }
+                        // The periodic update is half an hour away at best, and
+                        // a vendor build may stretch that further, so an error
+                        // left to it can sit on screen for hours. A failure only
+                        // the user can fix — a rejected credential — is left
+                        // alone: no retry produces a different answer.
+                        if (WidgetRetryPolicy.isTransient(e)) {
+                            WidgetRetry.schedule(context, appWidgetId)
+                        }
                     }
                 } ?: run {
                     Log.w(TAG, "Widget $appWidgetId update timed out")
                     withContext(Dispatchers.Main) {
                         showError(context, views, manager, appWidgetId, R.string.widget_err_timeout, server.name)
                     }
+                    WidgetRetry.schedule(context, appWidgetId)
                 }
             } finally {
-                activeUpdates.remove(appWidgetId)
+                activeUpdates.release(appWidgetId)
             }
         }
     }
