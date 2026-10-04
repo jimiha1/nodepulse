@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:fl_lib/fl_lib.dart';
+import 'package:server_box/core/utils/doh.dart';
+import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 /// WebSocket connection manager for CF-Server-Monitor (`/api/ws`).
@@ -22,7 +24,7 @@ class CfWs {
     this.onConnected,
     this.onDisconnected,
     WebSocketChannel Function(Uri uri)? channelFactory,
-  }) : _channelFactory = channelFactory ?? WebSocketChannel.connect;
+  }) : _channelFactory = channelFactory ?? _connectOverDoh;
 
   final String url;
   final String? token;
@@ -67,6 +69,13 @@ class CfWs {
     client._startConnect();
     return client;
   }
+
+  /// The default channel: a WebSocket over a client that resolves through DoH,
+  /// so the live feed reaches the same site the poll does. The platform
+  /// resolver is what a tampered network rewrites, and a feed that connects to
+  /// an impostor would feed the page samples that never came from the site.
+  static WebSocketChannel _connectOverDoh(Uri uri) =>
+      IOWebSocketChannel.connect(uri, customClient: buildDohHttpClient());
 
   /// Converts an http/https/ws/wss URL to a valid WebSocket URL with `/api/ws` path
   /// and optional `?token=...` parameter.

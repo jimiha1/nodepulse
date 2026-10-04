@@ -16,16 +16,10 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import tech.lolli.toolbox.MainActivity
+import tech.lolli.toolbox.cf.CfHttp
 import java.io.IOException
-import java.net.HttpURLConnection
 import java.net.URL
-import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
-import javax.net.ssl.HostnameVerifier
-import javax.net.ssl.HttpsURLConnection
-import javax.net.ssl.SSLContext
-import javax.net.ssl.TrustManager
-import javax.net.ssl.X509TrustManager
 
 class AlertWorker(
     appContext: Context,
@@ -149,43 +143,23 @@ class AlertWorker(
     private fun fetchServers(siteUrl: String, token: String?): String {
         val base = siteUrl.trimEnd('/')
         val url = URL("$base/api/servers")
+        if (url.protocol != "https") throw IOException("HTTPS required")
 
-        var connection: HttpURLConnection? = null
-        try {
-            connection = (url.openConnection() as HttpURLConnection).apply {
-                if (this is HttpsURLConnection) {
-                    sslSocketFactory = permissiveSslContext().socketFactory
-                    hostnameVerifier = HostnameVerifier { _, _ -> true }
-                }
-                requestMethod = "GET"
-                connectTimeout = TIMEOUT_MS
-                readTimeout = TIMEOUT_MS
-                if (!token.isNullOrEmpty()) {
-                    setRequestProperty("Authorization", "Bearer $token")
-                }
-                setRequestProperty("Accept", "application/json")
-                setRequestProperty("User-Agent", "ServerBox-Alert/1")
-            }
-            val code = connection.responseCode
-            if (code == 401 || code == 403) {
-                Log.w(TAG, "Authorization failed with HTTP $code, skipping alert check")
+        // See [WidgetApi.get]: the address has to come from DoH, because the
+        // platform resolver is what a tampered network rewrites.
+        return try {
+            CfHttp.shared.get(
+                url = url.toString(),
+                userAgent = "ServerBox-Alert/1",
+                token = token,
+                timeoutMs = TIMEOUT_MS,
+            )
+        } catch (e: CfHttp.HttpStatusException) {
+            if (e.code == 401 || e.code == 403) {
+                Log.w(TAG, "Authorization failed with HTTP ${e.code}, skipping alert check")
                 return ""
             }
-            if (code !in 200..299) throw IOException("HTTP $code")
-            return connection.inputStream.bufferedReader().use { it.readText() }
-        } finally {
-            connection?.disconnect()
-        }
-    }
-
-    private fun permissiveSslContext(): SSLContext {
-        val trustEverything = object : X509TrustManager {
-            override fun checkClientTrusted(chain: Array<X509Certificate>?, authType: String?) = Unit
-            override fun checkServerTrusted(chain: Array<X509Certificate>?, authType: String?) = Unit
-            override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
-        }
-        return SSLContext.getInstance("TLS").apply {
-            init(null, arrayOf<TrustManager>(trustEverything), java.security.SecureRandom())
+            throw IOException("HTTP ${e.code}", e)
         }
     }
 }

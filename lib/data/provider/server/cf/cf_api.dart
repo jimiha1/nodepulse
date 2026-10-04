@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
+import 'package:server_box/core/utils/doh.dart';
 import 'package:server_box/data/model/cf/cf_history.dart';
 import 'package:server_box/data/model/cf/cf_server.dart';
 
@@ -26,6 +28,14 @@ class CfApi {
         connectTimeout: _connectTimeout,
         receiveTimeout: _receiveTimeout,
       ),
+    );
+    // The site's address comes from DoH rather than the platform resolver: a
+    // resolver that has been tampered with answers with a server that is not
+    // the site, and the failure it produces (a wrong page, a wrong
+    // certificate) reads as a site problem instead of a resolver one. See
+    // `core/utils/doh.dart`.
+    _dio.httpClientAdapter = IOHttpClientAdapter(
+      createHttpClient: () => buildDohHttpClient(),
     );
     _dio.interceptors.add(
       InterceptorsWrapper(

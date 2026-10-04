@@ -6,19 +6,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import tech.lolli.toolbox.cf.CfHttp
 import java.io.IOException
-import java.net.HttpURLConnection
 import java.net.URL
-import java.security.cert.X509Certificate
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
-import javax.net.ssl.HostnameVerifier
-import javax.net.ssl.HttpsURLConnection
-import javax.net.ssl.SSLContext
-import javax.net.ssl.TrustManager
-import javax.net.ssl.X509TrustManager
 
 /**
  * Fetches CF-Server-Monitor endpoints directly for home widgets.
@@ -105,29 +99,23 @@ object WidgetApi {
     ): String {
         val base = siteUrl.trimEnd('/')
         val url = URL(base + path)
+        if (url.protocol != "https") throw InsecureException()
 
-        var connection: HttpURLConnection? = null
-        try {
-            connection = (url.openConnection() as HttpURLConnection).apply {
-                if (this is HttpsURLConnection) {
-                    sslSocketFactory = permissiveSslContext().socketFactory
-                    hostnameVerifier = HostnameVerifier { _, _ -> true }
-                }
-                requestMethod = "GET"
-                connectTimeout = TIMEOUT_MS
-                readTimeout = TIMEOUT_MS
-                if (!token.isNullOrEmpty()) {
-                    setRequestProperty("Authorization", "Bearer $token")
-                }
-                setRequestProperty("Accept", "application/json")
-                setRequestProperty("User-Agent", "ServerBox-Widget/2")
-            }
-            val code = connection.responseCode
-            if (code == 401 || code == 403) throw RejectedTokenException()
-            if (code !in 200..299) throw IOException("HTTP $code")
-            return connection.inputStream.bufferedReader().use { it.readText() }
-        } finally {
-            connection?.disconnect()
+        // Through [CfHttp] rather than `HttpURLConnection`: that class asks
+        // the platform resolver for the address itself, and a resolver that
+        // has been tampered with answers with a server that is not the site —
+        // which is what turned "the widget shows the wrong numbers" into a
+        // certificate error from a self-signed impostor.
+        return try {
+            CfHttp.shared.get(
+                url = url.toString(),
+                userAgent = "ServerBox-Widget/2",
+                token = token,
+                timeoutMs = TIMEOUT_MS,
+            )
+        } catch (e: CfHttp.HttpStatusException) {
+            if (e.code == 401 || e.code == 403) throw RejectedTokenException()
+            throw IOException("HTTP ${e.code}", e)
         }
     }
 
@@ -372,17 +360,6 @@ object WidgetApi {
                 else -> null
             }
         } else null
-
-    private fun permissiveSslContext(): SSLContext {
-        val trustEverything = object : X509TrustManager {
-            override fun checkClientTrusted(chain: Array<X509Certificate>?, authType: String?) = Unit
-            override fun checkServerTrusted(chain: Array<X509Certificate>?, authType: String?) = Unit
-            override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
-        }
-        return SSLContext.getInstance("TLS").apply {
-            init(null, arrayOf<TrustManager>(trustEverything), java.security.SecureRandom())
-        }
-    }
 
     fun formatBytes(bytes: Double): String {
         val units = listOf("b", "k", "m", "g", "t", "p")
