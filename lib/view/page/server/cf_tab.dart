@@ -85,10 +85,10 @@ class _CfHomePageState extends ConsumerState<CfHomePage> {
       onRefresh: () => ref.read(cfServersProvider.notifier).refresh(),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(6, 4, 6, 10),
+        padding: const EdgeInsets.fromLTRB(6, 6, 6, 12),
         children: [
           _overview(context, snap),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           if (snap.servers.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 60),
@@ -97,7 +97,7 @@ class _CfHomePageState extends ConsumerState<CfHomePage> {
           else
             for (final node in snap.servers)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3.5),
+                padding: const EdgeInsets.symmetric(vertical: 4),
                 child: CfServerCard(
                   node: node,
                   showExpire: snap.showExpire,
@@ -126,7 +126,7 @@ class _CfHomePageState extends ConsumerState<CfHomePage> {
           SettingsPage.route.go(context);
         },
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7.5),
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8.5),
           child: Row(
             children: [
               Expanded(

@@ -39,14 +39,14 @@ class CfServerCard extends StatelessWidget {
         borderRadius: CardX.borderRadius,
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8.5),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9.5),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _header(context),
-              const SizedBox(height: 5),
+              const SizedBox(height: 5.5),
               _resourceBars(context),
-              const SizedBox(height: 7),
+              const SizedBox(height: 7.5),
               // Modular 2x2 layout
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,7 +56,7 @@ class CfServerCard extends StatelessWidget {
                   Expanded(child: _buildTrafficTile(context)),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 6.5),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -74,7 +74,7 @@ class CfServerCard extends StatelessWidget {
 
   Widget _tileContainer({required BuildContext context, required Widget child}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6.8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.28),
@@ -523,7 +523,7 @@ class CfServerCard extends StatelessWidget {
       _ => const Color(0xFF34C759),
     };
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2.2),
+      padding: const EdgeInsets.symmetric(vertical: 2.4),
       child: Row(
         children: [
           SizedBox(
