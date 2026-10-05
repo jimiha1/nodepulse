@@ -528,11 +528,21 @@ class CfServerCard extends StatelessWidget {
         children: [
           SizedBox(
             width: _labelWidth,
-            child: Text(label, style: UIs.text12Grey),
+            child: Text(
+              label,
+              style: UIs.text12Grey,
+              maxLines: 1,
+              softWrap: false,
+            ),
           ),
           SizedBox(
             width: _percentWidth,
-            child: Text(_percent(percent), style: UIs.text13Bold),
+            child: Text(
+              _percent(percent),
+              style: UIs.text13Bold,
+              maxLines: 1,
+              softWrap: false,
+            ),
           ),
           Expanded(
             child: ClipRRect(
@@ -648,8 +658,8 @@ class CfServerCard extends StatelessWidget {
   }
 
   /// The two fixed columns left of the bar, matching [_resourceBar].
-  static const _labelWidth = 32.0;
-  static const _percentWidth = 44.0;
+  static const _labelWidth = 38.0;
+  static const _percentWidth = 52.0;
 
   /// The gap between the bar and the detail column, matching [_resourceBar].
   static const _detailGap = 8.0;
