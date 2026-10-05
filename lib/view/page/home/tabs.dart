@@ -36,8 +36,12 @@ extension _HomePageTabs on _HomePageState {
               // three of them put a `Scaffold` *inside* a pane splitter, so the
               // splitter's own divider is above any app bar that could have
               // spent the inset.
-              rootBuilder: (_) =>
-                  SafeArea(bottom: false, child: _tabs[index].page),
+              rootBuilder: (_) => SafeArea(
+                left: false,
+                right: false,
+                bottom: false,
+                child: _tabs[index].page,
+              ),
             ),
             onPageChanged: (value) {
               FocusScope.of(context).unfocus();
