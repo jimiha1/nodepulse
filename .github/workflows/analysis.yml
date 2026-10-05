@@ -103,21 +103,14 @@ jobs:
           # reaching main with nothing having compiled anything.
           shared='^\.github/(workflows/(analysis|build)\.yml$|actions/)|^pubspec\.(yaml|lock)$|^packages/'
 
-          emit rust "$shared|^crates/|^monitor/|^Cargo\.(toml|lock)$"
-          # `crates/` because `flutter test` loads the FFI dylib and the
-          # generated bindings come from there.
-          #
-          # `macos/` because `test/platform/macos_entitlements_test.dart` is a plain
-          # test and runs here — the `macOS build` job below says exactly that
-          # and then relies on it.
-          #
+          emit rust "$shared|^monitor/|^Cargo\.(toml|lock)$"
           # `docs/schemas/` because `test/unit/theme_schema_test.dart` reads the
           # manifest schema and holds it against the parser; a schema-only
           # change is exactly what that test is for.
           #
           # `store/` because `test/unit/theme_store_tree_test.dart` reads the
           # official theme repository the way the store does.
-          emit dart "$shared|^lib/|^test/|^integration_test/|^crates/|^macos/|^Cargo\.(toml|lock)$|^analysis_options\.yaml$|^docs/schemas/|^store/"
+          emit dart "$shared|^lib/|^test/|^integration_test/|^analysis_options\.yaml$|^docs/schemas/|^store/"
           emit frontend "$shared|^monitor/frontend/|^packages/webui/"
           # `store/` (and fl_lib, under `$shared`) for the theme manifests the
           # docs job validates against that same schema; `assets/catalog/` for
@@ -403,10 +396,10 @@ jobs:
   # is open and reproduces on ordinary desktops too.
   #
   # So this builds instead of pretending to test. The entitlements the products
-  # ship with are guarded by `test/platform/macos_entitlements_test.dart`, which is a
-  # plain test and runs in `check` below; what is left for a macOS runner is
-  # whether the project and the Rust static library still link.  The
-  # running-app half needs a machine, and has nowhere in CI to run.
+  # ship with used to be guarded by `test/platform/macos_entitlements_test.dart`,
+  # which went with `macos/` in the CF-Server-Monitor trim; what is left for a
+  # macOS runner is whether the project and the Rust static library still link.
+  # The running-app half needs a machine, and has nowhere in CI to run.
   macosBuild:
     name: macOS build
     if: github.event_name == 'workflow_dispatch'
@@ -462,9 +455,8 @@ jobs:
           </plist>
           EOF
 
-      # `test/platform/macos_entitlements_test.dart` is what guards the entitlements the
-      # products actually ship with; it runs in `check`, on a checkout the step
-      # above has not rewritten.
+      # The entitlements the products actually ship with have no test behind
+      # them since the trim; this builds against the ones the step above wrote.
       - name: Build the unsandboxed app
         run: flutter build macos --debug
 

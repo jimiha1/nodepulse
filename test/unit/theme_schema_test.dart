@@ -96,13 +96,22 @@ void main() {
 
   test('icon keys, and the file name each maps to', () {
     final images = _map(properties['icons']['properties']['images']);
+    final colors = _map(properties['icons']['properties']['colors']);
     expect(images['additionalProperties'], false);
-    expect(images['properties'].keys.toSet(), ThemePackages.iconKeys);
+    // Containment, not equality: the schema is the format, shared by more than
+    // one app, so it offers every key any of them draws. This build draws a
+    // subset — a package for another app carries keys this one has never heard
+    // of, and the parser keeps them and never draws them. What must not happen
+    // is the reverse: a key this app draws that the schema does not offer,
+    // which an editor would then flag as a mistake in a manifest that is right.
     expect(
-      _map(properties['icons']['properties']['colors'])['properties']
-          .keys
-          .toSet(),
-      ThemePackages.iconKeys,
+      images['properties'].keys.toSet(),
+      containsAll(ThemePackages.iconKeys),
+      reason: 'every key this app draws must be one the schema offers',
+    );
+    expect(
+      colors['properties'].keys.toSet(),
+      images['properties'].keys.toSet(),
       reason: 'a color for a key no image carries is refused anyway',
     );
     for (final entry in _map(images['properties']).entries) {

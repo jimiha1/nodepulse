@@ -1,6 +1,7 @@
 import 'package:extended_image/extended_image.dart';
 import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:icons_plus/icons_plus.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:server_box/core/utils/logo_url.dart';
 import 'package:server_box/data/model/server/dist.dart';
@@ -63,30 +64,56 @@ class DistIconOf extends StatelessWidget {
   ColorFilter _tint(BuildContext context) =>
       ColorFilter.mode(_tintColor(context), BlendMode.srcIn);
 
-  Color _tintColor(BuildContext context) {
-    final theme = Theme.of(context);
-    return theme.brightness == Brightness.dark
-        ? theme.colorScheme.onSurface
-        : theme.colorScheme.primary;
-  }
+  Color _tintColor(BuildContext context) =>
+      IconTheme.of(context).color ??
+      Theme.of(context).colorScheme.onSurfaceVariant;
+
+  /// Drawn wherever there is no mark: no address and no shipped file, an
+  /// address that could not be fetched, or a distribution nothing recognised.
+  ///
+  /// A blank of the same size would keep the row from shifting just as well,
+  /// but it reads as something missing; an icon reads as "not known", which is
+  /// the truth.
+  ///
+  /// Two of them, because there are two different things not to know. A
+  /// distribution that *was* recognised and simply has no mark here — Ubuntu
+  /// is the case most people will meet — is a Linux for certain, and a penguin
+  /// says so. One that was not recognised at all might be a BSD, macOS or
+  /// Windows, all of which `uname -or` reaches, so the penguin would be a
+  /// guess and the machine is all that can be claimed.
+  ///
+  /// Takes the same colour as the marks, so a column of them is one column.
+  Widget _fallback(BuildContext context) => Icon(
+    dist?.isLinux == true ? MingCute.linux_fill : BoxIcons.bxs_server,
+    size: size,
+    color: _tintColor(context),
+  );
 
   @override
   Widget build(BuildContext context) {
-    final dist = this.dist;
-    if (dist == null) return const SizedBox.shrink();
+    // Belt and braces. Every call site goes through `distIconOf`, which answers
+    // null and lets the slot be omitted — but a widget built directly must not
+    // draw a mark the switch says is off.
+    if (!Stores.setting.showDistMark.fetch()) return const SizedBox.shrink();
 
-    final asset = dist.markAsset;
+    final dist = this.dist;
+
+    final asset = dist?.markAsset;
     if (asset != null) {
-      return Image.asset(
+      return SvgPicture.asset(
         asset,
         width: size,
         height: size,
-        color: _tintColor(context),
+        fit: BoxFit.contain,
+        colorFilter: _tint(context),
+        semanticsLabel: dist?.name,
       );
     }
 
+    if (dist == null) return _fallback(context);
+
     final url = distMarkUrl(dist: dist, dark: context.isDark);
-    if (url == null) return const SizedBox.shrink();
+    if (url == null) return _fallback(context);
 
     final urlStr = url;
     if (_isSvgUrl(urlStr)) {
@@ -94,7 +121,11 @@ class DistIconOf extends StatelessWidget {
         urlStr,
         width: size,
         height: size,
+        fit: BoxFit.contain,
         colorFilter: _tint(context),
+        semanticsLabel: dist.name,
+        placeholderBuilder: (_) => SizedBox.square(dimension: size),
+        errorBuilder: (_, _, _) => _fallback(context),
       );
     }
 

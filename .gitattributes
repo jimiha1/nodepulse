@@ -35,6 +35,17 @@ monitor/migrations/*.sql text eol=lf
 test/fixtures/rootfs_manifest/signed.json text eol=lf
 test/fixtures/rootfs_manifest/*.sig -text
 
+# `theme_bundled_test` compares each shipped `.fsbt` against the `store/`
+# folder it was packed from, byte for byte, because shipped bytes that drifted
+# from the folder are a version the store never published. A `.fsbt` is a zip
+# of files packed on whatever host published them, so it holds the LF the
+# packer wrote; a Windows checkout with `core.autocrlf=true` converts the
+# folder's `.toml` and `.svg` to CRLF and the comparison fails on files that
+# never differed. Pin the endings so the folder is the packer's copy on every
+# platform. The `.png` beside them is already binary and unaffected.
+store/themes/**/*.toml text eol=lf
+store/themes/**/*.svg text eol=lf
+
 # No Git LFS: every tracked image and theme package is a regular blob. An LFS
 # rule over them makes each file whose mtime changes (a build, an IDE) show as
 # modified, and `git add` would turn it into a pointer. The theme store also
