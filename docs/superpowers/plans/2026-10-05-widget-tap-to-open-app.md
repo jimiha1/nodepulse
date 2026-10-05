@@ -382,3 +382,45 @@ Expected: 7 条全部符合。
 
 复测：把 5014 的 `widget_5014_server` 从配置里移除（先 `md5sum` 备份，测完按原字节还原并校验 md5 一致），重新安装触发重绘，小组件显示「点按选择服务器」；点其**正文**（非名称）→ logcat `cmp=…/.widget.WidgetConfigureActivity`，焦点为配置面板。**通过**。
 
+---
+
+### Task 5: 小组件进入时默认 1 小时（追加需求）
+
+**Files:**
+- Modify: `lib/view/page/server/cf_detail/view.dart`（`CfDetailArgs` 加 `range`；`_selectedRange` 初值改用它）
+- Modify: `lib/view/page/home.dart`（import `charts.dart` 取 `CfHistoryRange`）
+- Modify: `lib/view/page/home/lifecycle.dart`（深链分支传 `CfHistoryRange.h1`）
+- Test: `test/widget/cf_detail_range_test.dart`（新建）
+
+**为什么**：`live` 只是**本次 App 会话**采集的缓冲区。小组件点开的往往正是刚启动的 App，那时 live 里几乎没有数据，图表只有一两个点（实测：卡片进入是单点，组件进入是一条完整曲线）。看「这台机器最近怎么样」需要的是历史，所以组件入口给 `h1`。
+
+**不动卡片入口**：`range` 是可选参数，不传就是 `live`，`cf_tab.dart` 的卡片调用一行未改。设计上「App 内点卡片看实时、桌面点组件看一小时」是刻意的，不是遗漏。
+
+- [x] **Step 1: 写失败的测试**
+
+`test/widget/cf_detail_range_test.dart`：用 `ProviderScope` 覆写 `cfServersProvider`（内存快照）与 `cfHistoryProvider`（记录被请求的 `hours` 并返回空表），断言
+1. 传 `range: h1` 时请求了 `hours == 1.0`，且选中的 chip 是「1小时」；
+2. 不传 `range` 时不请求任何 history，选中「实时」。
+
+**两个坑，已解决**（写测试时踩到，记下来免得下次重踩）：
+- 详情页用的是 `package:flutter/material.dart` 的 `ChoiceChip`，需要 **Flutter 自己的** `MaterialLocalizations`，而 `material_ui` 的 delegate 提供的是另一种类型。要套 `MaterialUiCompatibilityBridge`（`app.dart` 对真实树用的就是它）。文件里 `ChoiceChip` 这个名字会解析到 `material_ui` 的同名无关类型，所以测试里用 `import 'package:flutter/material.dart' as legacy;` 并断言 `legacy.ChoiceChip`。
+- 范围条是横向滚动的，右侧 chip 不在布局中，按 label 查找会漏；改为遍历所有 chip 取 `selected` 的那个。
+
+- [x] **Step 2: 确认测试确实会失败**
+
+把 `_selectedRange` 临时改回 `= CfHistoryRange.live`，测试报 `Expected: contains <1.0>  Actual: []`——**确实红**，不是空跑。还原后通过。
+
+- [x] **Step 3: 实现**
+
+`CfDetailArgs` 加 `final CfHistoryRange? range;`；`_selectedRange` 改为 `late CfHistoryRange _selectedRange = widget.args.range ?? CfHistoryRange.live;`；深链分支传 `range: CfHistoryRange.h1`。
+
+- [x] **Step 4: 测试与静态检查**
+
+`flutter test test/widget/cf_detail_range_test.dart` → 2 passed；`flutter test` → 568 passed（此前 566）；`flutter analyze` → 仅剩既有的 `_buildBottomBar` 警告。
+
+- [x] **Step 5: 实机验证**
+
+冷启动 → 首页卡片点 Osaka → **实时**（图表单点，live 缓冲区刚起步）。
+回桌面点 Osaka 组件 → **1小时**（图表为完整一小时曲线）；点 LAX 组件 → **LAX 页、1小时**。两条路径行为符合设计。
+
+
