@@ -241,4 +241,17 @@ class CfWidgetParseTest {
             HomeWidget.resolveTimeColorRes(now - 11 * 60 * 1000L, WidgetExpiry.H2, now),
         )
     }
+
+    @Test
+    fun formatBytesOmitsTrailingZeroDecimals() {
+        val gb = 1024.0 * 1024.0 * 1024.0
+        assertEquals("500g", WidgetApi.formatBytes(500.0 * gb))
+        assertEquals("116.7g", WidgetApi.formatBytes(116.7 * gb))
+        assertEquals("1g", WidgetApi.formatBytes(1.0 * gb))
+        assertEquals("1.5g", WidgetApi.formatBytes(1.5 * gb))
+        assertEquals("0b", WidgetApi.formatBytes(0.0))
+        assertEquals("512b", WidgetApi.formatBytes(512.0))
+        assertEquals("1k", WidgetApi.formatBytes(1024.0))
+        assertEquals("1.2m", WidgetApi.formatBytes(1.2 * 1024.0 * 1024.0))
+    }
 }

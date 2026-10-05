@@ -177,6 +177,73 @@ void main() {
     expect(find.text('CM 190ms'), findsNothing);
   });
 
+  testWidgets('the three resource bars are the same length', (tester) async {
+    // The regression this guards: the bar was an `Expanded` and the detail
+    // text took its intrinsic width, so CPU — whose detail is the two
+    // characters `x4`, against disk's `20 GB / 40 GB` — drew a bar far longer
+    // than the other two.
+    await _pump(tester);
+
+    final finder = find.byType(LinearProgressIndicator);
+    expect(finder, findsNWidgets(3));
+
+    final rects = [for (var i = 0; i < 3; i++) tester.getRect(finder.at(i))];
+    for (final rect in rects) {
+      expect(rect.width, closeTo(rects.first.width, 0.01));
+      expect(rect.right, closeTo(rects.first.right, 0.01));
+    }
+    // Not merely equal because all three collapsed: the widest detail of the
+    // three has to leave the bars a real length.
+    expect(rects.first.width, greaterThan(40));
+  });
+
+  testWidgets('an absent CPU detail does not lengthen the CPU bar', (
+    tester,
+  ) async {
+    // `cpuCores == null` means no detail at all on the CPU row. The row used
+    // to drop its trailing spacer along with the text, so that bar alone grew
+    // by the gap — this is the same node as the fixture minus the core count.
+    await _pump(
+      tester,
+      node: const CfServer(
+        id: 'n1',
+        name: '日本节点',
+        group: '家宽',
+        region: 'jp',
+        os: 'Ubuntu 22.04',
+        online: true,
+        cpu: 3.2,
+        ramUsed: 1024,
+        ramTotal: 4096,
+        swapUsed: 0,
+        swapTotal: 0,
+        diskUsed: 20480,
+        diskTotal: 40960,
+        load1: 0.42,
+        load5: 0.3,
+        load15: 0.2,
+        netInSpeed: 1048576,
+        netOutSpeed: 262144,
+        netRxMonthly: 3221225472,
+        netTxMonthly: 1073741824,
+        netRx: 0,
+        netTx: 0,
+        tcpConn: 12,
+        udpConn: 3,
+        processes: 118,
+      ),
+    );
+
+    final finder = find.byType(LinearProgressIndicator);
+    expect(finder, findsNWidgets(3));
+
+    final rects = [for (var i = 0; i < 3; i++) tester.getRect(finder.at(i))];
+    for (final rect in rects) {
+      expect(rect.width, closeTo(rects.first.width, 0.01));
+      expect(rect.right, closeTo(rects.first.right, 0.01));
+    }
+  });
+
   testWidgets('renders progress indicators and loss metrics for cf server', (tester) async {
     const server = CfServer(
       id: 's1',

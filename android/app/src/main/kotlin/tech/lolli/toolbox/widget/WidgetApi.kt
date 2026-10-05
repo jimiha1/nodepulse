@@ -372,7 +372,9 @@ object WidgetApi {
         return if (idx == 0) {
             "${value.toInt()}${units[idx]}"
         } else {
-            String.format(Locale.US, "%.1f%s", value, units[idx])
+            val formatted = String.format(Locale.US, "%.1f", value)
+            val cleanValue = if (formatted.endsWith(".0")) formatted.dropLast(2) else formatted
+            "$cleanValue${units[idx]}"
         }
     }
 
