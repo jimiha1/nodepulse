@@ -5048,6 +5048,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cfTestFail => '连接失败';
 
   @override
+  String get cfNeedLogin => '该站点需要登录';
+
+  @override
+  String get cfOpenSettings => '打开设置';
+
+  @override
   String get cfOverviewOnline => '在线';
 
   @override

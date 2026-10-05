@@ -223,3 +223,25 @@ class CfApiException implements Exception {
   @override
   String toString() => 'CfApiException($code): $message';
 }
+
+/// Whether [error] is the site refusing an unauthenticated read, rather than
+/// a transport failure or a malformed answer.
+///
+/// The two shapes are both real and neither implies the other: a read that
+/// goes out without a token is refused by Dio's own status check, which
+/// throws `DioException` before any of this file's code sees the response —
+/// `CfApiException` only carries a refusal the site stated in a body, which
+/// is the login path's shape. A caller that wants to say "this site needs a
+/// login, go and enter one" has to recognise both, and the status code is
+/// the only thing they share.
+///
+/// 401 is the site's own answer (API.md §3.2) and 403 the one it gives a
+/// token that is present but no longer good.
+bool isCfAuthFailure(Object error) {
+  final code = switch (error) {
+    CfApiException(:final code) => code,
+    DioException(:final response) => response?.statusCode,
+    _ => null,
+  };
+  return code == 401 || code == 403;
+}

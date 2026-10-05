@@ -9231,6 +9231,18 @@ abstract class AppLocalizations {
   /// **'Connection failed'**
   String get cfTestFail;
 
+  /// Shown on the CF home page in place of the raw 401 the site answered with, since the fix is to enter credentials in the settings.
+  ///
+  /// In en, this message translates to:
+  /// **'This site needs a login'**
+  String get cfNeedLogin;
+
+  /// Button on the CF home page's error state, which otherwise has no way into the settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get cfOpenSettings;
+
   /// Label of the CF home overview's online-count cell.
   ///
   /// In en, this message translates to:

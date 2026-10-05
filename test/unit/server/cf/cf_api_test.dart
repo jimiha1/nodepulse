@@ -308,6 +308,88 @@ void main() {
     }
   });
 
+  group('isCfAuthFailure names the site refusing an unauthenticated read', () {
+    // The page that renders the error has to tell "this site wants a login"
+    // from every other failure, because only the first has a fix the reader
+    // can carry out. The two shapes it can arrive in are genuinely different
+    // code paths: a tokenless read is refused by Dio's status check, so it
+    // never reaches the body-parsing below that builds a `CfApiException`.
+
+    test('a 401 DioException counts', () {
+      expect(
+        isCfAuthFailure(
+          DioException(
+            requestOptions: RequestOptions(path: '/api/servers'),
+            response: Response<dynamic>(
+              requestOptions: RequestOptions(path: '/api/servers'),
+              statusCode: 401,
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('a 403 counts too: the site answers a stale token with it', () {
+      expect(
+        isCfAuthFailure(CfApiException(code: 403, message: 'forbidden')),
+        isTrue,
+      );
+    });
+
+    test('a transport failure does not: there is no status to read', () {
+      expect(
+        isCfAuthFailure(
+          DioException(
+            requestOptions: RequestOptions(path: '/api/servers'),
+            type: DioExceptionType.connectionTimeout,
+          ),
+        ),
+        isFalse,
+      );
+    });
+
+    test('other statuses and other errors do not', () {
+      expect(
+        isCfAuthFailure(
+          DioException(
+            requestOptions: RequestOptions(path: '/api/servers'),
+            response: Response<dynamic>(
+              requestOptions: RequestOptions(path: '/api/servers'),
+              statusCode: 500,
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        ),
+        isFalse,
+      );
+      expect(isCfAuthFailure(CfApiException(message: 'loginFailed')), isFalse);
+      expect(isCfAuthFailure(StateError('nope')), isFalse);
+    });
+
+    test('a real 401 read is recognised end to end', () async {
+      // The shape the app actually gets, not a hand-built exception: this is
+      // the one that used to reach the page as the raw Dio text.
+      final server = await _serve((request) async {
+        request.response.statusCode = HttpStatus.unauthorized;
+        return _json(request.response, {'error': 'Unauthorized', 'code': 401});
+      });
+      final api = CfApi(baseUrl: 'http://127.0.0.1:${server.port}');
+      try {
+        final error = await api.fetchServers().then<Object?>(
+          (_) => null,
+          onError: (Object e) => e,
+        );
+        expect(error, isNotNull);
+        expect(isCfAuthFailure(error!), isTrue);
+      } finally {
+        api.close();
+        await server.close(force: true);
+      }
+    });
+  });
+
   test('expiryOf reads exp from the JWT payload', () {
     String b64(Map<String, Object?> j) => base64Url.encode(utf8.encode(jsonEncode(j)));
     final token = '${b64({'alg': 'HS256', 'typ': 'JWT'})}.'

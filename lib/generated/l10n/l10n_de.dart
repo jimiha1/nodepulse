@@ -5455,6 +5455,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get cfTestFail => 'Connection failed';
 
   @override
+  String get cfNeedLogin => 'This site needs a login';
+
+  @override
+  String get cfOpenSettings => 'Open settings';
+
+  @override
   String get cfOverviewOnline => 'Online';
 
   @override

@@ -7008,6 +7008,14 @@
   "@cfTestFail": {
     "description": "Shown when the CF site connection test failed."
   },
+  "cfNeedLogin": "This site needs a login",
+  "@cfNeedLogin": {
+    "description": "Shown on the CF home page in place of the raw 401 the site answered with, since the fix is to enter credentials in the settings."
+  },
+  "cfOpenSettings": "Open settings",
+  "@cfOpenSettings": {
+    "description": "Button on the CF home page's error state, which otherwise has no way into the settings."
+  },
   "cfOverviewOnline": "Online",
   "@cfOverviewOnline": {
     "description": "Label of the CF home overview's online-count cell."
