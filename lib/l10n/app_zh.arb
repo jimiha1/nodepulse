@@ -1509,6 +1509,7 @@
   "firewallInvalidForwardPort": "格式为 port=80:proto=tcp:toport=8080，需包含 toport、toaddr 或两者。",
   "cfSite": "CF 监控站点",
   "cfSiteUrlHint": "https://status.example.com",
+  "cfSiteHttpsRequired": "站点地址必须是 HTTPS。使用 HTTP 时密码会以明文发送。",
   "cfAuth": "站点需要登录",
   "cfUsername": "用户名",
   "cfPassword": "密码",

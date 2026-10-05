@@ -13,6 +13,7 @@ import 'package:server_box/core/chan.dart';
 import 'package:server_box/core/extension/context/locale.dart';
 import 'package:server_box/core/service/crash_report.dart';
 import 'package:server_box/core/service/diagnostics_upload.dart';
+import 'package:server_box/core/utils/secure_endpoint.dart';
 import 'package:server_box/data/model/app/motion.dart';
 import 'package:server_box/data/provider/server/cf/cf_servers_provider.dart';
 import 'package:server_box/data/res/build_data.dart';

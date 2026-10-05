@@ -56,9 +56,28 @@ final class _CfSiteSettingsPageState extends ConsumerState<CfSiteSettingsPage> {
     super.dispose();
   }
 
+  /// Saves the address, refusing one the login must not be posted to.
+  ///
+  /// The password goes out on this connection, so a plaintext address is not
+  /// a preference to honour: `http://` puts it on the wire in the clear, and
+  /// the WebSocket that follows carries the token the same way. The widget
+  /// side has always refused this (`WidgetApi.get` throws on a non-HTTPS
+  /// URL); this is the same rule on the app's own path, which is where the
+  /// password is typed.
+  ///
+  /// Loopback is allowed through — `isSecureRemoteEndpoint` says so, and a
+  /// site being developed on this machine is reached over HTTP. Nothing is
+  /// stored on a refusal, so the previously good address stays in effect.
   void _saveUrl(String raw) {
     final url = raw.trim();
     if (url == Stores.setting.cfSiteUrl.fetch()) return;
+
+    final uri = Uri.tryParse(url);
+    if (uri == null || !isSecureRemoteEndpoint(uri)) {
+      context.showErrDialog(l10n.cfSiteHttpsRequired);
+      return;
+    }
+
     // The provider holding the API listens for exactly this, and rebuilds
     // its client — nothing else to notify here.
     Stores.setting.cfSiteUrl.put(url);

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:server_box/core/utils/doh.dart';
+import 'package:server_box/core/utils/secure_endpoint.dart';
 import 'package:server_box/data/model/cf/cf_history.dart';
 import 'package:server_box/data/model/cf/cf_server.dart';
 
@@ -131,6 +132,15 @@ class CfApi {
   /// `403 verificationFailed`, …) throws [CfApiException] carrying the
   /// server's error key; transport failures propagate as `DioException`.
   Future<String> performLogin(String username, String password) async {
+    // Backstop for the settings page's check: an address stored before that
+    // check existed is still in the store, and this is the one request that
+    // carries the password rather than a token. Refused here as well so the
+    // password cannot go out in the clear on an install that was configured
+    // by an older build. See `isSecureRemoteEndpoint`.
+    final uri = Uri.tryParse(_dio.options.baseUrl);
+    if (uri == null || !isSecureRemoteEndpoint(uri)) {
+      throw CfApiException(message: 'insecureSiteUrl');
+    }
     Response<dynamic> res;
     try {
       res = await _dio.post<dynamic>(

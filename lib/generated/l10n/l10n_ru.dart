@@ -5397,6 +5397,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get cfSiteUrlHint => 'https://status.example.com';
 
   @override
+  String get cfSiteHttpsRequired =>
+      'The site must be an HTTPS address. A password sent over HTTP travels in the clear.';
+
+  @override
   String get cfAuth => 'Login required';
 
   @override

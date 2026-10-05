@@ -6975,6 +6975,10 @@
   "@cfSiteUrlHint": {
     "description": "Placeholder of the input for the CF site's address."
   },
+  "cfSiteHttpsRequired": "The site must be an HTTPS address. A password sent over HTTP travels in the clear.",
+  "@cfSiteHttpsRequired": {
+    "description": "Refusal shown when the CF site's address is not HTTPS, since the login password is posted to it."
+  },
   "cfAuth": "Login required",
   "@cfAuth": {
     "description": "Whether the CF site's read endpoints need a login."

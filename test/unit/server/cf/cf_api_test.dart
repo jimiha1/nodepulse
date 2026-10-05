@@ -320,6 +320,71 @@ void main() {
     expect(CfCredentials.expiryOf('garbage'), isNull);
     expect(CfCredentials.expiryOf('a.b.c'), isNull);
   });
+
+  group('a plaintext site is refused the password', () {
+    // The password is posted to whatever address is configured, so an address
+    // that would carry it in the clear is not a preference to honour. The
+    // settings page refuses one on submit; this is the backstop for an install
+    // that stored one before that check existed, which is the case the store
+    // alone cannot rule out.
+
+    test('performLogin throws before any request goes out', () async {
+      var reached = false;
+      final server = await _serve((request) async {
+        reached = true;
+        return _json(request.response, {'success': true, 'token': 'jwt-1'});
+      });
+      // Not loopback: the guard allows loopback through, and this is the
+      // remote case that it must not.
+      final api = CfApi(baseUrl: 'http://192.0.2.1:${server.port}');
+      try {
+        await expectLater(
+          api.login('admin', 'hunter2'),
+          throwsA(isA<CfApiException>()),
+        );
+        expect(
+          reached,
+          isFalse,
+          reason: 'the password must not reach a plaintext site',
+        );
+      } finally {
+        api.close();
+        await server.close(force: true);
+      }
+    });
+
+    test('an https site is not what the guard stops', () async {
+      // Nothing is listening, so this fails in transport. What matters is that
+      // it is not the refusal above: the guard is about the scheme alone.
+      final api = CfApi(baseUrl: 'https://127.0.0.1:1');
+      try {
+        await expectLater(
+          api.login('admin', 'pw'),
+          throwsA(isNot(isA<CfApiException>())),
+        );
+      } finally {
+        api.close();
+      }
+    });
+
+    test('loopback over http is allowed through', () async {
+      // A site being developed on this machine is reached over HTTP, and
+      // `isSecureRemoteEndpoint` says so. The rest of this suite runs on it.
+      var reached = false;
+      final server = await _serve((request) async {
+        reached = true;
+        return _json(request.response, {'success': true, 'token': 'jwt-1'});
+      });
+      final api = CfApi(baseUrl: 'http://127.0.0.1:${server.port}');
+      try {
+        await api.login('admin', 'pw');
+        expect(reached, isTrue);
+      } finally {
+        api.close();
+        await server.close(force: true);
+      }
+    });
+  });
 }
 
 Future<HttpServer> _serve(FutureOr<void> Function(HttpRequest request) handler) async {

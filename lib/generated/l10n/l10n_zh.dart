@@ -5025,6 +5025,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cfSiteUrlHint => 'https://status.example.com';
 
   @override
+  String get cfSiteHttpsRequired => '站点地址必须是 HTTPS。使用 HTTP 时密码会以明文发送。';
+
+  @override
   String get cfAuth => '站点需要登录';
 
   @override

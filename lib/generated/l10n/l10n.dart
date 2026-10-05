@@ -9189,6 +9189,12 @@ abstract class AppLocalizations {
   /// **'https://status.example.com'**
   String get cfSiteUrlHint;
 
+  /// Refusal shown when the CF site's address is not HTTPS, since the login password is posted to it.
+  ///
+  /// In en, this message translates to:
+  /// **'The site must be an HTTPS address. A password sent over HTTP travels in the clear.'**
+  String get cfSiteHttpsRequired;
+
   /// Whether the CF site's read endpoints need a login.
   ///
   /// In en, this message translates to:
