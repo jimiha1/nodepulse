@@ -23,6 +23,7 @@ sealed class AppLink {
     if (segs.any((seg) => seg.isEmpty)) return null;
     return switch (uri.host.toLowerCase()) {
       TabLink._host when segs.length == 1 => TabLink._parse(segs.single),
+      ServerLink._host when segs.length == 1 => ServerLink(segs.single),
       _ => null,
     };
   }
@@ -49,4 +50,21 @@ final class TabLink extends AppLink {
   @override
   Uri toUri() =>
       Uri(scheme: AppLink.scheme, host: _host, pathSegments: [tab.name]);
+}
+
+/// One server, by its id on the CF site.
+///
+/// The name is deliberately not carried: it changes with the site (a rename,
+/// a different site), so the id is the only part that stays true, and the
+/// caller already has a snapshot to look the name up in.
+final class ServerLink extends AppLink {
+  const ServerLink(this.id);
+
+  static const _host = 'server';
+
+  final String id;
+
+  @override
+  Uri toUri() =>
+      Uri(scheme: AppLink.scheme, host: _host, pathSegments: [id]);
 }
