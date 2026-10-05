@@ -73,6 +73,27 @@ extension _HomePageLifecycle on _HomePageState {
       if (parsed is TabLink && mounted) {
         final idx = _tabs.indexOf(parsed.tab);
         if (idx >= 0) _onDestinationSelected(idx);
+      } else if (parsed is ServerLink && mounted) {
+        // The name comes from the snapshot because the link carries only the
+        // id; the page falls back on its own when the id is not in it yet, so
+        // a cold start that lands here before the first poll still opens.
+        final name = ref
+                .read(cfServersProvider)
+                .value
+                ?.servers
+                .where((s) => s.id == parsed.id)
+                .map((s) => s.name)
+                .firstOrNull ??
+            parsed.id;
+        // Deliberately not awaited: the future completes when the detail page
+        // is popped, and holding this method open that long would leave
+        // `_consumingPending` set for the whole visit.
+        unawaited(
+          CfDetailPage.route.go(
+            context,
+            CfDetailArgs(id: parsed.id, name: name),
+          ),
+        );
       }
     } catch (e, s) {
       Loggers.app.warning('Consume what was opened', e, s);

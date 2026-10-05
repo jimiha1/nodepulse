@@ -15,6 +15,7 @@ import 'package:server_box/data/res/build_data.dart';
 import 'package:server_box/data/res/store.dart';
 import 'package:server_box/data/res/url.dart';
 import 'package:server_box/view/page/home_tab.dart';
+import 'package:server_box/view/page/server/cf_detail/view.dart';
 import 'package:server_box/view/page/setting/entry.dart';
 import 'package:server_box/view/widget/nav_bar.dart';
 import 'package:server_box/view/widget/nav_rail.dart';
