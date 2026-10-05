@@ -170,14 +170,19 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         val views = RemoteViews(context.packageName, R.layout.home_widget)
 
         // Read first: which click target the container gets depends on whether
-        // a server has been picked yet. The wiring still happens before the
-        // not-configured return below, so a widget with nothing picked has a
-        // tap that goes somewhere.
+        // a server has been picked yet.
         val config = WidgetConfig.load(context, appWidgetId, kind)
-        setupClickIntent(context, views, appWidgetId, config.serverId)
-
         val server = config.serverId.takeIf { it.isNotEmpty() }
             ?.let { WidgetStore.server(context, it) }
+
+        // The container's target follows whether a server *resolves*, not
+        // whether an id is stored. A widget pointing at a server that has since
+        // left the site falls into the same "pick a server" state below as one
+        // that was never configured, and its tap has to lead to the same place
+        // — otherwise the widget says "tap to pick a server" and then opens the
+        // app instead.
+        setupClickIntent(context, views, appWidgetId, server?.id)
+
         if (server == null) {
             showError(context, views, manager, appWidgetId, R.string.widget_err_not_configured)
             activeUpdates.release(appWidgetId)
@@ -360,15 +365,16 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
      * click binding overrides the container's, which is what keeps the two
      * apart — the refresh icon relies on the same thing.
      *
-     * [serverId] empty means nothing is configured yet: there is no server
-     * page to open, so the whole widget falls back to the configuration panel,
-     * the only useful thing to do in that state.
+     * [serverId] null means no server resolves for this widget — nothing picked
+     * yet, or a pick that has since left the site. There is no server page to
+     * open, so the whole widget falls back to the configuration panel, the only
+     * useful thing to do in that state.
      */
     private fun setupClickIntent(
         context: Context,
         views: RemoteViews,
         appWidgetId: Int,
-        serverId: String,
+        serverId: String?,
     ) {
         val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -385,7 +391,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             PendingIntent.getActivity(context, appWidgetId, configure, flag),
         )
 
-        if (serverId.isEmpty()) {
+        if (serverId == null) {
             // The name's own target, reached by tapping anywhere: a widget with
             // no server has no page to open.
             views.setOnClickPendingIntent(
