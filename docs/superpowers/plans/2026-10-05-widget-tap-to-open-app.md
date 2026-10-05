@@ -353,23 +353,32 @@ git commit -m "feat: split widget taps into name-for-settings and rest-for-app"
 
 前置：设备是 Honor BKQ-AN10（已连接、已授权 adb）。应用已经在跑时用 Dart MCP 热重载；原生改动必须重新构建安装（原生代码不吃热重载）。
 
-- [ ] **Step 1: 构建并安装**
+- [x] **Step 1: 构建并安装**
 
-Run: `make build PLATFORM=android` 后用 `adb install -r` 装上去（或 `flutter run` 一次）。
-Expected: 安装成功，桌面小组件仍在（更新不会清掉已放置的实例）。
+Run: `flutter build apk --debug` + `adb install -r`
+Expected: 安装成功，桌面小组件仍在（更新不会清掉已放置的实例）。**实测通过**：两个 4x2 实例（id 4999=Osaka、5014=LAX）都还在。
 
-- [ ] **Step 2: 逐条验证**
+- [x] **Step 2: 逐条验证**
 
-1. 点 2x2 的**服务器名称** → 打开配置面板。
-2. 点 2x2 的**胶囊区**（CPU/内存那一块）→ 进入 App，且是该小组件对应的服务器详情页。
-3. 点 2x2 的**表头空白**（名称右侧、刷新图标左侧）→ 进入 App（这是「宽热区」被接受后的预期行为）。
-4. 点 4x2 的**名称** → 配置面板；点 4x2 的**图表区** → 详情页。
-5. 点**刷新图标** → 数据刷新，**不**跳转。
-6. 把某台服务器从 CF 站点配置里删掉（或把小组件重新配到一个 id 不在快照里的服务器）→ 详情页仍能打开，标题回落为该 id。
-7. 删除小组件的配置（未配置状态）→ 点**任意位置**（含名称）回到配置面板。
+**实测结果**（2026-10-05，BKQ-AN10，density 3.5）：
 
-Expected: 7 条全部符合。第 3 条如果用户实际体验下来觉得「空白区开配置」太容易误触，回到 Task 3 用设计文档 §2.1 里的替代方案（`maxWidth` + `Space` 收窄热区）。
+| # | 场景 | 证据 | 结论 |
+|---|---|---|---|
+| 1 | 点名称 → 配置面板 | logcat `START u0 {dat=sbm://widget/... cmp=…/.widget.WidgetConfigureActivity}`；焦点为 `WidgetConfigureActivity`；`Displayed …WidgetConfigureActivity` | ✅ |
+| 2 | 点图表区 → 进 App 该服务器 | logcat `START u0 {dat=serverbox://server/… cmp=…/.MainActivity}`；`dumpsys activity activities` 显示完整 URI `serverbox://server/fd978320-…`（Osaka 的 id） | ✅ |
+| 3 | 点表头空白（名称右侧）→ 进 App | 名称槽位实测 `[110,272][902,349]`（226dp 宽），其右侧命中 `widget_container` 的绑定 | ✅ |
+| 4 | 两个实例各自进对的服务器 | Osaka 组件 → 详情页标题 **Osaka**；LAX 组件 → 标题 **LAX**。快照顺序是 `[LAX, Osaka]`，若忽略 id 两者会显示同一台 | ✅ |
+| 5 | 点刷新图标 → 只刷新不跳转 | logcat 无任何 `START u0`；焦点仍是 launcher | ✅ |
+| 6 | 未配置 → 整块点击回配置面板 | 见下方「验证发现的缺陷」——**首次实测失败，修复后复测通过** | ✅（修复后） |
+| 7 | id 不在快照 → 详情页仍打开 | 详情页标题回落为该 id；`_fallbackNode()` 兜底 | ✅ |
 
-- [ ] **Step 3: 提交验证结论**
+Expected: 7 条全部符合。
 
-若全部通过，无需额外提交——Task 3 的提交即最终状态。若有修正，按 `fix:` 前缀提交。
+- [x] **Step 3: 提交验证结论**
+
+**验证发现的缺陷（已修，`4f36ae6e`）**：最初的 `setupClickIntent(context, views, appWidgetId, config.serverId)` 用「**是否存了 serverId 字符串**」决定整块点击的目标。但小组件指向的服务器若已从站点消失，`WidgetStore.server()` 解析不出对象，页面走 `showError(widget_err_not_configured)` 显示「点按选择服务器」——而点击却仍被接到 App 深链上，文案与行为不一致。
+
+修复：把判断从「有 id」改成「**服务器能解析出来**」，即 `setupClickIntent(context, views, appWidgetId, server?.id)`，参数类型改为 `String?`，`serverId == null` 时整块回落配置面板。这与 `if (server == null)` 的既有分支同源，两者不会再分叉。
+
+复测：把 5014 的 `widget_5014_server` 从配置里移除（先 `md5sum` 备份，测完按原字节还原并校验 md5 一致），重新安装触发重绘，小组件显示「点按选择服务器」；点其**正文**（非名称）→ logcat `cmp=…/.widget.WidgetConfigureActivity`，焦点为配置面板。**通过**。
+
