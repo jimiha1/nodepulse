@@ -21,6 +21,7 @@ object AlertSettings {
     private const val KEY_EXPIRY_DAYS = "expiry_days"
     private const val KEY_SITE_URL = "site_url"
     private const val KEY_TOKEN_EXPIRES_AT = "token_expires_at"
+    private const val KEY_RESOURCE_RULES = "resource_rules"
 
     private const val TOKEN_PREFS = "sbm_alert_tokens"
     private const val KEY_TOKEN = "global_token"
@@ -37,6 +38,13 @@ object AlertSettings {
         val siteUrl: String,
         val token: String?,
         val tokenExpiresAt: Long,
+        /**
+         * The user's resource rules, still in the payload's own JSON: the
+         * worker parses them through [ResourceAlertEvaluator], and keeping the
+         * text means a rule this build cannot read is not silently rewritten
+         * to something it can.
+         */
+        val resourceRules: String,
     )
 
     fun load(context: Context): Settings {
@@ -48,6 +56,7 @@ object AlertSettings {
             siteUrl = prefs.getString(KEY_SITE_URL, "") ?: "",
             token = token(context),
             tokenExpiresAt = prefs.getLong(KEY_TOKEN_EXPIRES_AT, 0L),
+            resourceRules = prefs.getString(KEY_RESOURCE_RULES, "") ?: "",
         )
     }
 
@@ -59,6 +68,7 @@ object AlertSettings {
             .putInt(KEY_EXPIRY_DAYS, settings.expiryDays)
             .putString(KEY_SITE_URL, settings.siteUrl)
             .putLong(KEY_TOKEN_EXPIRES_AT, settings.tokenExpiresAt)
+            .putString(KEY_RESOURCE_RULES, settings.resourceRules)
             .apply()
 
         setToken(context, settings.token)
@@ -74,6 +84,14 @@ object AlertSettings {
                 siteUrl = root.optString("siteUrl", ""),
                 token = root.optString("token").takeIf { it.isNotEmpty() },
                 tokenExpiresAt = root.optLong("tokenExpiresAt", 0L),
+                // Kept as text rather than parsed here: this runs on the
+                // platform thread, and the rules are only ever read by the
+                // worker. An empty array is stored as an empty string, which
+                // [ResourceAlertEvaluator.parseRules] reads as "no rules".
+                resourceRules = root.optJSONArray("resourceRules")
+                    ?.toString()
+                    ?.takeIf { it != "[]" }
+                    ?: "",
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to parse alert settings payload: ${e.message}")

@@ -5132,6 +5132,101 @@ class AppLocalizationsZh extends AppLocalizations {
   String cfAlertDaysFmt(int days) {
     return '$days 天';
   }
+
+  @override
+  String get cfResourceAlerts => '资源告警规则';
+
+  @override
+  String get cfResourceAlertsEmpty => '还没有规则。点右下角新建一条，例如「CPU 超过 80% 持续 5 分钟」。';
+
+  @override
+  String get cfResourceAlertsTip => '后台每 15 分钟检查一次，取站点历史数据判断窗口是否超标';
+
+  @override
+  String get cfResourceRuleNew => '新建规则';
+
+  @override
+  String get cfResourceRuleEdit => '编辑规则';
+
+  @override
+  String get cfResourceRuleDelete => '删除规则';
+
+  @override
+  String cfResourceRuleDeleteConfirm(String name) {
+    return '删除规则「$name」？';
+  }
+
+  @override
+  String get cfResourceRuleName => '名称';
+
+  @override
+  String get cfResourceRuleNameHint => '例如：CPU 过高（挖矿排查）';
+
+  @override
+  String get cfResourceRuleMetric => '监控项';
+
+  @override
+  String get cfResourceRuleThreshold => '阈值';
+
+  @override
+  String get cfResourceRuleServer => '服务器';
+
+  @override
+  String get cfResourceRuleServerAll => '全部服务器';
+
+  @override
+  String get cfResourceRuleWindow => '窗口时间';
+
+  @override
+  String get cfResourceRuleTrigger => '触发方式';
+
+  @override
+  String get cfResourceRuleThresholdRequired => '请填写阈值';
+
+  @override
+  String get cfResourceRuleThresholdPositive => '阈值必须大于 0';
+
+  @override
+  String get cfResourceRuleThresholdOver100 => '百分比阈值超过 100 将永远不会触发，确认要保存吗？';
+
+  @override
+  String get cfResourceRuleServerGone => '服务器已不存在';
+
+  @override
+  String cfResourceRuleSummaryAvg(String metric, int window, String threshold) {
+    return '$metric · $window分钟窗口均值 > $threshold';
+  }
+
+  @override
+  String cfResourceRuleSummaryAll(String metric, int window, String threshold) {
+    return '$metric · $window分钟窗口全部样本 > $threshold';
+  }
+
+  @override
+  String get cfResourceMetricCpu => 'CPU';
+
+  @override
+  String get cfResourceMetricRam => '内存';
+
+  @override
+  String get cfResourceMetricDisk => '磁盘';
+
+  @override
+  String get cfResourceMetricNetIn => '入站网速';
+
+  @override
+  String get cfResourceMetricNetOut => '出站网速';
+
+  @override
+  String get cfResourceTriggerAvg => '窗口平均值超过阈值';
+
+  @override
+  String get cfResourceTriggerAll => '窗口内全部样本超过阈值';
+
+  @override
+  String cfResourceWindowFmt(int minutes) {
+    return '$minutes 分钟';
+  }
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).

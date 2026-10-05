@@ -299,6 +299,33 @@ final class _CfSiteSettingsPageState extends ConsumerState<CfSiteSettingsPage> {
                                   );
                                 },
                               ),
+                              // The resource rules are the alert system's third
+                              // kind, and like the other two they are only read
+                              // on Android — the worker that evaluates them is
+                              // native. The row lives inside the same
+                              // `isAndroid` block for that reason.
+                              ListTile(
+                                leading: const Icon(Icons.speed_outlined),
+                                title: Text(l10n.cfResourceAlerts),
+                                subtitle: Text(
+                                  l10n.cfResourceAlertsTip,
+                                  style: UIs.text12Grey,
+                                ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ValBuilder(
+                                      listenable: Stores.setting.cfResourceAlertRules.listenable(),
+                                      builder: (rules) => Text(
+                                        '${rules.length}',
+                                        style: UIs.text15,
+                                      ),
+                                    ),
+                                    const Icon(Icons.chevron_right, size: 18),
+                                  ],
+                                ),
+                                onTap: () => CfResourceAlertsPage.route.go(context),
+                              ),
                             ],
                           )
                         : UIs.placeholder,

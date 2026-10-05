@@ -5,6 +5,7 @@ import 'package:fl_lib/theme.dart';
 import 'package:server_box/data/model/app/diagnostics_level.dart';
 import 'package:server_box/data/model/app/motion.dart';
 import 'package:server_box/data/model/app/tab.dart';
+import 'package:server_box/data/model/cf/cf_resource_alert.dart';
 import 'package:server_box/data/res/default.dart';
 import 'package:server_box/data/store/field_prop.dart';
 
@@ -57,6 +58,20 @@ class SettingStore extends SqliteStore with ThemeSettings {
 
   /// Advance notice days before expiration to alert.
   late final cfAlertExpiryDays = propertyDefault('cfAlertExpiryDays', 7);
+
+  /// User-authored resource rules the native alert worker evaluates on its
+  /// periodic run: which node, which metric, over what window, and how the
+  /// window is judged. See [CfResourceAlertRule].
+  ///
+  /// One row holding a JSON array rather than a row per rule: the rules are
+  /// only ever read and written whole — the settings page loads the list,
+  /// edits it, and puts it back — and a row per rule would need its own id
+  /// bookkeeping for no reader that wants one rule on its own.
+  late final cfResourceAlertRules = listProperty<CfResourceAlertRule>(
+    'cfResourceAlertRules',
+    fromObj: CfResourceAlertRule.parseList,
+    toObj: CfResourceAlertRule.toObjList,
+  );
 
   // Maximum number of server connection retries.
   late final maxRetryCount = propertyDefault('maxRetryCount', 2);

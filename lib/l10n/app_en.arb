@@ -7124,5 +7124,153 @@
         "type": "int"
       }
     }
+  },
+  "cfResourceAlerts": "Resource alert rules",
+  "@cfResourceAlerts": {
+    "description": "Settings row that opens the resource alert rule list"
+  },
+  "cfResourceAlertsEmpty": "No rules yet. Tap + to add one, for example \"CPU over 80% for 5 minutes\".",
+  "@cfResourceAlertsEmpty": {
+    "description": "Empty state on the resource alert rule list"
+  },
+  "cfResourceAlertsTip": "Checked in the background every 15 minutes against the site's history",
+  "@cfResourceAlertsTip": {
+    "description": "Description under the resource alert rules row"
+  },
+  "cfResourceRuleNew": "New rule",
+  "@cfResourceRuleNew": {
+    "description": "Title of the resource alert rule editor when creating"
+  },
+  "cfResourceRuleEdit": "Edit rule",
+  "@cfResourceRuleEdit": {
+    "description": "Title of the resource alert rule editor when editing"
+  },
+  "cfResourceRuleDelete": "Delete rule",
+  "@cfResourceRuleDelete": {
+    "description": "Delete action on a resource alert rule"
+  },
+  "cfResourceRuleDeleteConfirm": "Delete the rule \"{name}\"?",
+  "@cfResourceRuleDeleteConfirm": {
+    "description": "Confirmation before deleting a resource alert rule",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cfResourceRuleName": "Name",
+  "@cfResourceRuleName": {
+    "description": "Name field label in the resource alert rule editor"
+  },
+  "cfResourceRuleNameHint": "e.g. CPU too high",
+  "@cfResourceRuleNameHint": {
+    "description": "Name field hint in the resource alert rule editor"
+  },
+  "cfResourceRuleMetric": "Metric",
+  "@cfResourceRuleMetric": {
+    "description": "Metric picker label in the resource alert rule editor"
+  },
+  "cfResourceRuleThreshold": "Threshold",
+  "@cfResourceRuleThreshold": {
+    "description": "Threshold field label in the resource alert rule editor"
+  },
+  "cfResourceRuleServer": "Server",
+  "@cfResourceRuleServer": {
+    "description": "Server picker label in the resource alert rule editor"
+  },
+  "cfResourceRuleServerAll": "All servers",
+  "@cfResourceRuleServerAll": {
+    "description": "Server picker entry that watches every node"
+  },
+  "cfResourceRuleWindow": "Window",
+  "@cfResourceRuleWindow": {
+    "description": "Window length picker label in the resource alert rule editor"
+  },
+  "cfResourceRuleTrigger": "Trigger",
+  "@cfResourceRuleTrigger": {
+    "description": "Trigger mode picker label in the resource alert rule editor"
+  },
+  "cfResourceRuleThresholdRequired": "Enter a threshold",
+  "@cfResourceRuleThresholdRequired": {
+    "description": "Validation message when the threshold is empty"
+  },
+  "cfResourceRuleThresholdPositive": "The threshold must be greater than 0",
+  "@cfResourceRuleThresholdPositive": {
+    "description": "Validation message when the threshold is zero or negative"
+  },
+  "cfResourceRuleThresholdOver100": "A percentage threshold over 100 can never fire. Save anyway?",
+  "@cfResourceRuleThresholdOver100": {
+    "description": "Confirmation when a percentage threshold exceeds 100"
+  },
+  "cfResourceRuleServerGone": "Server no longer exists",
+  "@cfResourceRuleServerGone": {
+    "description": "Marked on a rule whose server is not in the site's node list"
+  },
+  "cfResourceRuleSummaryAvg": "{metric} · mean over {window} min > {threshold}",
+  "@cfResourceRuleSummaryAvg": {
+    "description": "One-line summary of a rule that fires on the window average",
+    "placeholders": {
+      "metric": {
+        "type": "String"
+      },
+      "window": {
+        "type": "int"
+      },
+      "threshold": {
+        "type": "String"
+      }
+    }
+  },
+  "cfResourceRuleSummaryAll": "{metric} · every sample in {window} min > {threshold}",
+  "@cfResourceRuleSummaryAll": {
+    "description": "One-line summary of a rule that fires when every sample is over",
+    "placeholders": {
+      "metric": {
+        "type": "String"
+      },
+      "window": {
+        "type": "int"
+      },
+      "threshold": {
+        "type": "String"
+      }
+    }
+  },
+  "cfResourceMetricCpu": "CPU",
+  "@cfResourceMetricCpu": {
+    "description": "Resource alert metric name"
+  },
+  "cfResourceMetricRam": "Memory",
+  "@cfResourceMetricRam": {
+    "description": "Resource alert metric name"
+  },
+  "cfResourceMetricDisk": "Disk",
+  "@cfResourceMetricDisk": {
+    "description": "Resource alert metric name"
+  },
+  "cfResourceMetricNetIn": "Net in",
+  "@cfResourceMetricNetIn": {
+    "description": "Resource alert metric name"
+  },
+  "cfResourceMetricNetOut": "Net out",
+  "@cfResourceMetricNetOut": {
+    "description": "Resource alert metric name"
+  },
+  "cfResourceTriggerAvg": "Window average over threshold",
+  "@cfResourceTriggerAvg": {
+    "description": "Resource alert trigger mode"
+  },
+  "cfResourceTriggerAll": "Every sample over threshold",
+  "@cfResourceTriggerAll": {
+    "description": "Resource alert trigger mode"
+  },
+  "cfResourceWindowFmt": "{minutes} min",
+  "@cfResourceWindowFmt": {
+    "description": "Window length in the rule editor",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
   }
 }

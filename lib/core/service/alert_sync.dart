@@ -35,6 +35,7 @@ final class AlertSync {
     Stores.setting.cfAlertsEnabled.listenable().addListener(_schedulePush);
     Stores.setting.cfAlertTrafficPct.listenable().addListener(_schedulePush);
     Stores.setting.cfAlertExpiryDays.listenable().addListener(_schedulePush);
+    Stores.setting.cfResourceAlertRules.listenable().addListener(_schedulePush);
     Stores.setting.cfSiteUrl.listenable().addListener(_schedulePush);
     Stores.setting.cfAuthEnabled.listenable().addListener(_schedulePush);
     await push();
@@ -72,6 +73,7 @@ final class AlertSync {
     final enabled = Stores.setting.cfAlertsEnabled.fetch();
     final trafficPct = Stores.setting.cfAlertTrafficPct.fetch();
     final expiryDays = Stores.setting.cfAlertExpiryDays.fetch();
+    final resourceRules = Stores.setting.cfResourceAlertRules.fetch();
     final siteUrl = Stores.setting.cfSiteUrl.fetch().trim();
 
     String? token = _latestToken;
@@ -94,6 +96,7 @@ final class AlertSync {
       'enabled': enabled,
       'trafficPct': trafficPct,
       'expiryDays': expiryDays,
+      'resourceRules': [for (final rule in resourceRules) rule.toJson()],
       'siteUrl': siteUrl,
       'token': token,
       'tokenExpiresAt': tokenExpiresAt,

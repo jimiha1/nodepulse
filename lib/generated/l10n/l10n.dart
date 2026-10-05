@@ -9398,6 +9398,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{days} days'**
   String cfAlertDaysFmt(int days);
+
+  /// Settings row that opens the resource alert rule list
+  ///
+  /// In en, this message translates to:
+  /// **'Resource alert rules'**
+  String get cfResourceAlerts;
+
+  /// Empty state on the resource alert rule list
+  ///
+  /// In en, this message translates to:
+  /// **'No rules yet. Tap + to add one, for example \"CPU over 80% for 5 minutes\".'**
+  String get cfResourceAlertsEmpty;
+
+  /// Description under the resource alert rules row
+  ///
+  /// In en, this message translates to:
+  /// **'Checked in the background every 15 minutes against the site\'s history'**
+  String get cfResourceAlertsTip;
+
+  /// Title of the resource alert rule editor when creating
+  ///
+  /// In en, this message translates to:
+  /// **'New rule'**
+  String get cfResourceRuleNew;
+
+  /// Title of the resource alert rule editor when editing
+  ///
+  /// In en, this message translates to:
+  /// **'Edit rule'**
+  String get cfResourceRuleEdit;
+
+  /// Delete action on a resource alert rule
+  ///
+  /// In en, this message translates to:
+  /// **'Delete rule'**
+  String get cfResourceRuleDelete;
+
+  /// Confirmation before deleting a resource alert rule
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the rule \"{name}\"?'**
+  String cfResourceRuleDeleteConfirm(String name);
+
+  /// Name field label in the resource alert rule editor
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get cfResourceRuleName;
+
+  /// Name field hint in the resource alert rule editor
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. CPU too high'**
+  String get cfResourceRuleNameHint;
+
+  /// Metric picker label in the resource alert rule editor
+  ///
+  /// In en, this message translates to:
+  /// **'Metric'**
+  String get cfResourceRuleMetric;
+
+  /// Threshold field label in the resource alert rule editor
+  ///
+  /// In en, this message translates to:
+  /// **'Threshold'**
+  String get cfResourceRuleThreshold;
+
+  /// Server picker label in the resource alert rule editor
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get cfResourceRuleServer;
+
+  /// Server picker entry that watches every node
+  ///
+  /// In en, this message translates to:
+  /// **'All servers'**
+  String get cfResourceRuleServerAll;
+
+  /// Window length picker label in the resource alert rule editor
+  ///
+  /// In en, this message translates to:
+  /// **'Window'**
+  String get cfResourceRuleWindow;
+
+  /// Trigger mode picker label in the resource alert rule editor
+  ///
+  /// In en, this message translates to:
+  /// **'Trigger'**
+  String get cfResourceRuleTrigger;
+
+  /// Validation message when the threshold is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a threshold'**
+  String get cfResourceRuleThresholdRequired;
+
+  /// Validation message when the threshold is zero or negative
+  ///
+  /// In en, this message translates to:
+  /// **'The threshold must be greater than 0'**
+  String get cfResourceRuleThresholdPositive;
+
+  /// Confirmation when a percentage threshold exceeds 100
+  ///
+  /// In en, this message translates to:
+  /// **'A percentage threshold over 100 can never fire. Save anyway?'**
+  String get cfResourceRuleThresholdOver100;
+
+  /// Marked on a rule whose server is not in the site's node list
+  ///
+  /// In en, this message translates to:
+  /// **'Server no longer exists'**
+  String get cfResourceRuleServerGone;
+
+  /// One-line summary of a rule that fires on the window average
+  ///
+  /// In en, this message translates to:
+  /// **'{metric} · mean over {window} min > {threshold}'**
+  String cfResourceRuleSummaryAvg(String metric, int window, String threshold);
+
+  /// One-line summary of a rule that fires when every sample is over
+  ///
+  /// In en, this message translates to:
+  /// **'{metric} · every sample in {window} min > {threshold}'**
+  String cfResourceRuleSummaryAll(String metric, int window, String threshold);
+
+  /// Resource alert metric name
+  ///
+  /// In en, this message translates to:
+  /// **'CPU'**
+  String get cfResourceMetricCpu;
+
+  /// Resource alert metric name
+  ///
+  /// In en, this message translates to:
+  /// **'Memory'**
+  String get cfResourceMetricRam;
+
+  /// Resource alert metric name
+  ///
+  /// In en, this message translates to:
+  /// **'Disk'**
+  String get cfResourceMetricDisk;
+
+  /// Resource alert metric name
+  ///
+  /// In en, this message translates to:
+  /// **'Net in'**
+  String get cfResourceMetricNetIn;
+
+  /// Resource alert metric name
+  ///
+  /// In en, this message translates to:
+  /// **'Net out'**
+  String get cfResourceMetricNetOut;
+
+  /// Resource alert trigger mode
+  ///
+  /// In en, this message translates to:
+  /// **'Window average over threshold'**
+  String get cfResourceTriggerAvg;
+
+  /// Resource alert trigger mode
+  ///
+  /// In en, this message translates to:
+  /// **'Every sample over threshold'**
+  String get cfResourceTriggerAll;
+
+  /// Window length in the rule editor
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String cfResourceWindowFmt(int minutes);
 }
 
 class _AppLocalizationsDelegate

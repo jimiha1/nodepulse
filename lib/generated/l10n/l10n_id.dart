@@ -5468,4 +5468,103 @@ class AppLocalizationsId extends AppLocalizations {
   String cfAlertDaysFmt(int days) {
     return '$days days';
   }
+
+  @override
+  String get cfResourceAlerts => 'Resource alert rules';
+
+  @override
+  String get cfResourceAlertsEmpty =>
+      'No rules yet. Tap + to add one, for example \"CPU over 80% for 5 minutes\".';
+
+  @override
+  String get cfResourceAlertsTip =>
+      'Checked in the background every 15 minutes against the site\'s history';
+
+  @override
+  String get cfResourceRuleNew => 'New rule';
+
+  @override
+  String get cfResourceRuleEdit => 'Edit rule';
+
+  @override
+  String get cfResourceRuleDelete => 'Delete rule';
+
+  @override
+  String cfResourceRuleDeleteConfirm(String name) {
+    return 'Delete the rule \"$name\"?';
+  }
+
+  @override
+  String get cfResourceRuleName => 'Name';
+
+  @override
+  String get cfResourceRuleNameHint => 'e.g. CPU too high';
+
+  @override
+  String get cfResourceRuleMetric => 'Metric';
+
+  @override
+  String get cfResourceRuleThreshold => 'Threshold';
+
+  @override
+  String get cfResourceRuleServer => 'Server';
+
+  @override
+  String get cfResourceRuleServerAll => 'All servers';
+
+  @override
+  String get cfResourceRuleWindow => 'Window';
+
+  @override
+  String get cfResourceRuleTrigger => 'Trigger';
+
+  @override
+  String get cfResourceRuleThresholdRequired => 'Enter a threshold';
+
+  @override
+  String get cfResourceRuleThresholdPositive =>
+      'The threshold must be greater than 0';
+
+  @override
+  String get cfResourceRuleThresholdOver100 =>
+      'A percentage threshold over 100 can never fire. Save anyway?';
+
+  @override
+  String get cfResourceRuleServerGone => 'Server no longer exists';
+
+  @override
+  String cfResourceRuleSummaryAvg(String metric, int window, String threshold) {
+    return '$metric · mean over $window min > $threshold';
+  }
+
+  @override
+  String cfResourceRuleSummaryAll(String metric, int window, String threshold) {
+    return '$metric · every sample in $window min > $threshold';
+  }
+
+  @override
+  String get cfResourceMetricCpu => 'CPU';
+
+  @override
+  String get cfResourceMetricRam => 'Memory';
+
+  @override
+  String get cfResourceMetricDisk => 'Disk';
+
+  @override
+  String get cfResourceMetricNetIn => 'Net in';
+
+  @override
+  String get cfResourceMetricNetOut => 'Net out';
+
+  @override
+  String get cfResourceTriggerAvg => 'Window average over threshold';
+
+  @override
+  String get cfResourceTriggerAll => 'Every sample over threshold';
+
+  @override
+  String cfResourceWindowFmt(int minutes) {
+    return '$minutes min';
+  }
 }
