@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:server_box/core/extension/context/locale.dart';
 import 'package:server_box/data/model/cf/cf_server.dart';
 import 'package:server_box/data/provider/server/cf/cf_servers_provider.dart';
 import 'package:server_box/view/page/server/cf_card.dart';
 import 'package:server_box/view/page/server/cf_detail/view.dart';
+import 'package:server_box/view/page/setting/entry.dart';
 
 /// The CF site's home: the fleet in one line, then one card per node.
 ///
@@ -83,10 +85,10 @@ class _CfHomePageState extends ConsumerState<CfHomePage> {
       onRefresh: () => ref.read(cfServersProvider.notifier).refresh(),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(11, 11, 11, 25),
+        padding: const EdgeInsets.fromLTRB(10, 6, 10, 12),
         children: [
           _overview(context, snap),
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
           if (snap.servers.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 60),
@@ -95,7 +97,7 @@ class _CfHomePageState extends ConsumerState<CfHomePage> {
           else
             for (final node in snap.servers)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
+                padding: const EdgeInsets.symmetric(vertical: 3),
                 child: CfServerCard(
                   node: node,
                   showExpire: snap.showExpire,
@@ -111,33 +113,43 @@ class _CfHomePageState extends ConsumerState<CfHomePage> {
 
   /// The fleet in one line: how many are up, what all of them are moving
   /// right now, and what they have moved this month.
+  ///
+  /// Long-pressing opens the settings page, accompanied by a haptic pulse,
+  /// replacing the bottom navigation bar and settings button.
   Widget _overview(BuildContext context, CfServersSnapshot snap) {
     return CardX(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
-        child: Row(
-          children: [
-            Expanded(
-              child: _overviewCol(
-                l10n.cfOverviewOnline,
-                ['${snap.online} / ${snap.total}'],
+      child: InkWell(
+        borderRadius: CardX.borderRadius,
+        onLongPress: () {
+          HapticFeedback.mediumImpact();
+          SettingsPage.route.go(context);
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          child: Row(
+            children: [
+              Expanded(
+                child: _overviewCol(
+                  l10n.cfOverviewOnline,
+                  ['${snap.online} / ${snap.total}'],
+                ),
               ),
-            ),
-            _overviewDivider(context),
-            Expanded(
-              child: _overviewCol(l10n.cfOverviewBandwidth, [
-                '↓ ${snap.globalSpeedIn.bytes2Str}/s',
-                '↑ ${snap.globalSpeedOut.bytes2Str}/s',
-              ]),
-            ),
-            _overviewDivider(context),
-            Expanded(
-              child: _overviewCol(libL10n.traffic, [
-                '↓ ${snap.globalNetRx.bytes2Str}',
-                '↑ ${snap.globalNetTx.bytes2Str}',
-              ]),
-            ),
-          ],
+              _overviewDivider(context),
+              Expanded(
+                child: _overviewCol(l10n.cfOverviewBandwidth, [
+                  '↓ ${snap.globalSpeedIn.bytes2Str}/s',
+                  '↑ ${snap.globalSpeedOut.bytes2Str}/s',
+                ]),
+              ),
+              _overviewDivider(context),
+              Expanded(
+                child: _overviewCol(libL10n.traffic, [
+                  '↓ ${snap.globalNetRx.bytes2Str}',
+                  '↑ ${snap.globalNetTx.bytes2Str}',
+                ]),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -38,29 +38,29 @@ class CfServerCard extends StatelessWidget {
         borderRadius: CardX.borderRadius,
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(11),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _header(context),
-              const SizedBox(height: 8),
+              const SizedBox(height: 5),
               _resourceBars(context),
-              const SizedBox(height: 10),
+              const SizedBox(height: 7),
               // Modular 2x2 layout
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(child: _buildNetworkTile(context)),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Expanded(child: _buildTrafficTile(context)),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(child: _buildPingLossTile(context)),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Expanded(child: _buildSystemTile(context)),
                 ],
               ),
@@ -73,7 +73,7 @@ class CfServerCard extends StatelessWidget {
 
   Widget _tileContainer({required BuildContext context, required Widget child}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.28),
@@ -522,7 +522,7 @@ class CfServerCard extends StatelessWidget {
       _ => const Color(0xFF34C759),
     };
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
           SizedBox(

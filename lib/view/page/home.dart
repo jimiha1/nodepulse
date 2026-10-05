@@ -202,7 +202,7 @@ class _HomePageState extends ConsumerState<HomePage>
               ),
           ],
         ),
-        bottomNavigationBar: narrow ? _buildBottomBar() : null,
+        bottomNavigationBar: null,
       ),
     );
 
