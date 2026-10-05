@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONException
+import tech.lolli.toolbox.MainActivity
 import tech.lolli.toolbox.R
 import java.io.IOException
 import java.net.SocketTimeoutException
@@ -167,9 +168,14 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         }
 
         val views = RemoteViews(context.packageName, R.layout.home_widget)
-        setupClickIntent(context, views, appWidgetId)
 
+        // Read first: which click target the container gets depends on whether
+        // a server has been picked yet. The wiring still happens before the
+        // not-configured return below, so a widget with nothing picked has a
+        // tap that goes somewhere.
         val config = WidgetConfig.load(context, appWidgetId, kind)
+        setupClickIntent(context, views, appWidgetId, config.serverId)
+
         val server = config.serverId.takeIf { it.isNotEmpty() }
             ?.let { WidgetStore.server(context, it) }
         if (server == null) {
@@ -346,20 +352,64 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         )
     }
 
-    private fun setupClickIntent(context: Context, views: RemoteViews, appWidgetId: Int) {
-        val intent = Intent(context, WidgetConfigureActivity::class.java).apply {
-            putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-            data = android.net.Uri.parse("sbm://widget/$appWidgetId")
-        }
+    /**
+     * Wires the two ways into the widget.
+     *
+     * The whole widget opens the app on the server it is showing; the name in
+     * the header opens the configuration panel instead. A child view's own
+     * click binding overrides the container's, which is what keeps the two
+     * apart — the refresh icon relies on the same thing.
+     *
+     * [serverId] empty means nothing is configured yet: there is no server
+     * page to open, so the whole widget falls back to the configuration panel,
+     * the only useful thing to do in that state.
+     */
+    private fun setupClickIntent(
+        context: Context,
+        views: RemoteViews,
+        appWidgetId: Int,
+        serverId: String,
+    ) {
         val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         } else {
             PendingIntent.FLAG_UPDATE_CURRENT
         }
+
+        val configure = Intent(context, WidgetConfigureActivity::class.java).apply {
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+            data = android.net.Uri.parse("sbm://widget/$appWidgetId")
+        }
         views.setOnClickPendingIntent(
-            R.id.widget_container,
-            PendingIntent.getActivity(context, appWidgetId, intent, flag),
+            R.id.widget_name,
+            PendingIntent.getActivity(context, appWidgetId, configure, flag),
         )
+
+        if (serverId.isEmpty()) {
+            // The name's own target, reached by tapping anywhere: a widget with
+            // no server has no page to open.
+            views.setOnClickPendingIntent(
+                R.id.widget_container,
+                PendingIntent.getActivity(context, appWidgetId, configure, flag),
+            )
+        } else {
+            // A request code of its own so this is never the same
+            // PendingIntent as the one above: FLAG_UPDATE_CURRENT rewrites the
+            // extras of whichever it is asked for, and sharing one would let
+            // the two targets overwrite each other.
+            val open = Intent(context, MainActivity::class.java).apply {
+                action = Intent.ACTION_VIEW
+                data = android.net.Uri.parse("serverbox://server/$serverId")
+                // The widget lives on the home screen, so the app is launched
+                // from outside its own task; SINGLE_TOP then routes a second
+                // tap into onNewIntent instead of stacking another copy.
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+            views.setOnClickPendingIntent(
+                R.id.widget_container,
+                PendingIntent.getActivity(context, appWidgetId + 1, open, flag),
+            )
+        }
 
         val refresh = Intent(context, javaClass).apply {
             action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
