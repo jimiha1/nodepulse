@@ -30,39 +30,6 @@ int railShownCount({
 extension _HomePageStrip on _HomePageState {
   bool _hasRail(bool narrow) => !narrow;
 
-  Widget _buildBottomBar() {
-    return ListenableBuilder(
-      listenable: _selectIndex,
-      builder: (context, child) {
-        if (_isServerFullscreenMode) return UIs.placeholder;
-        final shown = _barTabs;
-        final overflow = _tabs.length - shown.length;
-        return AppNavBar(
-          key: _navKey,
-          selectedIndex: _settingsOpen ? -1 : _selectIndex.value,
-          items: [
-            for (final tab in shown) tab.navRailItem(onMenu: _navMenuFor(tab)),
-          ],
-          onSelected: _onDestinationSelected,
-          trailing: overflow > 0
-              ? NavRailItem(
-                  icon: const ThemedIcon(Icons.more_vert),
-                  selectedIcon: const ThemedIcon(Icons.more_vert),
-                  label: libL10n.more,
-                )
-              : NavRailItem(
-                  icon: const ThemedIcon(Icons.settings_outlined),
-                  selectedIcon: const ThemedIcon(Icons.settings),
-                  label: libL10n.setting,
-                ),
-          onTrailingTap: overflow > 0
-              ? () => unawaited(_showMoreSheet(shown.length))
-              : _openSettings,
-        );
-      },
-    );
-  }
-
   Future<void> _showMoreSheet(int shownCount) async {
     final overflow = _tabs.skip(shownCount).toList();
     final selected = _selectIndex.value;

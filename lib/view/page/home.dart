@@ -18,7 +18,6 @@ import 'package:server_box/view/page/home_tab.dart';
 import 'package:server_box/view/page/server/cf_detail/charts.dart';
 import 'package:server_box/view/page/server/cf_detail/view.dart';
 import 'package:server_box/view/page/setting/entry.dart';
-import 'package:server_box/view/widget/nav_bar.dart';
 import 'package:server_box/view/widget/nav_rail.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
