@@ -88,10 +88,18 @@ extension _HomePageLifecycle on _HomePageState {
         // Deliberately not awaited: the future completes when the detail page
         // is popped, and holding this method open that long would leave
         // `_consumingPending` set for the whole visit.
+        //
+        // The hour range rather than live: a tap from the widget is a look at
+        // how the node has been, and live is only this app session's buffer —
+        // empty, for an app this very tap just launched.
         unawaited(
           CfDetailPage.route.go(
             context,
-            CfDetailArgs(id: parsed.id, name: name),
+            CfDetailArgs(
+              id: parsed.id,
+              name: name,
+              range: CfHistoryRange.h1,
+            ),
           ),
         );
       }

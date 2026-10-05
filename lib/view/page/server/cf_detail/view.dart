@@ -10,10 +10,20 @@ import 'package:server_box/view/page/server/cf_detail/charts.dart';
 /// Which node a [CfDetailPage] opens: its id on the site, and the name the
 /// list already had for the bar.
 final class CfDetailArgs {
-  const CfDetailArgs({required this.id, required this.name});
+  const CfDetailArgs({required this.id, required this.name, this.range});
 
   final String id;
   final String name;
+
+  /// The range the page opens on. Null is [CfHistoryRange.live] — the card in
+  /// the server list wants the freshest reading, and it is what this page did
+  /// before the range was a parameter at all.
+  ///
+  /// The widget's deep link passes [CfHistoryRange.h1] instead: a tap from the
+  /// home screen is a look at how the node has been doing, and live holds only
+  /// what this app session has collected — which, for an app opened by that
+  /// very tap, is nothing.
+  final CfHistoryRange? range;
 }
 
 /// The page a CF node's card opens: Info Card + Range Selector + 8 Charts + Ping Chart.
@@ -29,7 +39,8 @@ class CfDetailPage extends ConsumerStatefulWidget {
 }
 
 class _CfDetailPageState extends ConsumerState<CfDetailPage> {
-  CfHistoryRange _selectedRange = CfHistoryRange.live;
+  late CfHistoryRange _selectedRange =
+      widget.args.range ?? CfHistoryRange.live;
 
   @override
   Widget build(BuildContext context) {
