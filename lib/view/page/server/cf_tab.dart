@@ -85,7 +85,7 @@ class _CfHomePageState extends ConsumerState<CfHomePage> {
       onRefresh: () => ref.read(cfServersProvider.notifier).refresh(),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(11, 4, 11, 10),
+        padding: const EdgeInsets.fromLTRB(6, 4, 6, 10),
         children: [
           _overview(context, snap),
           const SizedBox(height: 4),
@@ -118,6 +118,7 @@ class _CfHomePageState extends ConsumerState<CfHomePage> {
   /// replacing the bottom navigation bar and settings button.
   Widget _overview(BuildContext context, CfServersSnapshot snap) {
     return CardX(
+      margin: EdgeInsets.zero,
       child: InkWell(
         borderRadius: CardX.borderRadius,
         onLongPress: () {

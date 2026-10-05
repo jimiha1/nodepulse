@@ -34,6 +34,7 @@ class CfServerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CardX(
+      margin: EdgeInsets.zero,
       child: InkWell(
         borderRadius: CardX.borderRadius,
         onTap: onTap,
@@ -647,8 +648,8 @@ class CfServerCard extends StatelessWidget {
   }
 
   /// The two fixed columns left of the bar, matching [_resourceBar].
-  static const _labelWidth = 38.0;
-  static const _percentWidth = 52.0;
+  static const _labelWidth = 32.0;
+  static const _percentWidth = 44.0;
 
   /// The gap between the bar and the detail column, matching [_resourceBar].
   static const _detailGap = 8.0;
