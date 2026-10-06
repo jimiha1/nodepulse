@@ -659,12 +659,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lastSuccess => '最后成功';
 
   @override
-  String get letterCache => '普通键盘输入';
-
-  @override
-  String get letterCacheTip => '开启后，输入内容会经过普通输入法，这样可避免部分系统在终端弹出安全键盘';
-
-  @override
   String get linuxShellTip => '终端用什么 shell 启动。留空恢复 /bin/sh。';
 
   @override
@@ -5917,12 +5911,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get lastSuccess => '最後成功';
-
-  @override
-  String get letterCache => '一般鍵盤輸入';
-
-  @override
-  String get letterCacheTip => '開啟後，輸入內容會經過一般輸入法，這樣可避免部分系統在終端彈出安全鍵盤。';
 
   @override
   String get linuxShellTip => '終端用什麼 shell 啟動。留空恢復 /bin/sh。';

@@ -706,13 +706,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get lastSuccess => 'Último éxito';
 
   @override
-  String get letterCache => 'Entrada normal del teclado';
-
-  @override
-  String get letterCacheTip =>
-      'Cuando está activado, la entrada pasa por el IME normal, lo que puede evitar avisos de teclado seguro en el terminal en algunos sistemas.';
-
-  @override
   String get linuxShellTip =>
       'Con qué shell arranca un terminal. Vacío restaura /bin/sh.';
 

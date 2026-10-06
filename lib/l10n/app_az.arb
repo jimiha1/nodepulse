@@ -198,8 +198,6 @@
   "keyAuth": "Açarla autentifikasiya",
   "lastFailure": "Son uğursuzluq",
   "lastSuccess": "Son uğurlu cəhd",
-  "letterCache": "Adi klaviatura daxiletməsi",
-  "letterCacheTip": "Aktivləşdirildikdə daxiletmə adi IME vasitəsilə aparılır. Bu, bəzi sistemlərdə terminalda təhlükəsiz klaviatura sorğularının qarşısını ala bilər.",
   "linuxShellTip": "Terminalın başladacağı əmr örtüyü. Boş olduqda /bin/sh bərpa olunur.",
   "linuxNetTip": "DNS serverləri. Boş olduqda standart dəyərlər bərpa olunur",
   "madeWithLove": "{myGithub} tərəfindən ❤️ ilə hazırlanıb",

@@ -704,13 +704,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get lastSuccess => 'Останній успіх';
 
   @override
-  String get letterCache => 'Звичайне введення з клавіатури';
-
-  @override
-  String get letterCacheTip =>
-      'Коли параметр увімкнено, введення проходить через звичайний IME, що на деяких системах дає змогу уникнути запитів захищеної клавіатури в терміналі.';
-
-  @override
   String get linuxShellTip =>
       'З якої оболонки запускається термінал. Порожньо — повернути /bin/sh.';
 

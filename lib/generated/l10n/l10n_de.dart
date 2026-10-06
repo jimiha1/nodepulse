@@ -704,13 +704,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get lastSuccess => 'Letzter Erfolg';
 
   @override
-  String get letterCache => 'Normale Tastatureingabe';
-
-  @override
-  String get letterCacheTip =>
-      'Wenn aktiviert, läuft die Eingabe über die normale IME. Dadurch lassen sich auf manchen Systemen sichere Tastaturhinweise im Terminal vermeiden.';
-
-  @override
   String get linuxShellTip =>
       'Mit welcher Shell ein Terminal startet. Leer stellt /bin/sh wieder her.';
 

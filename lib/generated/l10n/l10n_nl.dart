@@ -703,13 +703,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get lastSuccess => 'Laatst succesvol';
 
   @override
-  String get letterCache => 'Normale toetsenbordinvoer';
-
-  @override
-  String get letterCacheTip =>
-      'Wanneer dit is ingeschakeld, gaat invoer via de normale IME, wat op sommige systemen beveiligde toetsenbordmeldingen in de terminal kan vermijden.';
-
-  @override
   String get linuxShellTip =>
       'Met welke shell een terminal start. Leeg herstelt /bin/sh.';
 

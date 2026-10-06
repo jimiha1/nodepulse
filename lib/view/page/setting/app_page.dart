@@ -291,7 +291,11 @@ final class _AppSettingsPageState extends ConsumerState<AppSettingsPage> {
     required String hint,
     required IconData icon,
     required ValueChanged<String> onSave,
-    bool suggestion = false,
+    // Defaults to on, which is what keeps the field plain. Suppressing
+    // suggestions on a text field makes the engine ask for
+    // `TYPE_TEXT_VARIATION_VISIBLE_PASSWORD`, whose low byte is the password
+    // bit the secure keyboard is raised for — see [MaskedInput].
+    bool suggestion = true,
   }) {
     return Future<void>.sync(
       () => withTextFieldController((ctrl) async {

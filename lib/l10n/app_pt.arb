@@ -149,8 +149,6 @@
   "keyAuth": "Autenticação por chave",
   "lastFailure": "Última falha",
   "lastSuccess": "Último sucesso",
-  "letterCache": "Entrada normal do teclado",
-  "letterCacheTip": "Quando ativada, a entrada passa pelo IME normal, o que pode evitar avisos de teclado seguro no terminal em alguns sistemas.",
   "linuxShellTip": "Com que shell arranca um terminal. Vazio repõe /bin/sh.",
   "linuxNetTip": "Servidores DNS. Vazio repõe os valores por omissão",
   "madeWithLove": "Feito com ❤️ por {myGithub}",

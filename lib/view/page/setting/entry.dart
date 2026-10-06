@@ -13,6 +13,7 @@ import 'package:nodepulse/core/chan.dart';
 import 'package:nodepulse/core/extension/context/locale.dart';
 import 'package:nodepulse/core/service/crash_report.dart';
 import 'package:nodepulse/core/service/diagnostics_upload.dart';
+import 'package:nodepulse/core/utils/masked_text_controller.dart';
 import 'package:nodepulse/core/utils/secure_endpoint.dart';
 import 'package:nodepulse/data/model/app/motion.dart';
 import 'package:nodepulse/data/model/cf/cf_resource_alert.dart';
@@ -29,6 +30,7 @@ import 'package:nodepulse/view/widget/diagnostics_level_picker.dart';
 import 'package:nodepulse/view/widget/edge_fade_scroll.dart';
 import 'package:nodepulse/view/widget/group_title.dart';
 import 'package:nodepulse/view/widget/marked_title.dart';
+import 'package:nodepulse/view/widget/masked_input.dart';
 import 'package:nodepulse/view/widget/pane_settings.dart';
 
 part 'about.dart';

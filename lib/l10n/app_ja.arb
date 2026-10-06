@@ -149,8 +149,6 @@
   "keyAuth": "キー認証",
   "lastFailure": "最後の失敗",
   "lastSuccess": "最後の成功",
-  "letterCache": "通常キーボード入力",
-  "letterCacheTip": "有効にすると入力内容は通常のIMEを経由し、一部のシステムでターミナルにセキュアキーボードの案内が表示されるのを避けられます。",
   "linuxShellTip": "ターミナルを起動するシェル。空にすると /bin/sh に戻ります。",
   "linuxNetTip": "DNS サーバー。空にすると既定値に戻ります",
   "madeWithLove": "{myGithub}によって❤️で作成済み",

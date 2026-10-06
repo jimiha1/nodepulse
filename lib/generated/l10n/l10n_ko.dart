@@ -671,13 +671,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lastSuccess => '마지막 성공';
 
   @override
-  String get letterCache => '일반 키보드 입력';
-
-  @override
-  String get letterCacheTip =>
-      '이 옵션을 켜면 입력 내용이 일반 IME를 거치며, 일부 시스템에서는 터미널의 보안 키보드 안내를 피할 수 있습니다.';
-
-  @override
   String get linuxShellTip => '터미널을 시작할 셸. 비우면 /bin/sh로 돌아갑니다.';
 
   @override

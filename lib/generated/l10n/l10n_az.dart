@@ -706,13 +706,6 @@ class AppLocalizationsAz extends AppLocalizations {
   String get lastSuccess => 'Son uğurlu cəhd';
 
   @override
-  String get letterCache => 'Adi klaviatura daxiletməsi';
-
-  @override
-  String get letterCacheTip =>
-      'Aktivləşdirildikdə daxiletmə adi IME vasitəsilə aparılır. Bu, bəzi sistemlərdə terminalda təhlükəsiz klaviatura sorğularının qarşısını ala bilər.';
-
-  @override
   String get linuxShellTip =>
       'Terminalın başladacağı əmr örtüyü. Boş olduqda /bin/sh bərpa olunur.';
 

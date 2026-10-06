@@ -883,14 +883,6 @@
   "@lastSuccess": {
     "description": "User-facing label or message for last success."
   },
-  "letterCache": "Normal keyboard input",
-  "@letterCache": {
-    "description": "User-facing label or message for letter cache."
-  },
-  "letterCacheTip": "When enabled, input goes through the regular IME, which can avoid secure keyboard prompts in the terminal on some systems.",
-  "@letterCacheTip": {
-    "description": "Help text for the letter cache setting or action."
-  },
   "linuxShellTip": "Which shell a terminal starts. Empty restores /bin/sh.",
   "@linuxShellTip": {
     "description": "Help text for the linux shell setting or action."

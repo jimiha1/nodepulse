@@ -321,7 +321,9 @@ class _RuleEditorDialogState extends State<_RuleEditorDialog> {
             Input(
               controller: _nameCtrl,
               hint: l10n.cfResourceRuleNameHint,
-              suggestion: false,
+              // Suggestions stay on: suppressing them on a text field makes
+              // the engine ask for `TYPE_TEXT_VARIATION_VISIBLE_PASSWORD`,
+              // which raises the secure keyboard — see [MaskedInput].
             ),
             const SizedBox(height: 12),
             _fieldLabel(l10n.cfResourceRuleMetric),

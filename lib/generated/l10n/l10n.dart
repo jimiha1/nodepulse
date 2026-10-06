@@ -1349,18 +1349,6 @@ abstract class AppLocalizations {
   /// **'Last Success'**
   String get lastSuccess;
 
-  /// User-facing label or message for letter cache.
-  ///
-  /// In en, this message translates to:
-  /// **'Normal keyboard input'**
-  String get letterCache;
-
-  /// Help text for the letter cache setting or action.
-  ///
-  /// In en, this message translates to:
-  /// **'When enabled, input goes through the regular IME, which can avoid secure keyboard prompts in the terminal on some systems.'**
-  String get letterCacheTip;
-
   /// Help text for the linux shell setting or action.
   ///
   /// In en, this message translates to:

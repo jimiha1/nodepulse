@@ -197,11 +197,6 @@ final class _IntroPage extends StatelessWidget {
           title: TipText(l10n.dockerStatistics, l10n.parseContainerStatsTip),
           trailing: StoreSwitch(prop: _setting.containerParseStat),
         ).cardx,
-        ListTile(
-          leading: const Icon(Bootstrap.alphabet),
-          title: TipText(l10n.letterCache, l10n.letterCacheTip),
-          trailing: StoreSwitch(prop: _setting.letterCache),
-        ).cardx,
         UIs.height77,
       ],
     );
@@ -289,7 +284,7 @@ final class _IntroPage extends StatelessWidget {
   }
 
   static Future<void> _askBackupPassword(BuildContext ctx) async {
-    final controller = TextEditingController();
+    final controller = MaskedTextEditingController();
     final result = await ctx.showRoundDialog<bool>(
       title: ctx.l10n.backupPassword,
       // Disposed by the tree. It was never disposed at all before, which leaks
@@ -302,10 +297,9 @@ final class _IntroPage extends StatelessWidget {
           children: [
             Text(ctx.l10n.backupPasswordTip, style: UIs.textGrey),
             UIs.height13,
-            Input(
+            MaskedInput(
               label: ctx.l10n.backupPassword,
               controller: controller,
-              obscureText: true,
               // `popDialog`, not `pop`: the dialog is on the root navigator
               // and `ctx` is the page's. It happens to be the same one today
               // only because the intro is `MaterialApp.home` — under a pane or

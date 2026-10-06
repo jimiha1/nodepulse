@@ -611,8 +611,6 @@ class SettingStore extends SqliteStore with ThemeSettings {
 
   late final introVer = propertyDefault('introVer', 0);
 
-  late final letterCache = propertyDefault('letterCache', false);
-
   /// Remote editor command used in the SSH terminal, such as `$EDITOR` or
   /// `vim`. Leave empty to use the local GUI editor.
   late final sftpEditor = propertyDefault('sftpEditor', '');

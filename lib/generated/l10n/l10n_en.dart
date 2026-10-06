@@ -696,13 +696,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lastSuccess => 'Last Success';
 
   @override
-  String get letterCache => 'Normal keyboard input';
-
-  @override
-  String get letterCacheTip =>
-      'When enabled, input goes through the regular IME, which can avoid secure keyboard prompts in the terminal on some systems.';
-
-  @override
   String get linuxShellTip =>
       'Which shell a terminal starts. Empty restores /bin/sh.';
 

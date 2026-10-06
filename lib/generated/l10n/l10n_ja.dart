@@ -670,13 +670,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get lastSuccess => '最後の成功';
 
   @override
-  String get letterCache => '通常キーボード入力';
-
-  @override
-  String get letterCacheTip =>
-      '有効にすると入力内容は通常のIMEを経由し、一部のシステムでターミナルにセキュアキーボードの案内が表示されるのを避けられます。';
-
-  @override
   String get linuxShellTip => 'ターミナルを起動するシェル。空にすると /bin/sh に戻ります。';
 
   @override

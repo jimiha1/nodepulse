@@ -195,8 +195,6 @@
   "keyAuth": "金鑰認證",
   "lastFailure": "最後失敗",
   "lastSuccess": "最後成功",
-  "letterCache": "一般鍵盤輸入",
-  "letterCacheTip": "開啟後，輸入內容會經過一般輸入法，這樣可避免部分系統在終端彈出安全鍵盤。",
   "linuxShellTip": "終端用什麼 shell 啟動。留空恢復 /bin/sh。",
   "linuxNetTip": "DNS 伺服器。留空恢復預設值",
   "madeWithLove": "用❤️製作 by {myGithub}",

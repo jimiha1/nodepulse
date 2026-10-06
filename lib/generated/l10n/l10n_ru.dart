@@ -704,13 +704,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get lastSuccess => 'Последний успех';
 
   @override
-  String get letterCache => 'Обычный ввод с клавиатуры';
-
-  @override
-  String get letterCacheTip =>
-      'Когда параметр включен, ввод проходит через обычный IME, что на некоторых системах позволяет избежать запросов защищенной клавиатуры в терминале.';
-
-  @override
   String get linuxShellTip =>
       'С какой оболочки запускается терминал. Пусто — вернуть /bin/sh.';
 

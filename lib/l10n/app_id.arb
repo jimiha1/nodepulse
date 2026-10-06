@@ -149,8 +149,6 @@
   "keyAuth": "Auth kunci",
   "lastFailure": "Gagal Terakhir",
   "lastSuccess": "Sukses Terakhir",
-  "letterCache": "Input keyboard biasa",
-  "letterCacheTip": "Saat diaktifkan, input akan melalui IME biasa, yang dapat menghindari prompt keyboard aman di terminal pada beberapa sistem.",
   "linuxShellTip": "Shell yang dipakai terminal. Kosong mengembalikan /bin/sh.",
   "linuxNetTip": "Server DNS. Kosong mengembalikan bawaan",
   "madeWithLove": "Dibuat dengan ❤️ oleh {myGithub}",

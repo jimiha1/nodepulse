@@ -149,8 +149,6 @@
   "keyAuth": "Schlüsselauthentifzierung",
   "lastFailure": "Letzter Fehler",
   "lastSuccess": "Letzter Erfolg",
-  "letterCache": "Normale Tastatureingabe",
-  "letterCacheTip": "Wenn aktiviert, läuft die Eingabe über die normale IME. Dadurch lassen sich auf manchen Systemen sichere Tastaturhinweise im Terminal vermeiden.",
   "linuxShellTip": "Mit welcher Shell ein Terminal startet. Leer stellt /bin/sh wieder her.",
   "linuxNetTip": "DNS-Server. Leer stellt die Standardwerte wieder her",
   "madeWithLove": "Erstellt mit ❤️ von {myGithub}",

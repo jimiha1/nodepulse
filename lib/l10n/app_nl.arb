@@ -149,8 +149,6 @@
   "keyAuth": "Sleutelauthenticatie",
   "lastFailure": "Laatst gefaald",
   "lastSuccess": "Laatst succesvol",
-  "letterCache": "Normale toetsenbordinvoer",
-  "letterCacheTip": "Wanneer dit is ingeschakeld, gaat invoer via de normale IME, wat op sommige systemen beveiligde toetsenbordmeldingen in de terminal kan vermijden.",
   "linuxShellTip": "Met welke shell een terminal start. Leeg herstelt /bin/sh.",
   "linuxNetTip": "DNS-servers. Leeg herstelt de standaardwaarden",
   "madeWithLove": "Gemaakt met ❤️ door {myGithub}",

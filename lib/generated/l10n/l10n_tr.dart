@@ -702,13 +702,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get lastSuccess => 'Son Başarı';
 
   @override
-  String get letterCache => 'Normal klavye girişi';
-
-  @override
-  String get letterCacheTip =>
-      'Etkinleştirildiğinde giriş normal IME üzerinden yapılır; bu da bazı sistemlerde terminalde güvenli klavye istemlerini önleyebilir.';
-
-  @override
   String get linuxShellTip =>
       'Terminalin hangi kabukla açılacağı. Boş bırakınca /bin/sh’a döner.';
 

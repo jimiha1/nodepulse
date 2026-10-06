@@ -149,8 +149,6 @@
   "keyAuth": "Anahtar Kimlik Doğrulama",
   "lastFailure": "Son Başarısızlık",
   "lastSuccess": "Son Başarı",
-  "letterCache": "Normal klavye girişi",
-  "letterCacheTip": "Etkinleştirildiğinde giriş normal IME üzerinden yapılır; bu da bazı sistemlerde terminalde güvenli klavye istemlerini önleyebilir.",
   "linuxShellTip": "Terminalin hangi kabukla açılacağı. Boş bırakınca /bin/sh’a döner.",
   "linuxNetTip": "DNS sunucuları. Boş bırakınca varsayılana döner",
   "madeWithLove": "{myGithub} tarafından ❤️ ile yapıldı",

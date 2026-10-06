@@ -710,13 +710,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get lastSuccess => 'Dernier succès';
 
   @override
-  String get letterCache => 'Saisie clavier normale';
-
-  @override
-  String get letterCacheTip =>
-      'Lorsqu\'elle est activée, la saisie passe par l\'IME normal, ce qui peut éviter les invites de clavier sécurisé dans le terminal sur certains systèmes.';
-
-  @override
   String get linuxShellTip =>
       'Le shell avec lequel un terminal démarre. Vide restaure /bin/sh.';
 

@@ -20,7 +20,9 @@ final class CfSiteSettingsPage extends ConsumerStatefulWidget {
 final class _CfSiteSettingsPageState extends ConsumerState<CfSiteSettingsPage> {
   final _urlCtrl = TextEditingController();
   final _userCtrl = TextEditingController();
-  final _pwdCtrl = TextEditingController();
+  // Masked by the controller rather than by `obscureText`, which is what
+  // raises the secure keyboard — see [MaskedInput].
+  final _pwdCtrl = MaskedTextEditingController();
   final _expiryDaysCtrl = TextEditingController();
 
   /// Re-entry guard for the test below: a slow site and an impatient finger
@@ -277,7 +279,13 @@ final class _CfSiteSettingsPageState extends ConsumerState<CfSiteSettingsPage> {
               label: l10n.cfSite,
               hint: l10n.cfSiteUrlHint,
               icon: Icons.link,
-              suggestion: false,
+              // Suggestions are left on, and the keyboard type is left to
+              // inference. Suppressing suggestions on a text field makes the
+              // engine ask for `TYPE_TEXT_VARIATION_VISIBLE_PASSWORD` (0x90),
+              // whose low byte is the password bit — the same one the secure
+              // keyboard is raised for. `suggestion: false` here was the whole
+              // reason this field, which is not a password field, brought up
+              // the secure keyboard.
               onSubmitted: _saveUrl,
             ),
           ),
@@ -303,11 +311,10 @@ final class _CfSiteSettingsPageState extends ConsumerState<CfSiteSettingsPage> {
                         ),
                       ),
                       CardX(
-                        child: Input(
+                        child: MaskedInput(
                           controller: _pwdCtrl,
                           label: l10n.cfPassword,
                           icon: Icons.password_outlined,
-                          obscureText: true,
                           onSubmitted: _saveCredentials,
                         ),
                       ),
