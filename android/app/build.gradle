@@ -90,7 +90,7 @@ if (flutterVersionName == null) {
 }
 
 android {
-    namespace "tech.lolli.toolbox"
+    namespace "app.nodepulse"
     compileSdk pinnedCompileSdkVersion
     buildToolsVersion pinnedBuildToolsVersion
     // One version for Gradle native assets and scripts/build-proot-android.sh.
@@ -134,7 +134,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "tech.lolli.toolbox"
+        applicationId "app.nodepulse"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdkVersion flutter.minSdkVersion

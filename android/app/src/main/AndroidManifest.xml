@@ -127,7 +127,7 @@
             android:label="@string/widget_small_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="tech.lolli.toolbox.UPDATE_WIDGET" />
+                <action android:name="app.nodepulse.UPDATE_WIDGET" />
                 <action android:name="miui.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
@@ -141,7 +141,7 @@
             android:label="@string/widget_medium_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="tech.lolli.toolbox.UPDATE_WIDGET" />
+                <action android:name="app.nodepulse.UPDATE_WIDGET" />
                 <action android:name="miui.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
