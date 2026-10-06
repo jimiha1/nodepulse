@@ -343,7 +343,7 @@ abstract final class MethodChans {
     }
   }
 
-  /// The `serverbox://` link this app was last opened with, if one is waiting.
+  /// The `nodepulse://` link this app was last opened with, if one is waiting.
   ///
   /// Held natively and pulled, for the same reason as [takeOpenedShare]: on a
   /// cold launch the link arrives before the engine does. Android too, where a

@@ -36,7 +36,7 @@ object DohHttp {
         val query = "name=${encode(host)}&type=A"
         return client.get(
             url = "https://${provider.name}${provider.path}?$query",
-            userAgent = "ServerBox-DoH/1",
+            userAgent = "NodePulse-DoH/1",
             timeoutMs = TIMEOUT_MS,
         )
     }

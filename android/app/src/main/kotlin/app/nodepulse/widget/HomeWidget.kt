@@ -405,7 +405,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             // the two targets overwrite each other.
             val open = Intent(context, MainActivity::class.java).apply {
                 action = Intent.ACTION_VIEW
-                data = android.net.Uri.parse("serverbox://server/$serverId")
+                data = android.net.Uri.parse("nodepulse://server/$serverId")
                 // The widget lives on the home screen, so the app is launched
                 // from outside its own task; SINGLE_TOP then routes a second
                 // tap into onNewIntent instead of stacking another copy.

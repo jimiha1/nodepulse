@@ -1,10 +1,10 @@
 import 'package:nodepulse/data/model/app/tab.dart';
 
-/// A `serverbox://` link, parsed.
+/// A `nodepulse://` link, parsed.
 sealed class AppLink {
   const AppLink();
 
-  static const scheme = 'serverbox';
+  static const scheme = 'nodepulse';
 
   static AppLink? parse(String raw) {
     try {

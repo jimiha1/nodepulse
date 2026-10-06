@@ -425,7 +425,7 @@ class AlertWorker(
             return try {
                 CfHttp.shared.get(
                     url = url.toString(),
-                    userAgent = "ServerBox-Alert/1",
+                    userAgent = "NodePulse-Alert/1",
                     token = token,
                     timeoutMs = TIMEOUT_MS,
                 )
@@ -448,7 +448,7 @@ class AlertWorker(
             return try {
                 CfHttp.shared.get(
                     url = url.toString(),
-                    userAgent = "ServerBox-Alert/1",
+                    userAgent = "NodePulse-Alert/1",
                     token = token,
                     timeoutMs = TIMEOUT_MS,
                 )

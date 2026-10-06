@@ -429,12 +429,12 @@ jobs:
         shell: bash
         env:
           # `APP_NAME` is the *bundle* name and has a space in it. The job's
-          # own `env` sets it to `ServerBox`, which reaches every step —
+          # own `env` sets it to `NodePulse`, which reaches every step —
           # without this override `ditto` would stage the app into the DMG
           # under a name it does not have, and the volume would differ from
           # what `make package-dmg` produces locally.
           #
-          # The two `${{ env.APP_NAME }}` below still read `ServerBox`: what a
+          # The two `${{ env.APP_NAME }}` below still read `NodePulse`: what a
           # step's `env` block is evaluated against is the workflow's and the
           # job's, never its own.
           APP_NAME: Server Box

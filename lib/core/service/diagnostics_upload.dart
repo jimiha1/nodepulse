@@ -119,7 +119,7 @@ abstract final class DiagnosticsUpload {
     try {
       await sentry.Sentry.init((options) {
         options.dsn = dsn;
-        options.release = 'server_box@1.0.${BuildData.build}';
+        options.release = 'nodepulse@1.0.${BuildData.build}';
 
         // What `full` adds: traced operations arrive as they happen rather
         // than being held until something breaks. It is also the only setting

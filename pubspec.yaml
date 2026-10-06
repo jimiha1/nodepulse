@@ -1,7 +1,7 @@
 name: nodepulse
 description: server status & toolbox app.
 publish_to: "none"
-version: 1.0.1719+1719
+version: 1.0.1808+1808
 
 environment:
   sdk: ">=3.11.0"

@@ -73,11 +73,11 @@ class MainActivity: FlutterFragmentActivity() {
         const val MAX_TOMBSTONE_BYTES = 8 * 1024 * 1024
 
         /** Matches `AppLink.scheme` and the VIEW filter in the manifest. */
-        const val LINK_SCHEME = "serverbox"
+        const val LINK_SCHEME = "nodepulse"
     }
 
     /**
-     * A `serverbox://` link this activity was opened with, until the Dart side
+     * A `nodepulse://` link this activity was opened with, until the Dart side
      * takes it.
      *
      * Held rather than pushed, as on iOS and macOS: on a cold start the intent

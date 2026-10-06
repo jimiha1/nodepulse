@@ -109,7 +109,7 @@ object WidgetApi {
         return try {
             CfHttp.shared.get(
                 url = url.toString(),
-                userAgent = "ServerBox-Widget/2",
+                userAgent = "NodePulse-Widget/2",
                 token = token,
                 timeoutMs = TIMEOUT_MS,
             )

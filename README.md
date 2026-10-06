@@ -1,6 +1,6 @@
 [English](README.md) | [简体中文](README_zh.md)
 
-<h2 align="center">CF ServerBox</h2>
+<h2 align="center">NodePulse</h2>
 
 <div align="center">
   <img alt="lang" src="https://img.shields.io/badge/language-Dart%20%7C%20Kotlin-blue">
