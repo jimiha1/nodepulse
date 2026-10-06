@@ -8,14 +8,14 @@ void main() {
   test('the update check reads this fork releases', () {
     expect(
       Urls.githubReleasesApi,
-      'https://api.github.com/repos/jimiha1/cf_server_box/releases',
+      'https://api.github.com/repos/jimiha1/nodepulse/releases',
     );
   });
 
   test('a crash report is filed against this fork', () {
     expect(
       Urls.newIssue,
-      'https://github.com/jimiha1/cf_server_box/issues/new',
+      'https://github.com/jimiha1/nodepulse/issues/new',
     );
   });
 }

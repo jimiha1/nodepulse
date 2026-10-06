@@ -1,7 +1,7 @@
 abstract final class Urls {
   static const myGithub = 'https://github.com/jimiha1';
   static const githubApi = 'https://api.github.com/repos/jimiha1';
-  static const thisRepo = '$myGithub/cf_server_box';
+  static const thisRepo = '$myGithub/nodepulse';
 
   /// One file out of this repository's default branch.
   ///
@@ -16,7 +16,7 @@ abstract final class Urls {
   /// repositories and a new one should not need an app release. The copy in
   /// `assets/catalog/repos.toml` is what a first run with no network uses.
   static const themeCatalog = '$rawRepo/assets/catalog/repos.toml';
-  static const githubReleasesApi = '$githubApi/cf_server_box/releases';
+  static const githubReleasesApi = '$githubApi/nodepulse/releases';
 
   /// Where a crash report goes.
   ///

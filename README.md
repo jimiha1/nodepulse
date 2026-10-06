@@ -41,8 +41,8 @@ A modern, lightweight cross-platform client and Android Home Screen AppWidget de
 
 ```bash
 # Clone the repository
-git clone https://github.com/jimiha1/cf_server_box.git
-cd cf_server_box
+git clone https://github.com/jimiha1/nodepulse.git
+cd nodepulse
 
 # Install Flutter dependencies
 flutter pub get

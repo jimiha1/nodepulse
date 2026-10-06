@@ -41,8 +41,8 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/jimiha1/cf_server_box.git
-cd cf_server_box
+git clone https://github.com/jimiha1/nodepulse.git
+cd nodepulse
 
 # 安装 Flutter 依赖
 flutter pub get
