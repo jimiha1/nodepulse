@@ -1,11 +1,11 @@
 import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:server_box/core/extension/context/locale.dart';
-import 'package:server_box/data/model/cf/cf_history.dart';
-import 'package:server_box/data/model/cf/cf_server.dart';
-import 'package:server_box/data/provider/server/cf/cf_servers_provider.dart';
-import 'package:server_box/view/page/server/cf_detail/charts.dart';
+import 'package:nodepulse/core/extension/context/locale.dart';
+import 'package:nodepulse/data/model/cf/cf_history.dart';
+import 'package:nodepulse/data/model/cf/cf_server.dart';
+import 'package:nodepulse/data/provider/server/cf/cf_servers_provider.dart';
+import 'package:nodepulse/view/page/server/cf_detail/charts.dart';
 
 /// Which node a [CfDetailPage] opens: its id on the site, and the name the
 /// list already had for the bar.

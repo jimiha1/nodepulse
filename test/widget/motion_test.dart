@@ -1,8 +1,8 @@
 import 'package:fl_lib/theme.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:server_box/core/motion.dart';
-import 'package:server_box/data/model/app/motion.dart';
+import 'package:nodepulse/core/motion.dart';
+import 'package:nodepulse/data/model/app/motion.dart';
 
 /// Whether the app moves less: the device's settings, the app's own
 /// preference over them, and the page transitions that follow the answer.

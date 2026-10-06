@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:server_box/core/utils/private_address.dart';
+import 'package:nodepulse/core/utils/private_address.dart';
 
 /// Which of a machine's own addresses places it.
 ///

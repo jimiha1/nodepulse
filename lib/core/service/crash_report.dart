@@ -4,9 +4,9 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter/foundation.dart';
-import 'package:server_box/core/service/diagnostics_upload.dart';
-import 'package:server_box/core/service/native_exit.dart';
-import 'package:server_box/data/res/build_data.dart';
+import 'package:nodepulse/core/service/diagnostics_upload.dart';
+import 'package:nodepulse/core/service/native_exit.dart';
+import 'package:nodepulse/data/res/build_data.dart';
 
 /// The text a user pastes into an issue after a crash.
 ///

@@ -5,10 +5,10 @@ import 'package:fake_async/fake_async.dart';
 import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/data/model/cf/cf_server.dart';
-import 'package:server_box/data/provider/server/cf/cf_api.dart';
-import 'package:server_box/data/provider/server/cf/cf_servers_provider.dart';
-import 'package:server_box/data/res/store.dart';
+import 'package:nodepulse/data/model/cf/cf_server.dart';
+import 'package:nodepulse/data/provider/server/cf/cf_api.dart';
+import 'package:nodepulse/data/provider/server/cf/cf_servers_provider.dart';
+import 'package:nodepulse/data/res/store.dart';
 
 /// A minimal slice of the live `GET /api/servers` response, enough for one
 /// parsed node — the same fixture shape `cf_api_test.dart` uses.

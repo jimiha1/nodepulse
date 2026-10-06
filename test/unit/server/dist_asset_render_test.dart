@@ -13,7 +13,7 @@ library;
 
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/data/model/server/dist.dart';
+import 'package:nodepulse/data/model/server/dist.dart';
 import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 
 void main() {

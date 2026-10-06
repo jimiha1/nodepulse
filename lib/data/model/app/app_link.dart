@@ -1,4 +1,4 @@
-import 'package:server_box/data/model/app/tab.dart';
+import 'package:nodepulse/data/model/app/tab.dart';
 
 /// A `serverbox://` link, parsed.
 sealed class AppLink {

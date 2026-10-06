@@ -16,7 +16,7 @@ import 'package:fl_lib/fl_lib.dart';
 import 'package:fl_lib/theme.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:server_box/data/store/setting.dart';
+import 'package:nodepulse/data/store/setting.dart';
 
 import '../../helpers/test_db.dart';
 

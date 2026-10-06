@@ -1,5 +1,5 @@
 import 'package:flutter/painting.dart';
-import 'package:server_box/data/res/chart_series.dart';
+import 'package:nodepulse/data/res/chart_series.dart';
 
 /// The colours a reading is drawn in, wherever it is drawn.
 ///

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:server_box/view/widget/group_title.dart';
+import 'package:nodepulse/view/widget/group_title.dart';
 
 /// The heading measures its name as `Text` draws it: with the inherited
 /// style merged in, so a long summary leaves the rule its room.

@@ -2,11 +2,11 @@ import 'package:fl_lib/fl_lib.dart';
 import 'package:fl_lib/theme.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:server_box/data/model/app/tab.dart';
-import 'package:server_box/data/res/store.dart';
-import 'package:server_box/view/page/server/cf_tab.dart';
-import 'package:server_box/view/widget/marked_title.dart';
-import 'package:server_box/view/widget/nav_rail.dart';
+import 'package:nodepulse/data/model/app/tab.dart';
+import 'package:nodepulse/data/res/store.dart';
+import 'package:nodepulse/view/page/server/cf_tab.dart';
+import 'package:nodepulse/view/widget/marked_title.dart';
+import 'package:nodepulse/view/widget/nav_rail.dart';
 
 extension AppTabViewX on AppTab {
   Widget get page {

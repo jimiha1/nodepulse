@@ -1,7 +1,7 @@
 import 'package:fl_lib/fl_lib.dart';
 import 'package:get_it/get_it.dart';
-import 'package:server_box/data/store/server_dist.dart';
-import 'package:server_box/data/store/setting.dart';
+import 'package:nodepulse/data/store/server_dist.dart';
+import 'package:nodepulse/data/store/setting.dart';
 
 final GetIt getIt = GetIt.instance;
 

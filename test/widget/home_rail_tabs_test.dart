@@ -15,8 +15,8 @@ import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:server_box/view/page/home.dart';
-import 'package:server_box/view/widget/nav_rail.dart';
+import 'package:nodepulse/view/page/home.dart';
+import 'package:nodepulse/view/widget/nav_rail.dart';
 
 void main() {
   group('how many fit', () {

@@ -7,21 +7,21 @@ import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:nodepulse/app.dart';
+import 'package:nodepulse/core/chan.dart';
+import 'package:nodepulse/core/diag.dart';
+import 'package:nodepulse/core/motion.dart';
+import 'package:nodepulse/core/service/alert_sync.dart';
+import 'package:nodepulse/core/service/crash_report.dart';
+import 'package:nodepulse/core/service/diagnostics_upload.dart';
+import 'package:nodepulse/core/service/native_exit.dart';
+import 'package:nodepulse/core/service/theme_host.dart';
+import 'package:nodepulse/core/service/widget_sync.dart';
+import 'package:nodepulse/data/model/server/dist_license.dart';
+import 'package:nodepulse/data/res/build_data.dart';
+import 'package:nodepulse/data/res/misc.dart';
+import 'package:nodepulse/data/res/store.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:server_box/app.dart';
-import 'package:server_box/core/chan.dart';
-import 'package:server_box/core/diag.dart';
-import 'package:server_box/core/motion.dart';
-import 'package:server_box/core/service/alert_sync.dart';
-import 'package:server_box/core/service/crash_report.dart';
-import 'package:server_box/core/service/diagnostics_upload.dart';
-import 'package:server_box/core/service/native_exit.dart';
-import 'package:server_box/core/service/theme_host.dart';
-import 'package:server_box/core/service/widget_sync.dart';
-import 'package:server_box/data/model/server/dist_license.dart';
-import 'package:server_box/data/res/build_data.dart';
-import 'package:server_box/data/res/misc.dart';
-import 'package:server_box/data/res/store.dart';
 
 Future<void> main() async {
   await _runInZone(() async {

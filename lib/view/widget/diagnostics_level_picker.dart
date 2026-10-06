@@ -1,9 +1,9 @@
 import 'package:fl_lib/fl_lib.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:server_box/core/extension/context/locale.dart';
-import 'package:server_box/data/model/app/diagnostics_level.dart';
-import 'package:server_box/data/res/store.dart';
-import 'package:server_box/generated/l10n/l10n.dart';
+import 'package:nodepulse/core/extension/context/locale.dart';
+import 'package:nodepulse/data/model/app/diagnostics_level.dart';
+import 'package:nodepulse/data/res/store.dart';
+import 'package:nodepulse/generated/l10n/l10n.dart';
 
 /// The three levels laid out, one sentence each.
 ///

@@ -2,10 +2,10 @@ import 'dart:math' as math;
 import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
-import 'package:server_box/core/extension/context/locale.dart';
-import 'package:server_box/data/model/cf/cf_server.dart';
-import 'package:server_box/data/model/server/dist.dart';
-import 'package:server_box/view/widget/dist_icon.dart';
+import 'package:nodepulse/core/extension/context/locale.dart';
+import 'package:nodepulse/data/model/cf/cf_server.dart';
+import 'package:nodepulse/data/model/server/dist.dart';
+import 'package:nodepulse/view/widget/dist_icon.dart';
 
 /// One CF node, as the CF home page draws it.
 ///

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/core/service/self_addr.dart';
+import 'package:nodepulse/core/service/self_addr.dart';
 
 /// Which of a machine's reported addresses places it.
 ///

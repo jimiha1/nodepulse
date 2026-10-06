@@ -1,8 +1,8 @@
 import 'package:fl_lib/fl_lib.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:server_box/core/extension/context/locale.dart';
-import 'package:server_box/core/service/crash_report.dart';
-import 'package:server_box/data/res/url.dart';
+import 'package:nodepulse/core/extension/context/locale.dart';
+import 'package:nodepulse/core/service/crash_report.dart';
+import 'package:nodepulse/data/res/url.dart';
 
 /// Shows what the previous run left behind, after it crashed.
 ///

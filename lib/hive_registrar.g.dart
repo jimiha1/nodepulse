@@ -3,7 +3,7 @@
 // Check in to version control
 
 import 'package:hive_ce/hive_ce.dart';
-import 'package:server_box/data/model/app/tab.dart';
+import 'package:nodepulse/data/model/app/tab.dart';
 
 extension HiveRegistrar on HiveInterface {
   void registerAdapters() {

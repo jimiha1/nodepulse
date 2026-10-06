@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/core/utils/doh.dart';
+import 'package:nodepulse/core/utils/doh.dart';
 
 /// A DoH response shaped like the ones the providers actually send: AliDNS
 /// echoes the question as an object, DNSPod as an array, and both put the

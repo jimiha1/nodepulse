@@ -1,4 +1,4 @@
-import 'package:server_box/core/extension/context/locale.dart';
+import 'package:nodepulse/core/extension/context/locale.dart';
 
 /// Remote sync needs a backup password, and none is set.
 ///

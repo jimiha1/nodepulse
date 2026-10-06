@@ -4,9 +4,9 @@ import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:nodepulse/data/res/build_data.dart';
+import 'package:nodepulse/data/res/misc.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:server_box/data/res/build_data.dart';
-import 'package:server_box/data/res/misc.dart';
 
 /// What Android will and will not execute out of the app's own directory,
 /// measured rather than argued.

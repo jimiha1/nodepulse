@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/core/utils/cert_fingerprint.dart';
+import 'package:nodepulse/core/utils/cert_fingerprint.dart';
 
 /// One formatter for a stored pin, shared by the server editor and the
 /// Virtualization tab's certificate dialog, which each had their own.

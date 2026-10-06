@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter/foundation.dart';
-import 'package:server_box/core/chan.dart';
-import 'package:server_box/core/service/tombstone.dart';
-import 'package:server_box/data/res/store.dart';
+import 'package:nodepulse/core/chan.dart';
+import 'package:nodepulse/core/service/tombstone.dart';
+import 'package:nodepulse/data/res/store.dart';
 
 /// Reads why the process died last time, from the system.
 ///

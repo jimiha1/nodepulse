@@ -4,8 +4,8 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/data/provider/server/cf/cf_api.dart';
-import 'package:server_box/data/provider/server/cf/cf_credentials.dart';
+import 'package:nodepulse/data/provider/server/cf/cf_api.dart';
+import 'package:nodepulse/data/provider/server/cf/cf_credentials.dart';
 
 /// The same fixture as `cf_server_test.dart`: a minimal slice of the live
 /// `GET /api/servers` response.

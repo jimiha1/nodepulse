@@ -1,7 +1,7 @@
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:fl_lib/fl_lib.dart';
+import 'package:nodepulse/data/res/build_data.dart';
 import 'package:sentry/sentry.dart' as sentry;
-import 'package:server_box/data/res/build_data.dart';
 
 /// Describes the machine a report came from.
 ///

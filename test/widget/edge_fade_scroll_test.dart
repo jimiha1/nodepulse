@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:server_box/view/widget/edge_fade_scroll.dart';
+import 'package:nodepulse/view/widget/edge_fade_scroll.dart';
 
 /// The mask over a row that runs off its window, shared by the settings tabs
 /// and a server's function buttons.

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/core/utils/tag_group.dart';
+import 'package:nodepulse/core/utils/tag_group.dart';
 
 /// Anything with tags. The helper is generic, so a record stands in for the
 /// snippet the snippet rail groups and the server id the server rail does.

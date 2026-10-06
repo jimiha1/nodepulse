@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/data/model/app/diagnostics_level.dart';
+import 'package:nodepulse/data/model/app/diagnostics_level.dart';
 
 /// These decide what leaves a user's device by default. The failure mode is
 /// silent in both directions: too permissive and an F-Droid build collects

@@ -3,11 +3,11 @@ import 'dart:convert';
 
 import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:server_box/core/chan.dart';
-import 'package:server_box/data/model/cf/cf_server.dart';
-import 'package:server_box/data/provider/server/cf/cf_credentials.dart';
-import 'package:server_box/data/provider/server/cf/cf_servers_provider.dart';
-import 'package:server_box/data/res/store.dart';
+import 'package:nodepulse/core/chan.dart';
+import 'package:nodepulse/data/model/cf/cf_server.dart';
+import 'package:nodepulse/data/provider/server/cf/cf_credentials.dart';
+import 'package:nodepulse/data/provider/server/cf/cf_servers_provider.dart';
+import 'package:nodepulse/data/res/store.dart';
 
 /// Keeps the native alert scheduler (Android WorkManager) in sync with
 /// alert settings, site URL, and auth credentials.

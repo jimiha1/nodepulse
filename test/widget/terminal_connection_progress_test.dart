@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:server_box/core/extension/context/locale.dart';
-import 'package:server_box/generated/l10n/l10n.dart';
-import 'package:server_box/view/widget/terminal_connection_progress.dart';
+import 'package:nodepulse/core/extension/context/locale.dart';
+import 'package:nodepulse/generated/l10n/l10n.dart';
+import 'package:nodepulse/view/widget/terminal_connection_progress.dart';
 
 void main() {
   Future<void> pumpProgress(

@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' show Color;
 
-import 'package:server_box/core/color/oklch.dart';
+import 'package:nodepulse/core/color/oklch.dart';
 
 /// Which reading a line or a bar is, as far as colour is concerned.
 ///

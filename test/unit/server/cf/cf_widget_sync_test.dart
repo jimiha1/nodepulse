@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/core/service/widget_sync.dart';
-import 'package:server_box/data/model/cf/cf_server.dart';
+import 'package:nodepulse/core/service/widget_sync.dart';
+import 'package:nodepulse/data/model/cf/cf_server.dart';
 
 void main() {
   group('WidgetSync payloadFrom', () {

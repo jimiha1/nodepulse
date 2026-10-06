@@ -7,7 +7,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/core/utils/logo_url.dart';
+import 'package:nodepulse/core/utils/logo_url.dart';
 
 void main() {
   test('a blob URL becomes the raw one', () {

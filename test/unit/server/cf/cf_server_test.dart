@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/data/model/cf/cf_history.dart';
-import 'package:server_box/data/model/cf/cf_server.dart';
+import 'package:nodepulse/data/model/cf/cf_history.dart';
+import 'package:nodepulse/data/model/cf/cf_server.dart';
 
 /// A minimal representative slice of the real `GET /api/servers` response of
 /// <https://monitor.example.com> — field names and shapes per

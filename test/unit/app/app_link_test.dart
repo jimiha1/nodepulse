@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/data/model/app/app_link.dart';
+import 'package:nodepulse/data/model/app/app_link.dart';
 
 void main() {
   group('ServerLink', () {

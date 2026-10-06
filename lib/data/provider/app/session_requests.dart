@@ -1,5 +1,5 @@
+import 'package:nodepulse/data/model/app/tab.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:server_box/data/model/app/tab.dart';
 
 part 'session_requests.g.dart';
 

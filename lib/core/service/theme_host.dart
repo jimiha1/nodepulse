@@ -2,11 +2,11 @@ import 'package:fl_lib/fl_lib.dart';
 import 'package:fl_lib/theme.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:server_box/data/model/app/tab.dart';
-import 'package:server_box/data/model/app/theme_style.dart';
-import 'package:server_box/data/res/build_data.dart';
-import 'package:server_box/data/res/store.dart';
-import 'package:server_box/data/res/url.dart';
+import 'package:nodepulse/data/model/app/tab.dart';
+import 'package:nodepulse/data/model/app/theme_style.dart';
+import 'package:nodepulse/data/res/build_data.dart';
+import 'package:nodepulse/data/res/store.dart';
+import 'package:nodepulse/data/res/url.dart';
 
 /// Where the store themes this app ships are: one `<id>.fsbt` each, the exact
 /// bytes the store publishes for that version.

@@ -13,9 +13,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:server_box/data/model/server/dist.dart';
-import 'package:server_box/data/store/setting.dart';
-import 'package:server_box/view/widget/dist_icon.dart';
+import 'package:nodepulse/data/model/server/dist.dart';
+import 'package:nodepulse/data/store/setting.dart';
+import 'package:nodepulse/view/widget/dist_icon.dart';
 
 import '../helpers/test_db.dart';
 

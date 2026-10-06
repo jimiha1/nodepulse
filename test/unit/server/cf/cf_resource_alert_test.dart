@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/data/model/cf/cf_resource_alert.dart';
+import 'package:nodepulse/data/model/cf/cf_resource_alert.dart';
 
 /// The rule model is a carrier between the settings UI and the native
 /// evaluator, so what matters here is the wire format: the field names the

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/core/utils/secure_endpoint.dart';
+import 'package:nodepulse/core/utils/secure_endpoint.dart';
 
 /// The rule both the settings page and `CfApi.performLogin` apply before a
 /// password or token is put on the wire. Its own tests went with the monitor

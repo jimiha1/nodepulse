@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:fl_lib/fl_lib.dart';
+import 'package:nodepulse/data/model/cf/cf_history.dart';
+import 'package:nodepulse/data/model/cf/cf_server.dart';
+import 'package:nodepulse/data/provider/server/cf/cf_api.dart';
+import 'package:nodepulse/data/provider/server/cf/cf_credentials.dart';
+import 'package:nodepulse/data/provider/server/cf/cf_ws.dart';
+import 'package:nodepulse/data/res/store.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:server_box/data/model/cf/cf_history.dart';
-import 'package:server_box/data/model/cf/cf_server.dart';
-import 'package:server_box/data/provider/server/cf/cf_api.dart';
-import 'package:server_box/data/provider/server/cf/cf_credentials.dart';
-import 'package:server_box/data/provider/server/cf/cf_ws.dart';
-import 'package:server_box/data/res/store.dart';
 
 part 'cf_servers_provider.g.dart';
 

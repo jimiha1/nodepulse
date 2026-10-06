@@ -6,7 +6,7 @@
 // public site needs no credentials, so plain reads prove the whole path.
 import 'dart:io';
 
-import 'package:server_box/data/provider/server/cf/cf_api.dart';
+import 'package:nodepulse/data/provider/server/cf/cf_api.dart';
 
 Future<void> main(List<String> args) async {
   final base = args.isEmpty ? 'https://monitor.example.com' : args.first;

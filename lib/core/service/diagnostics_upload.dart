@@ -1,15 +1,15 @@
 import 'dart:async';
 
 import 'package:fl_lib/fl_lib.dart';
+import 'package:nodepulse/core/service/aptabase.dart';
+import 'package:nodepulse/core/service/diagnostics_platform.dart';
+import 'package:nodepulse/core/service/native_exit.dart';
+import 'package:nodepulse/core/service/openpanel.dart';
+import 'package:nodepulse/core/service/report_filter.dart';
+import 'package:nodepulse/data/model/app/diagnostics_level.dart';
+import 'package:nodepulse/data/res/build_data.dart';
+import 'package:nodepulse/data/res/store.dart';
 import 'package:sentry/sentry.dart' as sentry;
-import 'package:server_box/core/service/aptabase.dart';
-import 'package:server_box/core/service/diagnostics_platform.dart';
-import 'package:server_box/core/service/native_exit.dart';
-import 'package:server_box/core/service/openpanel.dart';
-import 'package:server_box/core/service/report_filter.dart';
-import 'package:server_box/data/model/app/diagnostics_level.dart';
-import 'package:server_box/data/res/build_data.dart';
-import 'package:server_box/data/res/store.dart';
 
 /// The revision of the crash-collection notice.
 ///

@@ -1,8 +1,8 @@
 import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter/material.dart';
-import 'package:server_box/core/extension/context/locale.dart';
-import 'package:server_box/data/model/cf/cf_history.dart';
-import 'package:server_box/view/page/server/chart.dart';
+import 'package:nodepulse/core/extension/context/locale.dart';
+import 'package:nodepulse/data/model/cf/cf_history.dart';
+import 'package:nodepulse/view/page/server/chart.dart';
 
 /// The 7 time ranges supported by CF history endpoints and live buffer.
 enum CfHistoryRange {

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:fl_lib/fl_lib.dart';
-import 'package:server_box/data/model/server/dist.dart';
+import 'package:nodepulse/data/model/server/dist.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 /// What each server was last seen running.

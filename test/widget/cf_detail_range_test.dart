@@ -16,16 +16,16 @@ import 'package:flutter/material.dart' as legacy;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:server_box/core/extension/context/locale.dart';
-import 'package:server_box/data/model/cf/cf_history.dart';
-import 'package:server_box/data/model/cf/cf_server.dart';
-import 'package:server_box/data/provider/server/cf/cf_servers_provider.dart';
-import 'package:server_box/data/res/store.dart';
-import 'package:server_box/data/store/setting.dart';
-import 'package:server_box/generated/l10n/l10n.dart';
-import 'package:server_box/generated/l10n/l10n_zh.dart';
-import 'package:server_box/view/page/server/cf_detail/charts.dart';
-import 'package:server_box/view/page/server/cf_detail/view.dart';
+import 'package:nodepulse/core/extension/context/locale.dart';
+import 'package:nodepulse/data/model/cf/cf_history.dart';
+import 'package:nodepulse/data/model/cf/cf_server.dart';
+import 'package:nodepulse/data/provider/server/cf/cf_servers_provider.dart';
+import 'package:nodepulse/data/res/store.dart';
+import 'package:nodepulse/data/store/setting.dart';
+import 'package:nodepulse/generated/l10n/l10n.dart';
+import 'package:nodepulse/generated/l10n/l10n_zh.dart';
+import 'package:nodepulse/view/page/server/cf_detail/charts.dart';
+import 'package:nodepulse/view/page/server/cf_detail/view.dart';
 
 import '../helpers/test_db.dart';
 

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:server_box/core/service/theme_host.dart';
+import 'package:nodepulse/core/service/theme_host.dart';
 
 /// Runs before every test file.
 ///

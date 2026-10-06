@@ -1,6 +1,6 @@
 import 'dart:collection';
 
-import 'package:server_box/core/extension/context/locale.dart';
+import 'package:nodepulse/core/extension/context/locale.dart';
 
 /// One heading in a rail and the entries under it.
 ///

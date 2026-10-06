@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/data/model/cf/cf_history.dart';
-import 'package:server_box/view/page/server/cf_detail/charts.dart';
+import 'package:nodepulse/data/model/cf/cf_history.dart';
+import 'package:nodepulse/view/page/server/cf_detail/charts.dart';
 
 void main() {
   group('CfHistoryRange', () {

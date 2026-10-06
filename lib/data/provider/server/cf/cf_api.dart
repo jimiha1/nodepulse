@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
-import 'package:server_box/core/utils/doh.dart';
-import 'package:server_box/core/utils/secure_endpoint.dart';
-import 'package:server_box/data/model/cf/cf_history.dart';
-import 'package:server_box/data/model/cf/cf_server.dart';
+import 'package:nodepulse/core/utils/doh.dart';
+import 'package:nodepulse/core/utils/secure_endpoint.dart';
+import 'package:nodepulse/data/model/cf/cf_history.dart';
+import 'package:nodepulse/data/model/cf/cf_server.dart';
 
 /// Talks to one CF-Server-Monitor site
 /// (https://github.com/huilang-me/CF-Server-Monitor, API.md is the contract).

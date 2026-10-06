@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:fixnum/fixnum.dart';
-import 'package:server_box/src/proto/tombstone.pb.dart' as pb;
+import 'package:nodepulse/src/proto/tombstone.pb.dart' as pb;
 
 /// Reads the tombstone Android writes when a process dies of a native crash.
 ///

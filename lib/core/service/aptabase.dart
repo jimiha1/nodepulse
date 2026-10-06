@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:aptabase_flutter/aptabase_flutter.dart';
 import 'package:fl_lib/fl_lib.dart';
-import 'package:server_box/core/service/diagnostics_upload.dart';
+import 'package:nodepulse/core/service/diagnostics_upload.dart';
 
 /// Counts what the app is used for, at `full` only.
 ///

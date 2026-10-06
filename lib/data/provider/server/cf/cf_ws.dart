@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:fl_lib/fl_lib.dart';
-import 'package:server_box/core/utils/doh.dart';
+import 'package:nodepulse/core/utils/doh.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 

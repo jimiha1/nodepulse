@@ -2,9 +2,9 @@ import 'dart:ui';
 
 import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/core/color/oklch.dart';
-import 'package:server_box/data/res/chart_palette.dart';
-import 'package:server_box/data/res/chart_series.dart';
+import 'package:nodepulse/core/color/oklch.dart';
+import 'package:nodepulse/data/res/chart_palette.dart';
+import 'package:nodepulse/data/res/chart_series.dart';
 
 /// The chart palette, against the values the design published.
 ///

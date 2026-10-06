@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:server_box/view/widget/built_from.dart';
+import 'package:nodepulse/view/widget/built_from.dart';
 
 /// A subtree that is built again only when what it says has changed.
 ///

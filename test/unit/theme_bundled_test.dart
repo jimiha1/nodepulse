@@ -8,9 +8,9 @@ import 'package:archive/archive.dart';
 import 'package:fl_lib/theme.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/core/service/theme_host.dart';
-import 'package:server_box/data/res/store.dart';
-import 'package:server_box/data/store/setting.dart';
+import 'package:nodepulse/core/service/theme_host.dart';
+import 'package:nodepulse/data/res/store.dart';
+import 'package:nodepulse/data/store/setting.dart';
 
 import '../helpers/test_db.dart';
 

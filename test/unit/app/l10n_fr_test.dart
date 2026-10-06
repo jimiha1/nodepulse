@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/generated/l10n/l10n_fr.dart';
+import 'package:nodepulse/generated/l10n/l10n_fr.dart';
 
 void main() {
   test('French process count uses the singular only for one', () {

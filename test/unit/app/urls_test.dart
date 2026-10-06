@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/data/res/url.dart';
+import 'package:nodepulse/data/res/url.dart';
 
 /// The update check and the crash-report link both read this fork's own
 /// repository. An upstream merge that restores the original owner would

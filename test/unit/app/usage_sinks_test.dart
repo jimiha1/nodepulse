@@ -1,8 +1,8 @@
 import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/core/service/aptabase.dart';
-import 'package:server_box/core/service/openpanel.dart';
-import 'package:server_box/data/model/app/diagnostics_level.dart';
+import 'package:nodepulse/core/service/aptabase.dart';
+import 'package:nodepulse/core/service/openpanel.dart';
+import 'package:nodepulse/data/model/app/diagnostics_level.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// What this sends is a privacy claim, and every failure here is silent: an

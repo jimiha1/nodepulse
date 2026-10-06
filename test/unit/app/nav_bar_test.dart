@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:server_box/view/widget/nav_bar.dart';
-import 'package:server_box/view/widget/nav_rail.dart';
+import 'package:nodepulse/view/widget/nav_bar.dart';
+import 'package:nodepulse/view/widget/nav_rail.dart';
 
 NavRailItem _item(String label) => NavRailItem(
   icon: const Icon(Icons.circle_outlined),

@@ -14,7 +14,7 @@ library;
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/data/model/server/dist.dart';
+import 'package:nodepulse/data/model/server/dist.dart';
 
 /// Read off disk: a test binary has no asset bundle, and the point is what is
 /// in the directory rather than what the manifest says about it.

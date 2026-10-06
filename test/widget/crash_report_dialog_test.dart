@@ -1,9 +1,9 @@
 import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:server_box/core/extension/context/locale.dart';
-import 'package:server_box/generated/l10n/l10n.dart';
-import 'package:server_box/view/widget/crash_report_dialog.dart';
+import 'package:nodepulse/core/extension/context/locale.dart';
+import 'package:nodepulse/generated/l10n/l10n.dart';
+import 'package:nodepulse/view/widget/crash_report_dialog.dart';
 
 /// The report is reached from a settings page now rather than from a toast, and
 /// that move is what these are about.

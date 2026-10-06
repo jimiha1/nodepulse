@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/core/utils/private_address.dart';
+import 'package:nodepulse/core/utils/private_address.dart';
 
 /// The gate in front of every geo lookup.
 ///

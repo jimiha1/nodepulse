@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:server_box/data/model/app/error.dart';
+import 'package:nodepulse/data/model/app/error.dart';
 
 /// Whether an error is a defect in this app, or the network's or the user's
 /// account's doing: a host that does not answer, credentials it refuses.

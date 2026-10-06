@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:server_box/data/model/cf/cf_server.dart';
-import 'package:server_box/data/provider/server/cf/cf_ws.dart';
+import 'package:nodepulse/data/model/cf/cf_server.dart';
+import 'package:nodepulse/data/provider/server/cf/cf_ws.dart';
 import 'package:stream_channel/stream_channel.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 

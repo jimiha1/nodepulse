@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:server_box/view/widget/progress_line.dart';
+import 'package:nodepulse/view/widget/progress_line.dart';
 
 /// Two states, one picture: the bar fills from the same edge whether or not
 /// the length is known, so a download that stops reporting a fraction does not

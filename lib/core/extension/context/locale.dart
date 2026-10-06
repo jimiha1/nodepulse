@@ -1,7 +1,7 @@
 import 'package:fl_lib/generated/l10n/lib_l10n.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:server_box/generated/l10n/l10n.dart';
-import 'package:server_box/generated/l10n/l10n_en.dart';
+import 'package:nodepulse/generated/l10n/l10n.dart';
+import 'package:nodepulse/generated/l10n/l10n_en.dart';
 
 AppLocalizations l10n = AppLocalizationsEn();
 

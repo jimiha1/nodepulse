@@ -3,9 +3,9 @@ import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:server_box/core/utils/logo_url.dart';
-import 'package:server_box/data/model/server/dist.dart';
-import 'package:server_box/data/res/store.dart';
+import 'package:nodepulse/core/utils/logo_url.dart';
+import 'package:nodepulse/data/model/server/dist.dart';
+import 'package:nodepulse/data/res/store.dart';
 
 String? distMarkUrl({required Dist? dist, required bool dark}) {
   final configured = Stores.setting.serverMarkUrl.fetch();

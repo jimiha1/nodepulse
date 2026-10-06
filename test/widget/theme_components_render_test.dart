@@ -2,7 +2,7 @@ import 'package:fl_lib/fl_lib.dart';
 import 'package:fl_lib/theme.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:server_box/view/widget/nav_rail.dart';
+import 'package:nodepulse/view/widget/nav_rail.dart';
 
 void main() {
   testWidgets('shared widgets render component colors, borders and spacing', (
