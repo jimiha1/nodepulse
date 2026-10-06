@@ -185,7 +185,6 @@ flutter_native_splash:
     - "ios/Runner/Info-Debug.plist"
     - "ios/Runner/Info-Profile.plist"
     - "ios/Runner/Info-Release.plist"
-  android12: true
 
 # What `fl_build` names the artifacts it produces, and the `BuildData.name` it
 # generates — which is the name the app itself draws. Here rather than in an
