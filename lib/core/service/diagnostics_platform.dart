@@ -83,8 +83,9 @@ abstract final class DiagnosticsPlatform {
   /// which means a client sending dio's default `Dart/3.x (dart:io)` reports
   /// events and zero users — data that looks like a consent bug and is not
   /// one. The `Mozilla/5.0 (...)` prefix is what the parser needs to find the
-  /// platform; the `ServerBox/<build>` suffix is what says this is not a
-  /// browser, and both halves are read.
+  /// platform; the `<app>/<build>` suffix — `BuildData.name`, so whatever this
+  /// app is currently called — is what says this is not a browser, and both
+  /// halves are read.
   ///
   /// **The same boundary as the rest of this file**: a token here names the
   /// hardware and the OS release and nothing that identifies a person or an
