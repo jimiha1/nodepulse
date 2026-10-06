@@ -254,7 +254,6 @@ class _HomePageState extends ConsumerState<HomePage>
         AppUpdateIface.doUpdate(
           build: BuildData.build,
           githubReleasesUrl: Urls.githubReleasesApi,
-          storeUrl: Urls.appStore,
           context: context,
         ),
       );

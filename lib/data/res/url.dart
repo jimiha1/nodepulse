@@ -17,7 +17,6 @@ abstract final class Urls {
   /// `assets/catalog/repos.toml` is what a first run with no network uses.
   static const themeCatalog = '$rawRepo/assets/catalog/repos.toml';
   static const githubReleasesApi = '$githubApi/cf_server_box/releases';
-  static const appStore = 'https://apps.apple.com/app/id1586449703';
 
   /// Where a crash report goes.
   ///

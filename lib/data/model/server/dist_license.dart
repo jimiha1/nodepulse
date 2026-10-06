@@ -1,19 +1,15 @@
 import 'package:flutter/foundation.dart';
 
-/// Puts the shipped marks' terms where the person running the app can read
-/// them: Settings → About → License, which is Flutter's `showLicensePage` over
-/// [LicenseRegistry].
+/// Puts the shipped marks' terms where [LicenseRegistry] collects them.
 ///
-/// Three of the four are under a Creative Commons licence — Alpine's mark is
-/// simple enough that no copyright subsists in it — and every one of those
-/// asks for credit "in any reasonable manner based on the medium, means, and
-/// context". For an application that is the licence screen it already has.
-/// `LicenseRegistry` collects each package's LICENSE file and nothing else, so
-/// an asset is invisible to it until something registers one.
-///
-/// `assets/distro/README.md` carries the same notices and the reasoning; it
-/// ships inside the bundle, because the whole directory is declared as an
-/// asset, but nothing renders it — a notice nobody can reach is not one.
+/// This build no longer opens Flutter's `showLicensePage` from anywhere, so
+/// these entries are not currently rendered. The registration is kept because
+/// the notices still ship — `assets/distro/README.md` carries the same text —
+/// and because dropping it would make the bundle's contents and its terms
+/// diverge. Three of the four are under a Creative Commons licence — Alpine's
+/// mark is simple enough that no copyright subsists in it — and every one of
+/// those asks for credit "in any reasonable manner based on the medium,
+/// means, and context".
 void registerDistMarkLicenses() {
   LicenseRegistry.addLicense(() async* {
     yield const LicenseEntryWithLineBreaks([_package], _preamble);
