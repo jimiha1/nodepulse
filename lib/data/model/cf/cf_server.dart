@@ -343,6 +343,23 @@ class CfServersSnapshot {
     required this.showPrice,
   });
 
+  /// A site with nothing to show yet: no nodes, and every counter at zero.
+  ///
+  /// What [CfServers] answers with while no site is configured, so the page
+  /// has a state to render without a request going out at a blank address —
+  /// see `cf_servers_provider.dart`.
+  static const empty = CfServersSnapshot(
+    servers: [],
+    total: 0,
+    online: 0,
+    globalSpeedIn: 0,
+    globalSpeedOut: 0,
+    globalNetRx: 0,
+    globalNetTx: 0,
+    showExpire: false,
+    showPrice: false,
+  );
+
   static CfServersSnapshot fromJson(Map<String, dynamic> j) {
     final stats = _map(j['stats']);
     final sys = _map(j['sysConfig']);

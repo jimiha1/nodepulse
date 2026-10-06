@@ -5466,6 +5466,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cfOpenSettings => 'Open settings';
 
   @override
+  String get cfNoSite => 'No monitor site yet';
+
+  @override
+  String get cfNoSiteTip =>
+      'Add the address of your CF-Server-Monitor site to see its nodes here.';
+
+  @override
   String get cfOverviewOnline => 'Online';
 
   @override

@@ -9243,6 +9243,18 @@ abstract class AppLocalizations {
   /// **'Open settings'**
   String get cfOpenSettings;
 
+  /// Shown on the CF home page when the app has never been pointed at a CF-Server-Monitor site, so the page has no error to report and only needs to say where to set one.
+  ///
+  /// In en, this message translates to:
+  /// **'No monitor site yet'**
+  String get cfNoSite;
+
+  /// Second line under cfNoSite, naming what the settings entry is for.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the address of your CF-Server-Monitor site to see its nodes here.'**
+  String get cfNoSiteTip;
+
   /// Label of the CF home overview's online-count cell.
   ///
   /// In en, this message translates to:

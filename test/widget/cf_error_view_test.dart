@@ -119,4 +119,44 @@ void main() {
     // entry is the page this whole change exists to make reachable.
     expect(find.text('CF 监控站点'), findsWidgets);
   });
+
+  /// The other state the page can be in with nothing to show: no site has been
+  /// configured, so nothing failed and there is no error to render. It has to
+  /// say where a site goes rather than present the empty-fleet message, which
+  /// would read as "your site has no nodes".
+  Future<void> pumpNoSite(WidgetTester tester) => tester.pumpWidget(
+    MaterialApp(
+      localizationsDelegates: appLocalizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: const Locale('zh'),
+      home: Builder(
+        builder: (ctx) {
+          ctx.setLibL10n();
+          l10n = AppLocalizationsZh();
+          return const Scaffold(body: CfNoSiteView());
+        },
+      ),
+    ),
+  );
+
+  testWidgets('no site configured says where to set one, not an error', (
+    tester,
+  ) async {
+    await pumpNoSite(tester);
+
+    expect(find.text('还没有监控站点'), findsOneWidget);
+    expect(find.text('打开设置'), findsOneWidget);
+    // Not the error view: nothing failed, and a retry button would be asking
+    // the user to repeat a request that was never made.
+    expect(find.text('重试'), findsNothing);
+  });
+
+  testWidgets('no site configured still reaches the settings', (tester) async {
+    await pumpNoSite(tester);
+
+    await tester.tap(find.text('打开设置'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('CF 监控站点'), findsWidgets);
+  });
 }

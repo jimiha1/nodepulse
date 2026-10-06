@@ -54,7 +54,13 @@ class _CfHomePageState extends ConsumerState<CfHomePage> {
       body: async.when(
         loading: () => UIs.centerLoading,
         error: (e, s) => _error(e),
-        data: (snap) => _list(context, snap),
+        // A site that has never been configured is not a site with no nodes:
+        // there is nothing to retry and no counters worth drawing at zero, and
+        // the one thing the page can usefully say is where to enter one. The
+        // provider answers `empty` rather than failing in this case — see
+        // [CfServers.build].
+        data: (snap) =>
+            hasCfSite() ? _list(context, snap) : const CfNoSiteView(),
       ),
     );
   }
@@ -168,6 +174,46 @@ class _CfHomePageState extends ConsumerState<CfHomePage> {
     thickness: Hairline.thickness,
     color: Hairline.color(context),
   );
+}
+
+/// What the CF page shows before it has ever been pointed at a site.
+///
+/// Distinct from [CfErrorView] because nothing failed: no address has been
+/// entered, so there is no poll to retry and no error to explain. The page's
+/// one job is to say where a site is set, which is the same settings page the
+/// error view opens — the overview card's long press, the app's usual way in,
+/// is not built here either, so the button is again the only way through.
+class CfNoSiteView extends StatelessWidget {
+  const CfNoSiteView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.dns_outlined, size: 43, color: Colors.grey),
+          const SizedBox(height: 13),
+          Text(l10n.cfNoSite, style: UIs.text15Bold),
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25),
+            child: Text(
+              l10n.cfNoSiteTip,
+              textAlign: TextAlign.center,
+              style: UIs.text13Grey,
+            ),
+          ),
+          const SizedBox(height: 13),
+          FilledButton.tonalIcon(
+            onPressed: () => SettingsPage.route.go(context),
+            icon: const Icon(Icons.settings_outlined),
+            label: Text(l10n.cfOpenSettings),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// What the CF page shows when a poll failed.

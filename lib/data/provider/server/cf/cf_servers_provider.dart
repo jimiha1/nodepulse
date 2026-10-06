@@ -78,6 +78,14 @@ Future<void> _restore(CfApi api, CfCredentials credentials) async {
   }
 }
 
+/// Whether a CF-Server-Monitor site is configured to read.
+///
+/// The one place this question is answered, so the provider that decides
+/// whether to poll and the page that decides what to draw cannot disagree
+/// about it. Trimmed, because the settings store what was typed and a site
+/// address of spaces is no address.
+bool hasCfSite() => Stores.setting.cfSiteUrl.fetch().trim().isNotEmpty;
+
 /// The node list of the CF site, polled; the state the CF pages read.
 @Riverpod(keepAlive: true)
 class CfServers extends _$CfServers {
@@ -97,6 +105,19 @@ class CfServers extends _$CfServers {
       _stopWs();
     });
     final api = ref.watch(cfApiProvider);
+    // Nobody has configured a site yet: answer with nothing rather than send a
+    // request to a blank address. That request fails in milliseconds — Dio
+    // refuses a URI with no host — but Riverpod's default retry then holds
+    // this provider in `loading` for ten attempts of exponential backoff,
+    // some 38 seconds, before the failure surfaces. On a first launch that is
+    // the whole first impression: a spinner, then an error page.
+    //
+    // `cfApiProvider` above is watched on purpose even on this path, so the
+    // dependency that rebuilds on a changed address exists here too: setting a
+    // site in the settings turns this state into the real fetch.
+    if (!hasCfSite()) {
+      return CfServersSnapshot.empty;
+    }
     // A private site's restore login starts the moment the API exists, and
     // this first fetch is the read it must not race — see [CfApi.ready].
     await api.ready;
@@ -110,7 +131,16 @@ class CfServers extends _$CfServers {
   /// Pulls once, now. A failure is state, not an exception: the poll also
   /// runs on a timer nobody is awaiting, and an error a reader can render is
   /// worth more than a log line.
+  ///
+  /// With no site configured there is nothing to ask and no error worth
+  /// showing: the state is left at [CfServersSnapshot.empty]. The poll's timer
+  /// keeps ticking regardless — this returns before any request — so a site
+  /// entered later starts being read without waiting for the next resume.
   Future<void> refresh() async {
+    if (!hasCfSite()) {
+      if (ref.mounted) state = const AsyncValue.data(CfServersSnapshot.empty);
+      return;
+    }
     final api = ref.read(cfApiProvider);
     await api.ready;
     final snapshot = await AsyncValue.guard(api.fetchServers);

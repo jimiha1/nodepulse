@@ -53,6 +53,11 @@ void main() {
   setUp(() async {
     SqliteDb.openInMemory();
     await Stores.init();
+    // Every test here is about a site that *is* configured: what the provider
+    // does with it is the subject. Without one the provider answers `empty`
+    // and sends nothing — see [hasCfSite] — which is a different behaviour and
+    // has its own test below.
+    Stores.setting.cfSiteUrl.put('https://status.example.com');
   });
 
   tearDown(() async {
@@ -135,5 +140,70 @@ void main() {
 
     await container.read(cfServersProvider.future);
     expect(container.read(cfServersProvider).value?.servers.single.name, 'n2');
+  });
+
+  group('no site configured', () {
+    setUp(() => Stores.setting.cfSiteUrl.put(''));
+
+    test('build answers empty without asking the api at all', () async {
+      final api = _FakeCfApi()..snapshot = _snapshotOf(_serversRaw);
+      final container = ProviderContainer(
+        overrides: [cfApiProvider.overrideWith((ref) => api)],
+      );
+      addTearDown(container.dispose);
+
+      final snap = await container.read(cfServersProvider.future);
+
+      // The point is the missing request, not the empty list: an address that
+      // is not configured used to be requested anyway, and the failure that
+      // came back was retried by Riverpod into a ~38-second spinner.
+      expect(api.fetches, 0);
+      expect(snap.servers, isEmpty);
+      expect(container.read(cfServersProvider).hasError, isFalse);
+    });
+
+    test('refresh stays empty rather than surfacing an error', () async {
+      final api = _FakeCfApi()
+        ..snapshot = _snapshotOf(_serversRaw)
+        ..error = const CfApiException(message: 'should not be reached');
+      final container = ProviderContainer(
+        overrides: [cfApiProvider.overrideWith((ref) => api)],
+      );
+      addTearDown(container.dispose);
+
+      await container.read(cfServersProvider.future);
+      await container.read(cfServersProvider.notifier).refresh();
+
+      final state = container.read(cfServersProvider);
+      expect(api.fetches, 0);
+      expect(state.hasError, isFalse);
+      expect(state.value?.servers, isEmpty);
+    });
+
+    test('configuring a site afterwards makes the next poll read it', () async {
+      final api = _FakeCfApi()..snapshot = _snapshotOf(_serversRaw);
+      final container = ProviderContainer(
+        overrides: [cfApiProvider.overrideWith((ref) => api)],
+      );
+      addTearDown(container.dispose);
+
+      expect((await container.read(cfServersProvider.future)).servers, isEmpty);
+      expect(api.fetches, 0);
+
+      // What the settings page writes when an address is entered.
+      Stores.setting.cfSiteUrl.put('https://status.example.com');
+
+      // Coming back to the home page runs this — the resume path and the
+      // auto-refresh timer both do. It is also the state's own guard being
+      // re-read: the site is configured now, so the request goes out where it
+      // was skipped a moment ago.
+      await container.read(cfServersProvider.notifier).refresh();
+
+      expect(api.fetches, greaterThanOrEqualTo(1));
+      expect(
+        container.read(cfServersProvider).value?.servers.single.name,
+        'n1',
+      );
+    });
   });
 }

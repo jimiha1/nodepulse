@@ -5054,6 +5054,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cfOpenSettings => '打开设置';
 
   @override
+  String get cfNoSite => '还没有监控站点';
+
+  @override
+  String get cfNoSiteTip => '填写你的 CF-Server-Monitor 站点地址，这里就会显示节点。';
+
+  @override
   String get cfOverviewOnline => '在线';
 
   @override

@@ -7016,6 +7016,14 @@
   "@cfOpenSettings": {
     "description": "Button on the CF home page's error state, which otherwise has no way into the settings."
   },
+  "cfNoSite": "No monitor site yet",
+  "@cfNoSite": {
+    "description": "Shown on the CF home page when the app has never been pointed at a CF-Server-Monitor site, so the page has no error to report and only needs to say where to set one."
+  },
+  "cfNoSiteTip": "Add the address of your CF-Server-Monitor site to see its nodes here.",
+  "@cfNoSiteTip": {
+    "description": "Second line under cfNoSite, naming what the settings entry is for."
+  },
   "cfOverviewOnline": "Online",
   "@cfOverviewOnline": {
     "description": "Label of the CF home overview's online-count cell."

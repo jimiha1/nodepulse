@@ -1518,6 +1518,8 @@
   "cfTestFail": "连接失败",
   "cfNeedLogin": "该站点需要登录",
   "cfOpenSettings": "打开设置",
+  "cfNoSite": "还没有监控站点",
+  "cfNoSiteTip": "填写你的 CF-Server-Monitor 站点地址，这里就会显示节点。",
   "cfOverviewOnline": "在线",
   "cfOverviewBandwidth": "总带宽",
   "cfLoad": "负载",
