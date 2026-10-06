@@ -22,7 +22,7 @@
 | applicationId / namespace | `app.nodepulse` |
 | Kotlin 包路径 | `tech.lolli.toolbox` → `app.nodepulse` |
 | Dart 包名 | `server_box` → `nodepulse` |
-| 版本号 | 重置 `1.0.0+1` |
+| 版本号 | **不重置**，对齐为 `1.0.1799+1799`（见 §4.5） |
 | GitHub 仓库名 | `cf_server_box` → `nodepulse` |
 
 **选择「彻底换包名」的既定代价**：新包名在系统里是一个不同的应用。旧安装不能覆盖升级，站点配置、登录凭据、告警规则、已添加的桌面小组件都不会跟过来，需要重新配置。这是本设计接受的取舍，不是缺陷。
@@ -98,10 +98,23 @@
 
 - deeplink scheme：`serverbox` → `nodepulse`（Dart `AppLink.scheme`、Kotlin `LINK_SCHEME`、Manifest `<data android:scheme>`）
 - UA：`ServerBox-Alert/1` → `NodePulse-Alert/1`（2 处）、`ServerBox-Widget/2` → `NodePulse-Widget/2`、`ServerBox-DoH/1` → `NodePulse-DoH/1`
-- 版本号：`version: 1.0.1719+1719` → `1.0.0+1`；`BuildData.build` 随之重新生成
 - README 标题
 - CI 注释（3 处，非功能）
 - GitHub 仓库改名（`gh repo rename`，GitHub 自动重定向旧地址）；本地 remote URL 跟着更新
+
+#### 版本号：不重置，对齐提交数
+
+**这一条推翻了本设计初稿的决定，理由是初稿基于错误前提。** 初稿打算重置为 `1.0.0+1`，前提是版本号由 pubspec 决定。实际不是：
+
+- `BuildData.build` 由 `fl_build` 从 **git 提交数**生成（`git rev-list --count HEAD`，见 `packages/fl_build/lib/utils.dart` 的 `_commitCount`），不是 pubspec 的 version。当前提交数 1799，而 `build_data.dart` 里还是 1719 —— 那个值已经过期。
+- `.github/workflows/build.yml` 有一条硬校验：`GITHUB_REF_NAME` 必须等于 `v1.0.${build_data}`，且 `pubspec` 的 version 必须等于 `1.0.${build_data}+${build_data}`。三者严格绑定，CI 发布时不一致即失败。
+- `AppUpdate` 用 `newest > BuildData.build` 判断是否有新版。build 号若倒退回 1，任何旧版本号都会大于它，更新检查将永远误报。
+
+所以 build 号**无法人为重置**（它由仓库的提交数实时决定），强行重置还会破坏 CI 与更新检查。
+
+**决定**：pubspec 的 `version:` 对齐为 `1.0.1799+1799`，与 `BuildData.build` 和未来的 tag 一致；不改 CI、不改 fl_build。构建号继续随提交数单调递增。用户看到的是应用名与图标，不是这个数字。
+
+`lib/data/res/build_data.dart` 是生成物（`fl_build` 写出），按仓库约定不手改 —— 本次由 `dart run fl_build` 重新生成，`name` 字段随之变成 `NodePulse`。
 
 ### 4.6 明确不做
 
@@ -120,7 +133,7 @@
 2. **显示名与文案** —— `appName`、`app_name`、15 个语言的 strings、2 个 ARB 键
 3. **包名与目录迁移** —— Gradle、目录移动、27 个 Kotlin 文件、Manifest、widget xml
 4. **Dart 包名** —— `pubspec.yaml` + 104 个文件 + 重跑生成
-5. **scheme / UA / 版本号 / README / 仓库改名**
+5. **scheme / UA / 版本对齐 / README / 仓库改名**
 6. **全量验证与真机**
 
 ## 6. 验证
@@ -144,5 +157,6 @@
 | Kotlin 包迁移遗漏导致编译失败 | 任务 3 的验证必须是 `flutter build apk`，不能只看 analyze |
 | 104 个文件的 import 替换出错 | 机械替换 + `flutter analyze` 全量校验 + 单测 |
 | 换包名后旧用户数据丢失 | 已确认接受（§2）；文档与提交信息中如实说明 |
+| 版本号未重置，看起来像继承自旧项目 | 已确认接受（§4.5）；它是内部构建号，用户看到的是应用名与图标 |
 | 图标在圆形遮罩下被裁 | 已在 `color.html` 中验证安全区，脚本按同一几何生成 |
 | 生成脚本手写 PNG 编码出错 | 输出后用 Flutter 实际加载验证（真机截图） |
