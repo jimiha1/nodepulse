@@ -36,12 +36,15 @@ void initThemeHost() => ThemeHost.init(
         ('nav.sort', Icons.sort),
         ('nav.settings', Icons.settings_outlined),
       ],
-      tabs: [
-        ('server', Icons.dns_outlined),
-        ('ssh', Icons.terminal),
-        ('file', Icons.folder_outlined),
-        ('agent', Icons.auto_awesome_outlined),
-      ],
+      // The bar a store preview draws is the app's own, and this app has one
+      // tab. It listed four — the terminal, file and agent tabs the trim
+      // removed — so a preview showed a bar this build can never draw, and
+      // asked theme packages for `tab.ssh`/`tab.file`/`tab.agent` icons that
+      // no screen here would ever use.
+      //
+      // One entry draws no bar at all (the preview wants more than one), which
+      // is the honest picture: the app opens straight onto the node list.
+      tabs: [('server', Icons.dns_outlined)],
     ),
   ),
 );
