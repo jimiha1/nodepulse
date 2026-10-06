@@ -506,21 +506,32 @@ Expected: `clean`.
 
 - [ ] **Step 3: Align the version with the build number**
 
-`fl_build` derives `BuildData.build` from the git commit count and has a function that writes the matching pubspec version. Use it rather than editing by hand — it is the same code the release flow runs:
+`fl_build` derives `BuildData.build` from the git commit count, with one wrinkle: `_commitCount` (`packages/fl_build/lib/utils.dart:19`) returns **count + 1** unless HEAD's *committed* `build` already equals its own count — because the release flow creates the version bump as the next commit, so a pre-bump HEAD is one behind.
+
+That means the value you want is the **commit count as it will be after this task's commit**, i.e. `count + 1` measured before committing. Write that, and the resulting commit becomes a fixed point: `_commitCount` returns exactly it, `changePubVersion()` no-ops, and CI's `v1.0.<build>` tag check validates.
 
 ```bash
 cd /d/flutter_server_box
-count=$(git rev-list --count HEAD)
-echo "commit count: $count"
+count=$(( $(git rev-list --count HEAD) + 1 ))
+echo "build number for this commit: $count"
 sed -i "s/^version: .*/version: 1.0.${count}+${count}/" pubspec.yaml
 grep -n "^version:" pubspec.yaml
 ```
 
-Expected: `version: 1.0.<count>+<count>` with `<count>` equal to the number printed.
+Then **commit this task, and re-check afterwards** that the committed `build` equals the new commit count:
+
+```bash
+git rev-list --count HEAD
+git show HEAD:lib/data/res/build_data.dart | grep "build ="
+```
+
+The two numbers must be **equal**. If the committed build is one less than the count, `fl_build` will compute count+1 on the next run and rewrite the pubspec, and CI will fail its tag/pubspec agreement check against the tag implied by the committed build.
 
 Do **not** reset this to `1.0.0+1`: `AppUpdate` compares build numbers numerically, so a build number below the previous release would make every installed copy consider itself newer than the published one, and CI's tag check (`GITHUB_REF_NAME` must equal `v1.0.${build_data}`) would fail.
 
-(`fl_build`'s own `changePubVersion()` writes exactly this string — `1.0.$_commitCount+$_commitCount`. The sed above reproduces it without starting a build.)
+(`fl_build`'s own `changePubVersion()` writes exactly `1.0.$_commitCount+$_commitCount`. The sed above reproduces its result without starting a build.)
+
+**A note for the eventual release:** this task's commit is a rebrand, not a release-bump commit. Tagging it directly is fine *because* it is a fixed point (count == committed build). A later release that adds new commits on top will need its own bump commit before tagging, as the repo's release flow already does.
 
 - [ ] **Step 4: Regenerate `BuildData` so the new name lands**
 
