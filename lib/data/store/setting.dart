@@ -6,11 +6,6 @@ import 'package:nodepulse/data/model/app/diagnostics_level.dart';
 import 'package:nodepulse/data/model/app/motion.dart';
 import 'package:nodepulse/data/model/app/tab.dart';
 import 'package:nodepulse/data/model/cf/cf_resource_alert.dart';
-import 'package:nodepulse/data/res/default.dart';
-import 'package:nodepulse/data/store/field_prop.dart';
-
-List<String> _virtKeyNames(Object? raw) =>
-    raw is List ? raw.whereType<String>().toList() : const [];
 
 class SettingStore extends SqliteStore with ThemeSettings {
   SettingStore([super.storeName = 'setting']);
@@ -20,18 +15,10 @@ class SettingStore extends SqliteStore with ThemeSettings {
   /// Timeout for server connections and related operations.
   late final timeout = propertyDefault('timeOut', 5);
 
-  /// Whether to remember previously opened SFTP paths.
-  late final recordHistory = propertyDefault('recordHistory', true);
-
   /// UI scale factor. `1.0` means 100%.
   ///
   /// Large values may cause layout issues.
   late final textFactor = propertyDefault('textFactor', 1.0);
-
-  late final serverStatusUpdateInterval = propertyDefault(
-    'serverStatusUpdateInterval',
-    Defaults.updateInterval,
-  );
 
   /// The CF-Server-Monitor site the CF pages read, see
   /// `lib/data/provider/server/cf/`. Empty means none is configured.
@@ -73,9 +60,6 @@ class SettingStore extends SqliteStore with ThemeSettings {
     toObj: CfResourceAlertRule.toObjList,
   );
 
-  // Maximum number of server connection retries.
-  late final maxRetryCount = propertyDefault('maxRetryCount', 2);
-
   /// Whether the app moves less than it would, over what the device asks —
   /// see [MotionPref]. Full motion unless the user turns it down here: the
   /// app's own transitions are its design, whatever the device asks.
@@ -92,117 +76,12 @@ class SettingStore extends SqliteStore with ThemeSettings {
   // Whether the app may continue running in the background on Android.
   late final bgRun = propertyDefault('bgRun', isAndroid);
 
-  /// Whether closing the desktop window leaves the app running in the tray.
-  ///
-  /// On by default, because it is what makes the status icon worth having: an
-  /// icon that goes away with the window says nothing at the moment anybody
-  /// would look at it. Off restores what every desktop build did before —
-  /// closing the window ends the app.
-  late final trayKeepRunning = propertyDefault('trayKeepRunning', isDesktop);
-
-  late final trayMetrics = listProperty<String>(
-    'trayMetrics',
-    defaultValue: ['cpu', 'mem'],
-  );
-
-  late final trayChart = propertyDefault('trayChart', 'cpu');
-
-  late final trayCompact = propertyDefault('trayCompact', false);
-
-  // Server order
-  late final serverOrder = listProperty<String>('serverOrder');
-
-  late final snippetOrder = listProperty<String>('snippetOrder');
-
-  // Disabled detail cards (for persistence when toggling visibility)
-  late final detailCardDisabled = listProperty<String>('detailCardDisabled');
-
-  /// Virtual keys the user has hidden, by [VirtKey.name] — see [sshVirtKeys]
-  /// for why not by index.
-  late final sshVirtKeysDisabled = listProperty<String>(
-    'sshVirtKeysDisabled',
-    fromObj: _virtKeyNames,
-  );
-
-  // SSH term font size
-  late final termFontSize = propertyDefault('termFontSize', 13.0);
-
   // Locale
   late final locale = propertyDefault('locale', '');
-
-  // SSH virtual key (ctrl | alt) auto turn off
-  late final sshVirtualKeyAutoOff = propertyDefault(
-    'sshVirtualKeyAutoOff',
-    true,
-  );
-
-  late final editorFontSize = propertyDefault('editorFontSize', 12.5);
-
-  late final editorFontFamily = propertyDefault('editorFontFamily', '');
-
-  /// Trusted SSH host key fingerprints keyed by `serverId::keyType`.
-  late final sshKnownHostFingerprints = propertyDefault<Map<String, String>>(
-    'sshKnownHostFingerprints',
-    const {},
-    fromObj: (raw) {
-      if (raw is Map) {
-        return raw.map(
-          (key, value) => MapEntry(key.toString(), value.toString()),
-        );
-      }
-      return <String, String>{};
-    },
-  );
-
-  /// Which profile a terminal opens in, by `LinuxProfile.id`.
-  ///
-  /// Empty until something is chosen; the platform layer reads that as "the
-  /// first one installed". A profile and not a distribution, because two of the
-  /// same distribution can be installed side by side.
-  late final linuxProfile = propertyDefault('linuxProfile', '');
-
-  late final linuxDistro = propertyDefault(
-    'linuxDistro',
-    'alpine',
-  );
-
-  late final linuxMirrors = propertyDefault<Map<String, String>>(
-    'linuxMirrors',
-    const {},
-    fromObj: (raw) {
-      if (raw is Map) {
-        return raw.map(
-          (key, value) => MapEntry(key.toString(), value.toString()),
-        );
-      }
-      return <String, String>{};
-    },
-  );
-
-  /// The resolvers written into the guest's `/etc/resolv.conf`.
-  ///
-  /// Not per distribution: this is the network the device is on. Read through
-  /// `linuxNameservers()`, which is also what decides what counts as an address
-  /// in it.
-  late final linuxDns = propertyDefault('linuxDns', Defaults.linuxDns);
-
-  // Editor theme
-  late final editorTheme = propertyDefault('editorTheme', Defaults.editorTheme);
-
-  late final editorDarkTheme = propertyDefault(
-    'editorDarkTheme',
-    Defaults.editorDarkTheme,
-  );
 
   late final fullScreen = propertyDefault('fullScreen', false);
 
   late final fullScreenJitter = propertyDefault('fullScreenJitter', true);
-
-  late final sshVirtKeys = listProperty<String>(
-    'sshVirtKeys',
-    defaultValue: const [],
-    fromObj: _virtKeyNames,
-  );
 
   // Only valid on iOS
   late final autoUpdateHomeWidget = propertyDefault(
@@ -223,77 +102,6 @@ class SettingStore extends SqliteStore with ThemeSettings {
   /// before Dart has pushed anything — so a change here has to go through
   /// [MethodChans.setPrivacyBlur], and every launch re-pushes.
   late final privacyBlur = propertyDefault('privacyBlur', false);
-
-  /// Whether this app may put a Live Activity on the lock screen at all.
-  ///
-  /// iOS only, and one switch for every kind rather than one per kind: the user
-  /// question is whether this app appears on the lock screen, not which of its
-  /// features does. What is behind it today is the terminal session activity;
-  /// the monitor status one will sit behind the same switch.
-  ///
-  /// **Off by default, which is a change of behaviour.** A Live Activity used
-  /// to appear whenever a terminal connected, with nothing to stop it. It shows
-  /// a server's name and the state of a connection to it, on a screen that is
-  /// readable without unlocking the phone, and that is not something to opt
-  /// somebody into — least of all silently, on a device they hand to other
-  /// people. An install that wants it turns it on once.
-  ///
-  /// Independent of iOS' own per-app Live Activity permission, which can also
-  /// be off: this says whether the app *asks*.
-  late final liveActivity = propertyDefault('liveActivity', false);
-
-  /// Servers the watch app may show, by [Spi.id], in display order.
-  ///
-  /// The watch used to be configured by a list of URLs living only inside the
-  /// WCSession application context — invisible to backup and sync, lost on
-  /// reinstall, and unrelated to the server list the user actually maintains.
-  /// Keeping the selection here makes the app the source of truth and the
-  /// context merely the transport. iOS only.
-  ///
-  /// Read only by the v15 -> v16 migration now, which turns whatever is in it
-  /// into [watchExcludedServerIds]. Every monitor server syncs by default.
-  ///
-  /// TODO: drop with `WatchSelectionToExclusionMigration`.
-  late final watchServerIds = listProperty<String>('watchServerIds');
-
-  /// Servers held back from the watch, by [Spi.id].
-  ///
-  /// The inverse of what came before, and the inversion is the feature: a
-  /// server the user adds is on their watch without a second step, which is
-  /// what "sync automatically" has to mean. An opt-*in* list is a place to
-  /// forget a server, and forgetting one looks exactly like the watch being
-  /// broken.
-  ///
-  /// It exists at all because syncing a server means minting a credential for
-  /// it and putting that on a second device. That is worth being able to
-  /// refuse per server — the default is what changed, not whether there is a
-  /// choice. iOS only.
-  late final watchExcludedServerIds = listProperty<String>(
-    'watchExcludedServerIds',
-  );
-
-  /// Raw Go-compat `/status` URLs typed by hand in builds before the watch
-  /// could read a server record.
-  ///
-  /// Read only by [LegacyStatusUrlsMigration], which empties it and arranges
-  /// for the user to be told — a bare address cannot reach the authenticated
-  /// API, so there is nothing to convert it into.
-  ///
-  /// TODO: drop with `LegacyStatusUrlsMigration`.
-  late final watchLegacyUrls = listProperty<String>('watchLegacyUrls');
-
-  /// Whether this install still has to be told that its hand-typed `/status`
-  /// URLs stopped working.
-  ///
-  /// Set by [LegacyStatusUrlsMigration] and cleared by the dialog. Persisted
-  /// rather than shown from the migration itself, because a migration runs
-  /// before there is a screen to show anything on — and a message about a
-  /// feature that has gone must not be lost to whichever launch happened to
-  /// run the migration.
-  late final legacyStatusNoticePending = propertyDefault(
-    'legacyStatusNoticePending',
-    false,
-  );
 
   /// The timestamp of the most recent `ApplicationExitInfo` already reported.
   ///
@@ -393,49 +201,8 @@ class SettingStore extends SqliteStore with ThemeSettings {
   /// Set to `0` to disable this feature.
   late final delayBioAuthLock = propertyDefault('delayBioAuthLock', 0);
 
-  /// The performance of highlight is bad
-  late final editorHighlight = propertyDefault('editorHighlight', true);
-
-  /// Open SFTP with last viewed path
-  late final sftpOpenLastPath = propertyDefault('sftpOpenLastPath', true);
-
-  /// Whether the SFTP browser lists directories before files.
-  late final sftpShowFoldersFirst = propertyDefault(
-    'sftpShowFoldersFirst',
-    true,
-  );
-
-  /// List entries whose name starts with a dot.
-  ///
-  /// Off, because the common case is looking for something you put there. Not
-  /// per-backend: someone who wants to see `.ssh` on a server wants to see
-  /// `.config` on this device too.
-  late final showHiddenFiles = propertyDefault('showHiddenFiles', false);
-
-  /// Whether to show the warning before suspending a process.
-  late final showSuspendTip = propertyDefault('showSuspendTip', true);
-
   /// Whether collapse UI items by default
   late final collapseUIDefault = propertyDefault('collapseUIDefault', true);
-
-  /// Whether a command the Agent proposes may run on a *server* without being
-  /// asked, when it is clearly read-only — see `AskAiCommand.canAutoRun`.
-  /// Running on this device is [agentLocalExec], and never runs unasked.
-  late final agentAutoRunSafe = propertyDefault('agentAutoRunSafe', false);
-
-  /// Whether the Agent may run commands on this device.
-  ///
-  /// Off until asked for, unlike a configured server. A server was added
-  /// deliberately and is somewhere else; this machine is where the app's own
-  /// stores, private keys and keychain live, and nobody opted into a model
-  /// touching those by adding a server.
-  ///
-  /// Auto-running stays off here whatever [agentAutoRunSafe] says — that
-  /// setting is about servers. See `AskAiCommand.canAutoRun`.
-  ///
-  /// Device-local — see [deviceLocalKeys]: this is what the app will let a
-  /// model do to this machine, and a restore should not carry it.
-  late final agentLocalExec = propertyDefault('agentLocalExec', false);
 
   /// Settings that describe *this device* rather than a preference worth
   /// carrying to another one, so a backup neither exports nor restores them.
@@ -473,115 +240,21 @@ class SettingStore extends SqliteStore with ThemeSettings {
     'bundledThemesSeeded',
   };
 
-  /// The floating Agent's placement and size, as one row.
-  ///
-  /// Eight keys before this. See [FloatShellConfig] for the nesting and
-  /// [FloatShellProps] for the [FieldProp]s onto it.
-  late final serverFuncBtns = listProperty<String>(
-    'serverBtns',
-    defaultValue: const [],
-  );
-
-  /// Whether container commands use Podman instead of Docker.
-  late final usePodman = propertyDefault('usePodman', false);
-
-  /// Whether to try `sudo` when running container commands.
-  late final containerTrySudo = propertyDefault('containerTrySudo', true);
-
-  /// Whether to retain the previous server status after a refresh error.
-  late final keepStatusWhenErr = propertyDefault('keepStatusWhenErr', false);
-
   /// Whether to collect container resource statistics.
   late final containerParseStat = propertyDefault('containerParseStat', true);
 
-  /// Whether to refresh container status automatically.
-  late final containerAutoRefresh = propertyDefault(
-    'containerAutoRefresh',
-    true,
-  );
-
-  /// Whether the strip above the server list is shown: the overview over the
-  /// grid, and the row of servers it turns into over an open one.
-  late final serverOverview = propertyDefault('serverOverview', true);
-
-  /// Remerber pwd in memory
-  /// Used for [DialogX.showPwdDialog]
-  late final rememberPwdInMem = propertyDefault('rememberPwdInMem', true);
-
-  /// SSH Term Theme
-  /// 0: follow app theme, 1: light, 2: dark
-  late final termTheme = propertyDefault('termTheme', 0);
-
   late final lastVer = propertyDefault('lastVer', 0);
-
-  /// Layout version of this device's local storage — see [SchemaVersion].
-  ///
-  /// Defaults to 2, not 0: storage that predates versioning is, by definition,
-  /// whatever the last unversioned release wrote, and that is v2 (Spi with a
-  /// flat SSH layout plus `monitorHttp`). A fresh install overwrites this with
-  /// [SchemaVersion.current] before any migration runs.
-  ///
-  /// An **internal** key, so `getAllMap` leaves it out of a backup and `clear`
-  /// leaves it alone. Under a plain key it travelled: restoring a backup taken
-  /// on a device still on the previous release wrote that device's version
-  /// back, and the next launch found a version with no migration registered for
-  /// it and threw `SchemaTooNewException`'s counterpart — a `StateError` that
-  /// nothing catches.
-  ///
-  /// Being internal also means it never stamps `lastUpdateTs`, which it must
-  /// not: it describes this device's storage, so counting a migration writing
-  /// it as a user edit would make a device that has only just upgraded claim
-  /// the newer copy of everything at the next sync.
-  ///
-  /// TODO: drop `schemaVersion` from `removeRetiredKeys` once no install can
-  /// still carry the plain-key copy this replaced.
-  late final schemaVersion = propertyDefault(
-    '${StoreDefaults.prefixKey}schemaVersion',
-    2,
-    updateLastModified: false,
-  );
 
   /// Hide title bar on desktop
   late final hideTitleBar = propertyDefault('hideTitleBar', isDesktop);
 
-  late final editorSoftWrap = propertyDefault('editorSoftWrap', isIOS);
-
-  late final sshTermHelpShown = propertyDefault('sshTermHelpShown', false);
-
-  /// Whether the walkthrough over the virtual keys has run.
-  ///
-  /// Separate from [sshTermHelpShown], which gates a dialog about the terminal
-  /// body and is the only guidance a desktop gets — there are no virtual keys
-  /// there to walk through.
-  late final virtKeyIntroShown = propertyDefault('virtKeyIntroShown', false);
-
-  /// How many rows of virtual keys the terminal shows at once, 0 for all.
-  ///
-  /// Rows past that go on a page of their own, swiped sideways. It replaced a
-  /// switch meaning "one row, scrolled sideways", which is this set to 1 —
-  /// with the difference that a swipe now lands on whole rows rather than
-  /// leaving the row halfway between two keys. See [VirtKeyRowsMigration].
-  late final virtKeyRows = propertyDefault('virtKeyRows', 0);
-
   /// general wake lock
   late final generalWakeLock = propertyDefault('generalWakeLock', false);
-
-  /// ssh page
-  late final sshWakeLock = propertyDefault('sshWakeLock', true);
-  late final sshBgImage = propertyDefault('sshBgImage', '');
-  late final sshBgOpacity = propertyDefault('sshBgOpacity', 0.3);
-  late final sshBlurRadius = propertyDefault('sshBlurRadius', 0.0);
 
   /// fmt: https://example.com/{DIST}-{BRIGHT}.png
   late final serverLogoUrl = propertyDefault('serverLogoUrl', '');
 
   late final betaTest = propertyDefault('betaTest', false);
-
-  /// The build number the App Store build last mentioned the DMG one for.
-  ///
-  /// `-1` means never again. Only the sandboxed macOS build reads it — see
-  /// `DmgNotice`, which is where the once-per-version rule lives.
-  late final dmgTipBuild = propertyDefault('dmgTipBuild', 0);
 
   /// For desktop only.
   /// Record the position and size of the window.
@@ -611,9 +284,6 @@ class SettingStore extends SqliteStore with ThemeSettings {
 
   late final introVer = propertyDefault('introVer', 0);
 
-  /// Remote editor command used in the SSH terminal, such as `$EDITOR` or
-  /// `vim`. Leave empty to use the local GUI editor.
-  late final sftpEditor = propertyDefault('sftpEditor', '');
 
   // `fgService` was here: a second switch for the Android foreground service,
   // whose tile was commented out of the settings page long before that page
@@ -629,9 +299,6 @@ class SettingStore extends SqliteStore with ThemeSettings {
 
   /// The backup password
   late final backupPassword = SecureProp('bakPasswd');
-
-  /// Whether to read SSH config from ~/.ssh/config on first time
-  late final firstTimeReadSSHCfg = propertyDefault('firstTimeReadSSHCfg', true);
 
   /// Tabs at home page
   ///
@@ -700,12 +367,6 @@ class SettingStore extends SqliteStore with ThemeSettings {
   /// that wrote it; nothing looks at it.
   late final showDistMark = propertyDefault('showDistMark', false);
 
-  /// Hide port forward beta warning
-  late final portForwardBetaWarned = propertyDefault(
-    'portForwardBetaWarned',
-    false,
-  );
-
   /// Whether the one-off guide over the tab strip has been shown.
   ///
   /// The bulk actions there open on a long press or a right-click, and neither
@@ -715,172 +376,6 @@ class SettingStore extends SqliteStore with ThemeSettings {
   /// read again.
   late final navTabMenuGuided = propertyDefault('navTabMenuGuided', false);
 
-  /// The highest rootfs-manifest serial this device has accepted.
-  ///
-  /// A signature stays valid for as long as the key does, so verifying one
-  /// does not make it current. Refusing a serial below this is what stops an
-  /// old signed manifest being replayed to pin a device to a rootfs whose
-  /// problems are known.
-  ///
-  /// Device-local bookkeeping, so it does not stamp the sync clock: which
-  /// manifest a phone has seen is not an edit anyone made.
-  late final rootfsManifestSerial = propertyDefault(
-    'rootfsManifestSerial',
-    0,
-    updateLastModified: false,
-  );
-
-  /// The last manifest that verified, and its signature, base64.
-  ///
-  /// Both, because the cache is re-verified when it is read rather than
-  /// trusted for having once been verified — it sits in app storage, and
-  /// re-checking 64 bytes costs nothing next to believing whatever is there.
-  late final rootfsManifestCache = propertyDefault(
-    'rootfsManifestCache',
-    '',
-    updateLastModified: false,
-  );
-  late final rootfsManifestCacheSig = propertyDefault(
-    'rootfsManifestCacheSig',
-    '',
-    updateLastModified: false,
-  );
-
-  /// Hide the Linux beta warning, which is asked before an install.
-  ///
-  /// Separate from [portForwardBetaWarned] rather than one flag for every beta
-  /// feature: dismissing the warning on one says nothing about having read the
-  /// other, and the two are not the same risk.
-  late final linuxBetaWarned = propertyDefault('linuxBetaWarned', false);
-
-  late final sshPageSortBy = propertyDefault('sshPageSortBy', 0);
-  late final sshPageSortAsc = propertyDefault('sshPageSortAsc', true);
-
-  /// The remote desktop server picker has the terminal picker's four orders,
-  /// but keeps its own choice so changing tabs does not change the ordering.
-  late final remoteDesktopSortBy = propertyDefault('remoteDesktopSortBy', 0);
-  late final remoteDesktopSortAsc = propertyDefault(
-    'remoteDesktopSortAsc',
-    true,
-  );
-
-  /// How the server list is ordered, as an index into `_SortField` and a
-  /// direction — the same pair, stored the same way, as the two above.
-  ///
-  /// The defaults are the first field ascending, which is the order the user
-  /// arranged in the settings. Sorting the list some other way is a view of
-  /// it, and this is where that view is remembered; [serverOrder] stays the
-  /// arrangement itself.
-  late final serverPageSortBy = propertyDefault<String>(
-    'serverPageSortBy',
-    'manual',
-  );
-  late final serverPageSortAsc = propertyDefault('serverPageSortAsc', true);
-
-  /// Whether to automatically start/attach tmux on SSH connect.
-  late final tmuxAuto = propertyDefault('tmuxAuto', false);
-
-  /// Whether to show the tmux session selector dialog on connect.
-  late final tmuxShowSelector = propertyDefault('tmuxShowSelector', true);
-
-  /// Default tmux session name. Empty string means use 'server_box'.
-  late final tmuxSessionName = propertyDefault('tmuxSessionName', '');
-
-  /// Which reading each server's card draws in full, by server id.
-  ///
-  /// Per server because the answer is: a database is watched for its disk and
-  /// a build box for its CPU. Carried into the detail page as well, so picking
-  /// a row on the card and picking one on the page are the same choice — which
-  /// is the whole reason the card and the page are one structure.
-  ///
-  /// A kind's `name`, never its index: a case inserted into
-  /// `ServerMetricKind` would silently repoint every stored choice.
-  late final serverCardMetric = propertyDefault<Map<String, String>>(
-    'serverCardMetric',
-    const {},
-    fromObj: (obj) => Map<String, String>.from(obj as Map),
-  );
-
-  /// Whether a server's card has its rows unfolded, for the servers somebody
-  /// has said so about, by [Spi.id].
-  ///
-  /// A card with no entry rests at what [collapseUIDefault] says, which is
-  /// what makes that setting a default rather than a starting value: a server
-  /// added tomorrow follows it without anything being written, and so does
-  /// every card nobody has touched when the setting is changed.
-  ///
-  /// Per server for the reason [serverCardMetric] is: the two machines worth
-  /// keeping open on a page of forty are not the same two for everybody.
-  late final serverCardExpandedOverride = propertyDefault<Map<String, bool>>(
-    'serverCardExpandedOverride',
-    const {},
-    fromObj: (obj) => Map<String, bool>.from(obj as Map),
-  );
-
-  /// How much of each server the list shows, by tag.
-  ///
-  /// Per tag because a tag is a set of machines: `#prod` with forty in it and
-  /// `#local` with two want different answers. The empty key is "all", which
-  /// is the set the app opens on.
-  ///
-  /// A [ServerListDensity]'s `name`, and absent means `auto` — so an install
-  /// that has never chosen follows the count rather than a stored guess.
-  late final serverListDensity = propertyDefault<Map<String, String>>(
-    'serverListDensity',
-    const {},
-    fromObj: (obj) => Map<String, String>.from(obj as Map),
-  );
-
-  /// How the list is ordered, by tag — the same shape, and the same empty key
-  /// for "all", as [serverListDensity].
-  ///
-  /// Per tag for the reason the density is: `#prod` with forty in it wants to
-  /// be read busiest-first, and `#local` with two wants the arrangement it was
-  /// given. One field and one direction, written `<field>:<asc|desc>` — a bare
-  /// field name reads as ascending, which is what the pair below used to be
-  /// stored as.
-  ///
-  /// TODO: [serverPageSortBy] and [serverPageSortAsc] are only still read as
-  /// this map's empty-key default, for installs that chose before it existed.
-  /// Delete both, and the fallback in `ServerSortOrder.of`, a few releases on.
-  late final serverListSort = propertyDefault<Map<String, String>>(
-    'serverListSort',
-    const {},
-    fromObj: (obj) => Map<String, String>.from(obj as Map),
-  );
-
-  /// Whether the list is cut into sections, by tag.
-  ///
-  /// A string rather than a bool because what it names is what the sections
-  /// are cut by: `tag` today, and absent is one list. A second answer — by
-  /// status, say — is then a value rather than a second setting.
-  ///
-  /// Only ever means anything under the empty key: inside `#prod` every
-  /// machine is in `#prod`, so grouping by tag there is one section. It is
-  /// stored per tag anyway, because a setting that is remembered in one place
-  /// and forgotten in another is the harder thing to explain.
-  late final serverListGroup = propertyDefault<Map<String, String>>(
-    'serverListGroup',
-    const {},
-    fromObj: (obj) => Map<String, String>.from(obj as Map),
-  );
-
-  /// Whether the globe exists at all.
-  ///
-  /// On by default, and off is a real off: no button in the server tab, no
-  /// asset read, no name resolved, no request made. That is worth stating
-  /// because the two things below it are separate switches and neither of them
-  /// is what turns the feature off.
-  late final globeEnabled = propertyDefault('globeEnabled', true);
-
-  /// Whether the server tab is currently showing the globe.
-  ///
-  /// A view over the list, stored the same way the sort order is and for the
-  /// same reason: reopening the app on the grid after having chosen the globe
-  /// reads as the choice not having taken. Distinct from [globeEnabled], which
-  /// is whether the choice exists.
-  late final serverPageGlobe = propertyDefault('serverPageGlobe', false);
-
   // `geoShards`, `geoShardEndpoint` and `geoCacheLimit` were all here and are
   // all retired below. Each existed because the data was fetched a shard at a
   // time: a switch to consent to those requests, an endpoint to send them
@@ -888,35 +383,6 @@ class SettingStore extends SqliteStore with ThemeSettings {
   // answers all three — having the file is the consent, there is nothing an
   // endpoint could improve about a request that discloses nothing, and one
   // copy that replaces itself cannot accumulate.
-
-  /// Whether the guide pointing at the globe button has been shown.
-  ///
-  /// Once per install, like [navTabMenuGuided] — the globe is a way of viewing
-  /// a list that already looks finished, so nothing on the server tab suggests
-  /// the button changes anything until it is pressed.
-  late final globeGuided = propertyDefault('globeGuided', false);
-
-  /// Whether the remote desktop viewer's walkthrough has been shown.
-  ///
-  /// Once per install. On a touch screen the canvas is a touchpad — one
-  /// finger moves the pointer rather than clicking where it lands — and
-  /// nothing on screen says so, nor that two fingers right-click and scroll.
-  late final remoteDesktopGuided = propertyDefault(
-    'remoteDesktopGuided',
-    false,
-  );
-
-  /// How long a remote session stays connected once it is off screen, in
-  /// seconds; 0, the default, keeps it until it is closed. See
-  /// `SessionKeepAlive`.
-  ///
-  /// Seconds rather than an index into the choices the settings row offers,
-  /// so that changing those choices never changes what a stored value means.
-  late final remoteSessionIdleTimeout = propertyDefault(
-    'remoteSessionIdleTimeout',
-    0,
-    fromObj: (obj) => obj is int && obj >= 0 ? obj : null,
-  );
 
   /// Removes settings for UI choices that no longer exist. Idempotent so old
   /// installs are cleaned without another migration flag becoming permanent
