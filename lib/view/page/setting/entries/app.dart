@@ -107,34 +107,8 @@ extension _App on _AppSettingsPageState {
     final label = libL10n.checkUpdate;
     return SettingsRow(
       label,
-      () => ListTile(
-        leading: const Icon(Icons.update),
-        title: Text(label),
-        subtitle: ValBuilder(
-          listenable: AppUpdateIface.newestBuild,
-          builder: (val) {
-            String display;
-            if (val != null) {
-              if (val > BuildData.build) {
-                display = libL10n.versionHasUpdate(val);
-              } else {
-                display = libL10n.versionUpdated(BuildData.build);
-              }
-            } else {
-              display = libL10n.versionUnknownUpdate(BuildData.build);
-            }
-            return Text(display, style: UIs.textGrey);
-          },
-        ),
-        onTap: () => Fns.throttle(
-          () => AppUpdateIface.doUpdate(
-            context: context,
-            build: BuildData.build,
-            githubReleasesUrl: Urls.githubReleasesApi,
-            storeUrl: Urls.appStore,
-            force: BuildMode.isDebug,
-          ),
-        ),
+      () => _checkUpdateTile(
+        context,
         trailing: StoreSwitch(prop: _setting.autoCheckAppUpdate),
       ),
       keywords: 'v${BuildData.build}',
