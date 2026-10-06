@@ -1,7 +1,7 @@
 abstract final class Urls {
-  static const myGithub = 'https://github.com/lollipopkit';
-  static const githubApi = 'https://api.github.com/repos/lollipopkit';
-  static const thisRepo = '$myGithub/flutter_server_box';
+  static const myGithub = 'https://github.com/jimiha1';
+  static const githubApi = 'https://api.github.com/repos/jimiha1';
+  static const thisRepo = '$myGithub/cf_server_box';
 
   /// One file out of this repository's default branch.
   ///
@@ -16,7 +16,7 @@ abstract final class Urls {
   /// repositories and a new one should not need an app release. The copy in
   /// `assets/catalog/repos.toml` is what a first run with no network uses.
   static const themeCatalog = '$rawRepo/assets/catalog/repos.toml';
-  static const githubReleasesApi = '$githubApi/flutter_server_box/releases';
+  static const githubReleasesApi = '$githubApi/cf_server_box/releases';
   static const appStore = 'https://apps.apple.com/app/id1586449703';
   static const appHelp = '$thisRepo#-help';
   static const appWiki = '$thisRepo/wiki';
@@ -73,26 +73,6 @@ abstract final class Urls {
   /// sends; they cannot say where it goes or how long it is kept, and consent
   /// given without somewhere to read that is consent to a summary.
   static const privacyPolicy = '$docs/privacy/';
-
-  /// Where the city-level geo data is downloaded from.
-  ///
-  /// A manifest and two archives, fetched once; every individual lookup after
-  /// that is local. The download is itself an ordinary HTTPS request, so it
-  /// exposes whatever any request does — the caller's address, TLS metadata,
-  /// timing — but it never says which address is being looked up, because the
-  /// lookups happen on the device against the downloaded data. That is why
-  /// there is no setting to point it elsewhere: there would be nothing for it
-  /// to improve.
-  static const geoData = 'https://ipgeo.lollipopkit.com';
-
-  /// The second endpoint, for a network where the first will not answer.
-  ///
-  /// `releases/latest/download/<file>` resolves without a tag being known, so
-  /// the fallback needs no lookup of its own. It carries the same logical data,
-  /// but independently produced gzip archives may have different bytes, so the
-  /// installer uses each endpoint's manifest and assets as one set.
-  static const geoDataFallback =
-      '$myGithub/ipgeo-shards/releases/latest/download';
 
   /// How the data is built, and where the DB-IP attribution lives.
   static const geoDataRepo = '$myGithub/ipgeo-shards';
