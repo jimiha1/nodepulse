@@ -458,10 +458,11 @@ git commit -m "refactor: rename the Dart package to nodepulse"
 - Modify: `android/app/src/main/kotlin/app/nodepulse/MainActivity.kt` (`LINK_SCHEME`)
 - Modify: `android/app/src/main/AndroidManifest.xml` (`<data android:scheme>`)
 - Modify: `android/app/src/main/kotlin/app/nodepulse/widget/WidgetApi.kt`, `alert/AlertWorker.kt`, `cf/DohHttp.kt` (user agents)
+- Modify: `lib/core/service/diagnostics_upload.dart` (Sentry release tag — added after Task 4's review found it; the plan had missed it)
 - Modify: `pubspec.yaml` (version)
 - Modify: `README.md`, `README_zh.md`
 - Modify: `.github/workflows/build.yml` (comments only)
-- External: rename the GitHub repository
+- External: rename the GitHub repository (**controller runs this separately, after confirming with the user — see Step 8**)
 
 **Interfaces:**
 - Consumes: `app.nodepulse` from Task 3, `nodepulse` from Task 4.
@@ -556,24 +557,36 @@ Expected: `BuildData: name=NodePulse build=<count>`, and the grep shows `name = 
 
 **Stated plainly:** this reproduces `fl_build`'s output instead of running it, because running it drags in a full build. The header is verbatim, and the two fields are exactly the two it derives. The next real `fl_build` run (a release, or `make build`) will overwrite this file with identical values.
 
-- [ ] **Step 5: Update the README titles**
+- [ ] **Step 5: Update the Sentry release tag**
+
+`lib/core/service/diagnostics_upload.dart:122` tags every crash report with the app's identity, which is what a reader sees in the Sentry dashboard:
+
+```dart
+        options.release = 'nodepulse@1.0.${BuildData.build}';
+```
+
+This was missing from the plan's original scope and was found during Task 4's review. Leaving it would report crashes as `server_box@…` from an app called NodePulse.
+
+- [ ] **Step 6: Update the README titles**
 
 In `README.md` and `README_zh.md`, the centred heading reads `CF ServerBox`. Change both to `NodePulse`. Leave the rest of each README alone — its badges and body describe upstream features that this trim has removed, which is a separate cleanup.
 
-- [ ] **Step 6: Update the CI comments**
+- [ ] **Step 7: Update the CI comments**
 
 `.github/workflows/build.yml` mentions `ServerBox` in three comments (around lines 432, 437). These are explanatory prose, not functional. Update the wording so it does not name an app that no longer exists.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 git add lib android pubspec.yaml README.md README_zh.md .github/
 git commit -m "feat: finish the NodePulse rebrand"
 ```
 
-- [ ] **Step 8: Rename the GitHub repository**
+**Stop here.** The next step renames a repository on GitHub and is **not** part of this task — the controller runs it separately after confirming with the user, because it is an outward-facing, hard-to-reverse action. Do not run it.
 
-This is the one step that changes something outside the working tree. Confirm with the user before running it.
+---
+
+#### Deferred: rename the GitHub repository (controller only, after user confirmation)
 
 ```bash
 gh repo rename nodepulse --repo jimiha1/cf_server_box
