@@ -34,7 +34,7 @@
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: `Urls.githubReleasesApi` → `https://api.github.com/repos/jimiha1/cf_server_box/releases`; `Urls.newIssue` → `https://github.com/jimiha1/cf_server_box/issues/new`. `Urls.appWiki`, `Urls.appHelp`, `Urls.appStore`, `Urls.geoData`, `Urls.geoDataFallback`, `Urls.geoDataRepo` no longer exist. `Urls.myGithub`, `Urls.thisRepo`, `Urls.rawRepo`, `Urls.themeCatalog`, `Urls.site`, `Urls.docs`, `Urls.privacyPolicy` and the doc links remain.
+- Produces: `Urls.githubReleasesApi` → `https://api.github.com/repos/jimiha1/cf_server_box/releases`; `Urls.newIssue` → `https://github.com/jimiha1/cf_server_box/issues/new`. `Urls.geoData` and `Urls.geoDataFallback` no longer exist. `Urls.myGithub`, `Urls.thisRepo`, `Urls.rawRepo`, `Urls.themeCatalog`, `Urls.site`, `Urls.docs`, `Urls.privacyPolicy` and the doc links remain. `Urls.appWiki`, `Urls.appHelp`, `Urls.geoDataRepo` and `Urls.appStore` **also remain** — their last readers are removed by Tasks 3 and 4, and deleting them here would leave `flutter analyze` failing at this commit.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -86,16 +86,13 @@ abstract final class Urls {
   static const githubReleasesApi = '$githubApi/cf_server_box/releases';
 ```
 
-- [ ] **Step 4: Delete the dead constants**
+- [ ] **Step 4: Delete the two constants that are already dead**
 
-In the same file, delete these lines and their doc comments:
+In the same file, delete the `geoData` block — `geoData` (`:86`), `geoDataFallback` (`:94-95`) and the doc comments above each.
 
-- `static const appStore = 'https://apps.apple.com/app/id1586449703';` (`:20`)
-- `static const appHelp = '$thisRepo#-help';` (`:21`)
-- `static const appWiki = '$thisRepo/wiki';` (`:22`)
-- the whole `geoData` block — `geoData` (`:86`), `geoDataFallback` (`:94-95`), `geoDataRepo` (`:98`) and the doc comments above each.
+These two have no reader at all any more: the city-level IP geolocation feature was removed by the trim (`IpGeo` and its download logic no longer exist), and their only remaining reference was the About-page card this plan deletes. `ipgeo-shards` is upstream's repository and does not follow the fork rename, which is why they cannot be fixed by changing `myGithub`.
 
-Rationale for the geo block: the city-level IP geolocation feature was removed by the trim (`IpGeo` and its download logic no longer exist); these constants' only remaining reader was the About-page card this plan deletes. `ipgeo-shards` is upstream's repository and does not follow the fork rename, which is why they cannot be fixed by changing `myGithub`.
+**Do not delete `appWiki`, `appHelp`, `geoDataRepo` or `appStore` here.** They still have live readers in `about.dart` (Tasks 3) and `home.dart` (Task 4); removing them now would leave `flutter analyze` failing at this commit. Each is deleted by the task that removes its last reader.
 
 - [ ] **Step 5: Run test to verify it passes**
 
@@ -208,11 +205,12 @@ git commit -m "refactor: draw the update row from one definition"
 **Files:**
 - Modify: `lib/view/page/setting/about.dart` (replace the page body)
 - Modify: `lib/view/page/setting/entry.dart:22` (drop the `github_id.dart` import)
+- Modify: `lib/data/res/url.dart` (delete the three constants this task orphans)
 - Delete: `lib/data/res/github_id.dart`
 
 **Interfaces:**
 - Consumes: `_checkUpdateTile` (Task 2).
-- Produces: `_AppAboutPage` as a `StatelessWidget` showing the icon, the version line and the check row.
+- Produces: `_AppAboutPage` as a `StatelessWidget` showing the icon, the version line and the check row. `Urls.appWiki`, `Urls.appHelp` and `Urls.geoDataRepo` no longer exist. `Urls.appStore` still exists (Task 4 removes it).
 
 - [ ] **Step 1: Replace the page**
 
@@ -265,20 +263,30 @@ git rm lib/data/res/github_id.dart
 
 Its only reader was the contributors/participants Markdown card removed in Step 1.
 
-- [ ] **Step 4: Verify no dangling references**
+- [ ] **Step 4: Delete the constants this task orphaned**
 
-Run: `grep -rn "GithubIds\|Urls.appWiki\|Urls.appHelp\|Urls.appStore\|Urls.geoData" lib/`
-Expected: no output (the contributors list, the four buttons and the geo constants are all gone).
+In `lib/data/res/url.dart`, delete these three and their doc comments:
 
-- [ ] **Step 5: Analyze**
+- `static const appHelp = '$thisRepo#-help';`
+- `static const appWiki = '$thisRepo/wiki';`
+- `static const geoDataRepo = '$myGithub/ipgeo-shards';`
+
+The two app links were read only by the Wiki and 反馈 buttons deleted in Step 1; `geoDataRepo` was read only by the Markdown card. Nothing else references them.
+
+- [ ] **Step 5: Verify no dangling references**
+
+Run: `grep -rn "GithubIds\|Urls.appWiki\|Urls.appHelp\|Urls.geoData" lib/`
+Expected: no output (the contributors list, the Wiki/反馈 buttons and every geo constant are gone).
+
+- [ ] **Step 6: Analyze**
 
 Run: `flutter analyze lib`
 Expected: `No issues found!`
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add lib/view/page/setting/about.dart lib/view/page/setting/entry.dart lib/data/res/github_id.dart
+git add lib/view/page/setting/about.dart lib/view/page/setting/entry.dart lib/data/res/url.dart lib/data/res/github_id.dart
 git commit -m "feat: trim the about page to version and update check"
 ```
 
@@ -288,11 +296,12 @@ git commit -m "feat: trim the about page to version and update check"
 
 **Files:**
 - Modify: `lib/view/page/home.dart:257` (drop `storeUrl`)
+- Modify: `lib/data/res/url.dart` (delete `appStore`, its last reader)
 - Modify: `lib/data/model/server/dist_license.dart:1-16` (doc comment only)
 
 **Interfaces:**
-- Consumes: `Urls.appStore` no longer exists (Task 1).
-- Produces: nothing new; this is a call-site fix plus a stale-comment correction.
+- Consumes: nothing.
+- Produces: `Urls.appStore` no longer exists. Nothing new; this is a call-site fix plus a stale-comment correction.
 
 - [ ] **Step 1: Drop the store URL from the launch-time check**
 
@@ -302,9 +311,17 @@ In `lib/view/page/home.dart`, in the `AppUpdateIface.doUpdate(...)` call (around
           storeUrl: Urls.appStore,
 ```
 
-The constant is gone (Task 1) and it only ever applied to iOS, which this build does not ship.
+It only ever applied to iOS, which this build does not ship — and with Task 2's row no longer passing it either, nothing reads the constant.
 
-- [ ] **Step 2: Correct the license-registry comment**
+- [ ] **Step 2: Delete the now-orphaned constant**
+
+In `lib/data/res/url.dart`, delete:
+
+```dart
+  static const appStore = 'https://apps.apple.com/app/id1586449703';
+```
+
+- [ ] **Step 3: Correct the license-registry comment**
 
 In `lib/data/model/server/dist_license.dart`, the class doc currently says the notices are reachable at "Settings → About → License". That entry no longer exists. Replace the first paragraph (`:3-5`) with:
 
@@ -323,15 +340,15 @@ In `lib/data/model/server/dist_license.dart`, the class doc currently says the n
 
 Leave the rest of the file (the four license bodies and `registerDistMarkLicenses`) untouched.
 
-- [ ] **Step 3: Analyze**
+- [ ] **Step 4: Analyze**
 
 Run: `flutter analyze lib`
 Expected: `No issues found!`
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add lib/view/page/home.dart lib/data/model/server/dist_license.dart
+git add lib/view/page/home.dart lib/data/res/url.dart lib/data/model/server/dist_license.dart
 git commit -m "fix: drop the store URL from the launch-time update check"
 ```
 
