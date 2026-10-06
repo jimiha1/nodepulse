@@ -1,7 +1,7 @@
 {
   "@@locale": "zh",
   "crashCollect": "诊断信息",
-  "crashCollectIntro": "ServerBox 会记录运行过程中发生的情况，以便修复问题。你可以选择要发送多少信息。",
+  "crashCollectIntro": "NodePulse 会记录运行过程中发生的情况，以便修复问题。你可以选择要发送多少信息。",
   "crashCollectNone": "不发送",
   "crashCollectNoneTip": "报告会保留在本机；发生崩溃后，你可手动发送。",
   "crashCollectBasic": "基本信息",
@@ -11,7 +11,7 @@
   "crashCollectFooter": "无论选择哪个级别，记录时都会将已知服务器名称、地址和用户名替换为占位符。之后可在设置中更改收集级别。",
   "privacy": "隐私",
   "privacyPolicy": "隐私政策",
-  "crashLastRunFailed": "ServerBox 上次运行时异常退出。",
+  "crashLastRunFailed": "NodePulse 上次运行时异常退出。",
   "crashReportTitle": "崩溃报告",
   "crashReportHint": "这是上次运行的日志。已知的服务器名称和地址已替换为占位符，但其中可能仍包含其他信息。提交前请仔细阅读。",
   "crashReportSubmit": "复制并反馈",

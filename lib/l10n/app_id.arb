@@ -1,7 +1,7 @@
 {
   "@@locale": "id",
   "crashCollect": "Data diagnostik",
-  "crashCollectIntro": "ServerBox mencatat apa yang terjadi saat berjalan agar masalah dapat diperbaiki. Pilih jumlah informasi yang dikirim.",
+  "crashCollectIntro": "NodePulse mencatat apa yang terjadi saat berjalan agar masalah dapat diperbaiki. Pilih jumlah informasi yang dikirim.",
   "crashCollectNone": "Tidak ada",
   "crashCollectNoneTip": "Laporan tetap tersimpan di perangkat ini; setelah terjadi kerusakan, Anda dapat mengirimkannya secara manual.",
   "crashCollectBasic": "Informasi dasar",
@@ -11,7 +11,7 @@
   "crashCollectFooter": "Pada tingkat apa pun, nama server yang dikenal beserta alamat dan nama penggunanya diganti dengan placeholder saat dicatat. Tingkat pengumpulan dapat diubah nanti di Pengaturan.",
   "privacy": "Privasi",
   "privacyPolicy": "Kebijakan privasi",
-  "crashLastRunFailed": "ServerBox berhenti secara tak terduga saat terakhir dijalankan.",
+  "crashLastRunFailed": "NodePulse berhenti secara tak terduga saat terakhir dijalankan.",
   "crashReportTitle": "Laporan kerusakan",
   "crashReportHint": "Ini adalah log dari sesi sebelumnya. Nama dan alamat server yang dikenal telah diganti dengan placeholder, tetapi detail lain mungkin tersisa. Baca dengan saksama sebelum mengirimkannya.",
   "crashReportSubmit": "Salin & laporkan",

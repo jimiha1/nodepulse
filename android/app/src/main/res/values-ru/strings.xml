@@ -13,13 +13,13 @@
     <string name="widget_configure_server">Сервер</string>
     <string name="widget_configure_metric">Основной показатель</string>
     <string name="widget_configure_save">Сохранить</string>
-    <string name="widget_configure_empty">Пока нет сервера с агентом monitor.\nДобавьте его в ServerBox и вернитесь сюда.</string>
+    <string name="widget_configure_empty">Пока нет сервера с агентом monitor.\nДобавьте его в NodePulse и вернитесь сюда.</string>
     <string name="widget_metric_cpu">ЦП</string>
     <string name="widget_metric_memory">Память</string>
     <string name="widget_metric_disk">Диск</string>
     <string name="widget_metric_network">Сеть</string>
     <string name="widget_err_not_configured">Нажмите, чтобы выбрать сервер</string>
-    <string name="widget_err_no_token">Нет учётных данных — откройте ServerBox</string>
+    <string name="widget_err_no_token">Нет учётных данных — откройте NodePulse</string>
     <string name="widget_err_insecure">Требуется HTTPS</string>
     <string name="widget_err_network">Ошибка сети</string>
     <string name="widget_err_timeout">Время ожидания истекло</string>

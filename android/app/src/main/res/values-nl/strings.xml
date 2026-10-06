@@ -13,13 +13,13 @@
     <string name="widget_configure_server">Server</string>
     <string name="widget_configure_metric">Belangrijkste meting</string>
     <string name="widget_configure_save">Bewaren</string>
-    <string name="widget_configure_empty">Nog geen server met monitor-agent.\nVoeg er een toe in ServerBox en kom terug.</string>
+    <string name="widget_configure_empty">Nog geen server met monitor-agent.\nVoeg er een toe in NodePulse en kom terug.</string>
     <string name="widget_metric_cpu">CPU</string>
     <string name="widget_metric_memory">Geheugen</string>
     <string name="widget_metric_disk">Schijf</string>
     <string name="widget_metric_network">Netwerk</string>
     <string name="widget_err_not_configured">Tik om een server te kiezen</string>
-    <string name="widget_err_no_token">Geen inloggegevens — open ServerBox</string>
+    <string name="widget_err_no_token">Geen inloggegevens — open NodePulse</string>
     <string name="widget_err_insecure">HTTPS vereist</string>
     <string name="widget_err_network">Netwerkfout</string>
     <string name="widget_err_timeout">Time-out</string>

@@ -13,7 +13,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get crashCollectIntro =>
-      'ServerBox 会记录运行过程中发生的情况，以便修复问题。你可以选择要发送多少信息。';
+      'NodePulse 会记录运行过程中发生的情况，以便修复问题。你可以选择要发送多少信息。';
 
   @override
   String get crashCollectNone => '不发送';
@@ -46,7 +46,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get privacyPolicy => '隐私政策';
 
   @override
-  String get crashLastRunFailed => 'ServerBox 上次运行时异常退出。';
+  String get crashLastRunFailed => 'NodePulse 上次运行时异常退出。';
 
   @override
   String get crashReportTitle => '崩溃报告';
@@ -5267,7 +5267,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get crashCollect => '診斷資料';
 
   @override
-  String get crashCollectIntro => 'ServerBox 會記錄執行期間發生的情況，以便修正問題。你可以選擇要傳送多少資料。';
+  String get crashCollectIntro => 'NodePulse 會記錄執行期間發生的情況，以便修正問題。你可以選擇要傳送多少資料。';
 
   @override
   String get crashCollectNone => '不傳送';
@@ -5300,7 +5300,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get privacyPolicy => '隱私權政策';
 
   @override
-  String get crashLastRunFailed => 'ServerBox 上次執行時異常結束。';
+  String get crashLastRunFailed => 'NodePulse 上次執行時異常結束。';
 
   @override
   String get crashReportTitle => '當機報告';

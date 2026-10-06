@@ -13,7 +13,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get crashCollectIntro =>
-      'ServerBox legt vast wat er tijdens het gebruik gebeurt, zodat problemen kunnen worden opgelost. Kies hoeveel informatie er wordt verstuurd.';
+      'NodePulse legt vast wat er tijdens het gebruik gebeurt, zodat problemen kunnen worden opgelost. Kies hoeveel informatie er wordt verstuurd.';
 
   @override
   String get crashCollectNone => 'Niets';
@@ -48,7 +48,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get crashLastRunFailed =>
-      'ServerBox is tijdens de vorige uitvoering onverwacht afgesloten.';
+      'NodePulse is tijdens de vorige uitvoering onverwacht afgesloten.';
 
   @override
   String get crashReportTitle => 'Crashrapport';

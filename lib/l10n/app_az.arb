@@ -1,7 +1,7 @@
 {
   "@@locale": "az",
   "crashCollect": "Diaqnostika məlumatları",
-  "crashCollectIntro": "ServerBox problemləri aradan qaldırmaq üçün işləyərkən baş verənləri qeydə alır. Göndəriləcək məlumatın həcmini seç.",
+  "crashCollectIntro": "NodePulse problemləri aradan qaldırmaq üçün işləyərkən baş verənləri qeydə alır. Göndəriləcək məlumatın həcmini seç.",
   "crashCollectNone": "Heç nə",
   "crashCollectNoneTip": "Hesabatlar bu cihazda qalır; qəza baş verdikdən sonra hesabatı əl ilə göndərə bilərsən.",
   "crashCollectBasic": "Əsas məlumatlar",
@@ -11,7 +11,7 @@
   "crashCollectFooter": "Bütün səviyyələrdə məlum server adları, ünvanlar və istifadəçi adları qeydə alınarkən yer tutucularla əvəz olunur. Məlumat toplama səviyyəsini daha sonra parametrlərdə dəyişə bilərsən.",
   "privacy": "Məxfilik",
   "privacyPolicy": "Məxfilik siyasəti",
-  "crashLastRunFailed": "ServerBox son dəfə işləyərkən gözlənilmədən bağlandı.",
+  "crashLastRunFailed": "NodePulse son dəfə işləyərkən gözlənilmədən bağlandı.",
   "crashReportTitle": "Qəza hesabatı",
   "crashReportHint": "Bu, əvvəlki işə salınmanın jurnalıdır. Məlum server adları və ünvanları yer tutucularla əvəz olunub, lakin başqa təfərrüatlar qala bilər. Göndərməzdən əvvəl diqqətlə oxu.",
   "crashReportSubmit": "Kopyala və bildir",

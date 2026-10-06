@@ -13,7 +13,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get crashCollectIntro =>
-      'ServerBox enregistre ce qui se passe pendant son fonctionnement afin de pouvoir corriger les problèmes. Choisissez la quantité d\'informations envoyée.';
+      'NodePulse enregistre ce qui se passe pendant son fonctionnement afin de pouvoir corriger les problèmes. Choisissez la quantité d\'informations envoyée.';
 
   @override
   String get crashCollectNone => 'Rien';
@@ -48,7 +48,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get crashLastRunFailed =>
-      'ServerBox s\'est fermé de manière inattendue lors de sa dernière exécution.';
+      'NodePulse s\'est fermé de manière inattendue lors de sa dernière exécution.';
 
   @override
   String get crashReportTitle => 'Rapport de plantage';

@@ -13,7 +13,7 @@ class AppLocalizationsAz extends AppLocalizations {
 
   @override
   String get crashCollectIntro =>
-      'ServerBox problemləri aradan qaldırmaq üçün işləyərkən baş verənləri qeydə alır. Göndəriləcək məlumatın həcmini seç.';
+      'NodePulse problemləri aradan qaldırmaq üçün işləyərkən baş verənləri qeydə alır. Göndəriləcək məlumatın həcmini seç.';
 
   @override
   String get crashCollectNone => 'Heç nə';
@@ -48,7 +48,7 @@ class AppLocalizationsAz extends AppLocalizations {
 
   @override
   String get crashLastRunFailed =>
-      'ServerBox son dəfə işləyərkən gözlənilmədən bağlandı.';
+      'NodePulse son dəfə işləyərkən gözlənilmədən bağlandı.';
 
   @override
   String get crashReportTitle => 'Qəza hesabatı';

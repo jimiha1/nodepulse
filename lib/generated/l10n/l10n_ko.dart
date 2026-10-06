@@ -13,7 +13,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get crashCollectIntro =>
-      'ServerBox는 문제를 해결할 수 있도록 실행 중 발생한 일을 기록합니다. 전송할 정보의 양을 선택할 수 있습니다.';
+      'NodePulse는 문제를 해결할 수 있도록 실행 중 발생한 일을 기록합니다. 전송할 정보의 양을 선택할 수 있습니다.';
 
   @override
   String get crashCollectNone => '전송 안 함';
@@ -46,7 +46,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get privacyPolicy => '개인정보 처리방침';
 
   @override
-  String get crashLastRunFailed => 'ServerBox가 마지막 실행 중 예기치 않게 종료되었습니다.';
+  String get crashLastRunFailed => 'NodePulse가 마지막 실행 중 예기치 않게 종료되었습니다.';
 
   @override
   String get crashReportTitle => '충돌 보고서';

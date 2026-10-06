@@ -13,7 +13,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get crashCollectIntro =>
-      'ServerBox mencatat apa yang terjadi saat berjalan agar masalah dapat diperbaiki. Pilih jumlah informasi yang dikirim.';
+      'NodePulse mencatat apa yang terjadi saat berjalan agar masalah dapat diperbaiki. Pilih jumlah informasi yang dikirim.';
 
   @override
   String get crashCollectNone => 'Tidak ada';
@@ -48,7 +48,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get crashLastRunFailed =>
-      'ServerBox berhenti secara tak terduga saat terakhir dijalankan.';
+      'NodePulse berhenti secara tak terduga saat terakhir dijalankan.';
 
   @override
   String get crashReportTitle => 'Laporan kerusakan';

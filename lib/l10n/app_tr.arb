@@ -1,7 +1,7 @@
 {
   "@@locale": "tr",
   "crashCollect": "Tanılama verileri",
-  "crashCollectIntro": "ServerBox, sorunların düzeltilebilmesi için çalışırken olanları kaydeder. Ne kadar bilgi gönderileceğini seçin.",
+  "crashCollectIntro": "NodePulse, sorunların düzeltilebilmesi için çalışırken olanları kaydeder. Ne kadar bilgi gönderileceğini seçin.",
   "crashCollectNone": "Hiçbir şey",
   "crashCollectNoneTip": "Raporlar bu cihazda tutulur; çökmenin ardından bir raporu elle gönderebilirsiniz.",
   "crashCollectBasic": "Temel bilgiler",
@@ -11,7 +11,7 @@
   "crashCollectFooter": "Her düzeyde bilinen sunucu adları, adresler ve kullanıcı adları kaydedilirken yer tutucularla değiştirilir. Toplama düzeyini daha sonra Ayarlar'dan değiştirebilirsiniz.",
   "privacy": "Gizlilik",
   "privacyPolicy": "Gizlilik politikası",
-  "crashLastRunFailed": "ServerBox son çalıştırmada beklenmedik şekilde kapandı.",
+  "crashLastRunFailed": "NodePulse son çalıştırmada beklenmedik şekilde kapandı.",
   "crashReportTitle": "Çökme raporu",
   "crashReportHint": "Bu, önceki çalıştırmanın günlüğüdür. Bilinen sunucu adları ve adresleri yer tutucularla değiştirilmiştir, ancak başka ayrıntılar kalmış olabilir. Göndermeden önce dikkatlice okuyun.",
   "crashReportSubmit": "Kopyala ve bildir",

@@ -13,13 +13,13 @@
     <string name="widget_configure_server">Servidor</string>
     <string name="widget_configure_metric">Métrica principal</string>
     <string name="widget_configure_save">Guardar</string>
-    <string name="widget_configure_empty">Ainda não há servidor com agente monitor.\nAdicione um no ServerBox e volte aqui.</string>
+    <string name="widget_configure_empty">Ainda não há servidor com agente monitor.\nAdicione um no NodePulse e volte aqui.</string>
     <string name="widget_metric_cpu">CPU</string>
     <string name="widget_metric_memory">Memória</string>
     <string name="widget_metric_disk">Disco</string>
     <string name="widget_metric_network">Rede</string>
     <string name="widget_err_not_configured">Toque para escolher um servidor</string>
-    <string name="widget_err_no_token">Sem credencial — abra o ServerBox</string>
+    <string name="widget_err_no_token">Sem credencial — abra o NodePulse</string>
     <string name="widget_err_insecure">HTTPS necessário</string>
     <string name="widget_err_network">Erro de rede</string>
     <string name="widget_err_timeout">Tempo esgotado</string>

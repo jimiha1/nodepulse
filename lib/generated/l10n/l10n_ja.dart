@@ -13,7 +13,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get crashCollectIntro =>
-      'ServerBox は問題を修正できるよう、実行中に起きたことを記録します。送信する情報量を選べます。';
+      'NodePulse は問題を修正できるよう、実行中に起きたことを記録します。送信する情報量を選べます。';
 
   @override
   String get crashCollectNone => '送信しない';
@@ -46,7 +46,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get privacyPolicy => 'プライバシーポリシー';
 
   @override
-  String get crashLastRunFailed => 'ServerBox は前回の実行中に予期せず終了しました。';
+  String get crashLastRunFailed => 'NodePulse は前回の実行中に予期せず終了しました。';
 
   @override
   String get crashReportTitle => 'クラッシュレポート';

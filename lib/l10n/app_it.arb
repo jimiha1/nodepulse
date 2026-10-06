@@ -1,7 +1,7 @@
 {
   "@@locale": "it",
   "crashCollect": "Dati diagnostici",
-  "crashCollectIntro": "ServerBox registra ciò che accade durante l'esecuzione per poter risolvere i problemi. Scegli quanti dati inviare.",
+  "crashCollectIntro": "NodePulse registra ciò che accade durante l'esecuzione per poter risolvere i problemi. Scegli quanti dati inviare.",
   "crashCollectNone": "Niente",
   "crashCollectNoneTip": "I rapporti restano su questo dispositivo; dopo un arresto anomalo puoi inviarne uno manualmente.",
   "crashCollectBasic": "Informazioni di base",
@@ -11,7 +11,7 @@
   "crashCollectFooter": "A ogni livello, i nomi dei server noti, i relativi indirizzi e nomi utente vengono sostituiti da segnaposto al momento della registrazione. Puoi modificare il livello di raccolta in seguito nelle impostazioni.",
   "privacy": "Privacy",
   "privacyPolicy": "Informativa sulla privacy",
-  "crashLastRunFailed": "ServerBox si è chiuso inaspettatamente durante l'ultima esecuzione.",
+  "crashLastRunFailed": "NodePulse si è chiuso inaspettatamente durante l'ultima esecuzione.",
   "crashReportTitle": "Rapporto di arresto anomalo",
   "crashReportHint": "Questo è il registro dell'esecuzione precedente. I nomi e gli indirizzi dei server noti sono stati sostituiti da segnaposto, ma altri dettagli possono rimanere. Leggilo attentamente prima di inviarlo.",
   "crashReportSubmit": "Copia e segnala",

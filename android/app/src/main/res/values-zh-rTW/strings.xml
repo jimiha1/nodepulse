@@ -13,13 +13,13 @@
     <string name="widget_configure_server">伺服器</string>
     <string name="widget_configure_metric">主要指標</string>
     <string name="widget_configure_save">儲存</string>
-    <string name="widget_configure_empty">尚未設定任何有 Monitor 的伺服器。\n請先在 ServerBox 中新增，然後返回。</string>
+    <string name="widget_configure_empty">尚未設定任何有 Monitor 的伺服器。\n請先在 NodePulse 中新增，然後返回。</string>
     <string name="widget_metric_cpu">CPU</string>
     <string name="widget_metric_memory">記憶體</string>
     <string name="widget_metric_disk">磁碟</string>
     <string name="widget_metric_network">網路</string>
     <string name="widget_err_not_configured">點按選擇伺服器</string>
-    <string name="widget_err_no_token">無憑證 —— 請開啟 ServerBox</string>
+    <string name="widget_err_no_token">無憑證 —— 請開啟 NodePulse</string>
     <string name="widget_err_insecure">需要 HTTPS</string>
     <string name="widget_err_network">網路錯誤</string>
     <string name="widget_err_timeout">要求逾時</string>

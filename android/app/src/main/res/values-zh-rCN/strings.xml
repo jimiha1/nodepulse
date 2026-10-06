@@ -13,7 +13,7 @@
     <string name="widget_configure_server">服务器</string>
     <string name="widget_configure_metric">主要指标</string>
     <string name="widget_configure_save">保存</string>
-    <string name="widget_configure_empty">还没有配置 Monitor 的服务器。\n请先在 ServerBox 中添加，然后返回。</string>
+    <string name="widget_configure_empty">还没有配置 Monitor 的服务器。\n请先在 NodePulse 中添加，然后返回。</string>
     <string name="widget_metric_cpu">CPU</string>
     <string name="widget_metric_memory">内存</string>
     <string name="widget_metric_disk">磁盘</string>
@@ -49,7 +49,7 @@
     <string name="widget_field_loss">丢包率</string>
 
     <string name="widget_err_not_configured">点按选择服务器</string>
-    <string name="widget_err_no_token">无凭据 —— 请打开 ServerBox</string>
+    <string name="widget_err_no_token">无凭据 —— 请打开 NodePulse</string>
     <string name="widget_err_insecure">需要 HTTPS</string>
     <string name="widget_err_network">网络错误</string>
     <string name="widget_err_timeout">请求超时</string>

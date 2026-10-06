@@ -4,7 +4,7 @@
   "@crashCollect": {
     "description": "User-facing label or message for crash collect."
   },
-  "crashCollectIntro": "ServerBox records what happens while it runs so problems can be fixed. Choose how much information to send.",
+  "crashCollectIntro": "NodePulse records what happens while it runs so problems can be fixed. Choose how much information to send.",
   "@crashCollectIntro": {
     "description": "Introductory text for the crash collect screen or section."
   },
@@ -44,7 +44,7 @@
   "@privacyPolicy": {
     "description": "User-facing label or message for privacy policy."
   },
-  "crashLastRunFailed": "ServerBox exited unexpectedly during its last run.",
+  "crashLastRunFailed": "NodePulse exited unexpectedly during its last run.",
   "@crashLastRunFailed": {
     "description": "Error message shown when crash last run failed."
   },

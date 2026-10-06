@@ -1,7 +1,7 @@
 {
   "@@locale": "nl",
   "crashCollect": "Diagnostische gegevens",
-  "crashCollectIntro": "ServerBox legt vast wat er tijdens het gebruik gebeurt, zodat problemen kunnen worden opgelost. Kies hoeveel informatie er wordt verstuurd.",
+  "crashCollectIntro": "NodePulse legt vast wat er tijdens het gebruik gebeurt, zodat problemen kunnen worden opgelost. Kies hoeveel informatie er wordt verstuurd.",
   "crashCollectNone": "Niets",
   "crashCollectNoneTip": "Rapporten blijven op dit apparaat; na een crash kun je er handmatig een versturen.",
   "crashCollectBasic": "Basisgegevens",
@@ -11,7 +11,7 @@
   "crashCollectFooter": "Op elk niveau worden bekende servernamen, adressen en gebruikersnamen al bij het vastleggen vervangen door plaatsaanduidingen. Je kunt het verzamelingsniveau later wijzigen in de instellingen.",
   "privacy": "Privacy",
   "privacyPolicy": "Privacybeleid",
-  "crashLastRunFailed": "ServerBox is tijdens de vorige uitvoering onverwacht afgesloten.",
+  "crashLastRunFailed": "NodePulse is tijdens de vorige uitvoering onverwacht afgesloten.",
   "crashReportTitle": "Crashrapport",
   "crashReportHint": "Dit is het logboek van de vorige uitvoering. Bekende servernamen en adressen zijn vervangen door plaatsaanduidingen, maar andere gegevens kunnen achterblijven. Lees het zorgvuldig door voordat je het indient.",
   "crashReportSubmit": "Kopiëren en melden",

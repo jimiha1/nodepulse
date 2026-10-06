@@ -1,7 +1,7 @@
 {
   "@@locale": "de",
   "crashCollect": "Diagnosedaten",
-  "crashCollectIntro": "ServerBox zeichnet während des Betriebs auf, was passiert, damit Probleme behoben werden können. Wählen Sie, wie viele Informationen gesendet werden.",
+  "crashCollectIntro": "NodePulse zeichnet während des Betriebs auf, was passiert, damit Probleme behoben werden können. Wählen Sie, wie viele Informationen gesendet werden.",
   "crashCollectNone": "Nichts",
   "crashCollectNoneTip": "Berichte bleiben auf diesem Gerät; nach einem Absturz können Sie manuell einen senden.",
   "crashCollectBasic": "Grundlegende Informationen",
@@ -11,7 +11,7 @@
   "crashCollectFooter": "Unabhängig von der Stufe werden bekannte Servernamen, -adressen und Benutzernamen bereits beim Aufzeichnen durch Platzhalter ersetzt. Die Erfassungsstufe kann später in den Einstellungen geändert werden.",
   "privacy": "Datenschutz",
   "privacyPolicy": "Datenschutzerklärung",
-  "crashLastRunFailed": "ServerBox wurde beim letzten Ausführen unerwartet beendet.",
+  "crashLastRunFailed": "NodePulse wurde beim letzten Ausführen unerwartet beendet.",
   "crashReportTitle": "Absturzbericht",
   "crashReportHint": "Dies ist das Protokoll des vorherigen Laufs. Bekannte Servernamen und -adressen wurden durch Platzhalter ersetzt, andere Angaben können jedoch verbleiben. Bitte lesen Sie es vor dem Absenden sorgfältig durch.",
   "crashReportSubmit": "Kopieren & melden",

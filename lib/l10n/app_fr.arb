@@ -1,7 +1,7 @@
 {
   "@@locale": "fr",
   "crashCollect": "Données de diagnostic",
-  "crashCollectIntro": "ServerBox enregistre ce qui se passe pendant son fonctionnement afin de pouvoir corriger les problèmes. Choisissez la quantité d'informations envoyée.",
+  "crashCollectIntro": "NodePulse enregistre ce qui se passe pendant son fonctionnement afin de pouvoir corriger les problèmes. Choisissez la quantité d'informations envoyée.",
   "crashCollectNone": "Rien",
   "crashCollectNoneTip": "Les rapports restent sur cet appareil ; après un plantage, vous pouvez en envoyer un manuellement.",
   "crashCollectBasic": "Informations de base",
@@ -11,7 +11,7 @@
   "crashCollectFooter": "Quel que soit le niveau, les noms de serveurs connus, leurs adresses et noms d'utilisateur sont remplacés par des espaces réservés dès l'enregistrement. Vous pouvez modifier le niveau de collecte plus tard dans les réglages.",
   "privacy": "Confidentialité",
   "privacyPolicy": "Politique de confidentialité",
-  "crashLastRunFailed": "ServerBox s'est fermé de manière inattendue lors de sa dernière exécution.",
+  "crashLastRunFailed": "NodePulse s'est fermé de manière inattendue lors de sa dernière exécution.",
   "crashReportTitle": "Rapport de plantage",
   "crashReportHint": "Ceci est le journal de l'exécution précédente. Les noms et adresses de serveurs connus ont été remplacés par des espaces réservés, mais d'autres informations peuvent subsister. Lisez-le attentivement avant de l'envoyer.",
   "crashReportSubmit": "Copier et signaler",

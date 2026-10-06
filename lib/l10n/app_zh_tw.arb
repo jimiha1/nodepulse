@@ -1,7 +1,7 @@
 {
   "@@locale": "zh_TW",
   "crashCollect": "診斷資料",
-  "crashCollectIntro": "ServerBox 會記錄執行期間發生的情況，以便修正問題。你可以選擇要傳送多少資料。",
+  "crashCollectIntro": "NodePulse 會記錄執行期間發生的情況，以便修正問題。你可以選擇要傳送多少資料。",
   "crashCollectNone": "不傳送",
   "crashCollectNoneTip": "報告仍會保留在本機；當機後你仍可手動傳送。",
   "crashCollectBasic": "基本資料",
@@ -11,7 +11,7 @@
   "crashCollectFooter": "無論選擇哪個等級，記錄時都會將已知伺服器名稱、位址和使用者名稱替換為預留位置。之後可在設定中更改收集等級。",
   "privacy": "隱私",
   "privacyPolicy": "隱私權政策",
-  "crashLastRunFailed": "ServerBox 上次執行時異常結束。",
+  "crashLastRunFailed": "NodePulse 上次執行時異常結束。",
   "crashReportTitle": "當機報告",
   "crashReportHint": "這是上次執行的日誌。已知的伺服器名稱和位址已替換為預留位置，但其中可能仍包含其他資訊。提交前請仔細閱讀。",
   "crashReportSubmit": "複製並回報",

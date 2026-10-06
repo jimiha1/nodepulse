@@ -13,13 +13,13 @@
     <string name="widget_configure_server">Sunucu</string>
     <string name="widget_configure_metric">Ana ölçüm</string>
     <string name="widget_configure_save">Kaydet</string>
-    <string name="widget_configure_empty">Henüz monitor aracısı olan bir sunucu yok.\nServerBox\'ta bir tane ekleyip geri dönün.</string>
+    <string name="widget_configure_empty">Henüz monitor aracısı olan bir sunucu yok.\nNodePulse\'ta bir tane ekleyip geri dönün.</string>
     <string name="widget_metric_cpu">CPU</string>
     <string name="widget_metric_memory">Bellek</string>
     <string name="widget_metric_disk">Disk</string>
     <string name="widget_metric_network">Ağ</string>
     <string name="widget_err_not_configured">Sunucu seçmek için dokunun</string>
-    <string name="widget_err_no_token">Kimlik bilgisi yok — ServerBox\'ı açın</string>
+    <string name="widget_err_no_token">Kimlik bilgisi yok — NodePulse\'ı açın</string>
     <string name="widget_err_insecure">HTTPS gerekli</string>
     <string name="widget_err_network">Ağ hatası</string>
     <string name="widget_err_timeout">Zaman aşımı</string>

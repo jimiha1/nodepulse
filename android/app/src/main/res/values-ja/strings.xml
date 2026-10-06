@@ -13,13 +13,13 @@
     <string name="widget_configure_server">サーバー</string>
     <string name="widget_configure_metric">主な指標</string>
     <string name="widget_configure_save">保存</string>
-    <string name="widget_configure_empty">monitor を設定したサーバーがまだありません。\nServerBox で追加してから戻ってください。</string>
+    <string name="widget_configure_empty">monitor を設定したサーバーがまだありません。\nNodePulse で追加してから戻ってください。</string>
     <string name="widget_metric_cpu">CPU</string>
     <string name="widget_metric_memory">メモリ</string>
     <string name="widget_metric_disk">ディスク</string>
     <string name="widget_metric_network">ネットワーク</string>
     <string name="widget_err_not_configured">タップしてサーバーを選択</string>
-    <string name="widget_err_no_token">認証情報がありません — ServerBox を開いてください</string>
+    <string name="widget_err_no_token">認証情報がありません — NodePulse を開いてください</string>
     <string name="widget_err_insecure">HTTPS が必要です</string>
     <string name="widget_err_network">ネットワークエラー</string>
     <string name="widget_err_timeout">タイムアウトしました</string>

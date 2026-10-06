@@ -1,7 +1,7 @@
 {
   "@@locale": "pt",
   "crashCollect": "Dados de diagnóstico",
-  "crashCollectIntro": "O ServerBox registra o que acontece durante a execução para que os problemas possam ser corrigidos. Escolha quanta informação enviar.",
+  "crashCollectIntro": "O NodePulse registra o que acontece durante a execução para que os problemas possam ser corrigidos. Escolha quanta informação enviar.",
   "crashCollectNone": "Nada",
   "crashCollectNoneTip": "Os relatórios continuam neste dispositivo; após uma falha, você pode enviar um manualmente.",
   "crashCollectBasic": "Informações básicas",
@@ -11,7 +11,7 @@
   "crashCollectFooter": "Em todos os níveis, nomes de servidor conhecidos, seus endereços e nomes de usuário são substituídos por marcadores no momento do registro. Você pode alterar o nível de coleta mais tarde nas configurações.",
   "privacy": "Privacidade",
   "privacyPolicy": "Política de privacidade",
-  "crashLastRunFailed": "O ServerBox fechou inesperadamente durante a última execução.",
+  "crashLastRunFailed": "O NodePulse fechou inesperadamente durante a última execução.",
   "crashReportTitle": "Relatório de falha",
   "crashReportHint": "Este é o registro da execução anterior. Nomes e endereços de servidor conhecidos foram substituídos por marcadores, mas outros detalhes podem permanecer. Leia-o com atenção antes de enviá-lo.",
   "crashReportSubmit": "Copiar e relatar",

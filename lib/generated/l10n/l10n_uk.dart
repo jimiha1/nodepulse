@@ -13,7 +13,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get crashCollectIntro =>
-      'ServerBox записує те, що відбувається під час роботи, щоб можна було виправляти проблеми. Виберіть, скільки даних надсилати.';
+      'NodePulse записує те, що відбувається під час роботи, щоб можна було виправляти проблеми. Виберіть, скільки даних надсилати.';
 
   @override
   String get crashCollectNone => 'Нічого';
@@ -48,7 +48,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get crashLastRunFailed =>
-      'ServerBox несподівано завершив роботу під час останнього запуску.';
+      'NodePulse несподівано завершив роботу під час останнього запуску.';
 
   @override
   String get crashReportTitle => 'Звіт про збій';

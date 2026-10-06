@@ -134,7 +134,7 @@ abstract class AppLocalizations {
   /// Introductory text for the crash collect screen or section.
   ///
   /// In en, this message translates to:
-  /// **'ServerBox records what happens while it runs so problems can be fixed. Choose how much information to send.'**
+  /// **'NodePulse records what happens while it runs so problems can be fixed. Choose how much information to send.'**
   String get crashCollectIntro;
 
   /// Empty-state message for crash collect none.
@@ -194,7 +194,7 @@ abstract class AppLocalizations {
   /// Error message shown when crash last run failed.
   ///
   /// In en, this message translates to:
-  /// **'ServerBox exited unexpectedly during its last run.'**
+  /// **'NodePulse exited unexpectedly during its last run.'**
   String get crashLastRunFailed;
 
   /// Title shown for the crash report dialog or section.
