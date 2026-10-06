@@ -18,8 +18,6 @@ abstract final class Urls {
   static const themeCatalog = '$rawRepo/assets/catalog/repos.toml';
   static const githubReleasesApi = '$githubApi/cf_server_box/releases';
   static const appStore = 'https://apps.apple.com/app/id1586449703';
-  static const appHelp = '$thisRepo#-help';
-  static const appWiki = '$thisRepo/wiki';
 
   /// Where a crash report goes.
   ///
@@ -73,7 +71,4 @@ abstract final class Urls {
   /// sends; they cannot say where it goes or how long it is kept, and consent
   /// given without somewhere to read that is consent to a summary.
   static const privacyPolicy = '$docs/privacy/';
-
-  /// How the data is built, and where the DB-IP attribution lives.
-  static const geoDataRepo = '$myGithub/ipgeo-shards';
 }
