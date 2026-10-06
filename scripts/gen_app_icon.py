@@ -9,7 +9,7 @@ a build should not need a drawing tool. Re-run it after changing anything here:
 Every size is the same waveform, so the shape lives once in a unit square and
 each output is a supersampled raster of it. The PNGs are written by hand for
 the reason the drawing is: this repo's machines have no drawing tool, and a
-flat RGBA image is a zlib stream and four chunks.
+flat RGBA image is a zlib stream and three chunks.
 """
 
 import struct
@@ -32,7 +32,7 @@ BG = (0x1A, 0x3D, 0x5C)  # #1A3D5C
 FG = (0xFF, 0xFF, 0xFF)
 
 SAMPLES = 4             # 4x4 subsamples a pixel; the diagonals need them
-SAFE = 0.66             # adaptive icons crop, so the foreground insets to this
+SAFE = 0.66             # adaptive icons crop, so both adaptive layers inset
 
 ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "assets"
@@ -80,11 +80,11 @@ def covered(x: float, y: float) -> bool:
 def render(size: int, inset: bool = False, fill: bool = True) -> bytes:
     """One output's RGBA pixels.
 
-    `inset` draws the waveform at SAFE of its size, centred: the adaptive
-    foreground is cropped to a shape the launcher picks, and a full-bleed line
-    would lose its ends under a circular mask. `fill` paints the navy
-    background; without it the waveform stands alone in white on transparent,
-    which is what the themed-icon and foreground layers are.
+    `inset` draws the waveform at SAFE of its size, centred: an adaptive layer
+    is cropped to a shape the launcher picks, and a full-bleed line would lose
+    its ends under a circular mask. `fill` paints the navy background; without
+    it the waveform stands alone in white on transparent, which is what the
+    themed-icon and foreground layers are.
     """
     scale = SAFE if inset else 1.0
     # A subsample's coordinate in the unit square, per pixel index. The same
@@ -148,7 +148,10 @@ def main() -> None:
             (folder / "ic_launcher.png", size, False, True),
             (folder / "ic_launcher_round.png", size, False, True),
             # Themed icons are the waveform alone; the system supplies a colour.
-            (folder / "ic_launcher_monochrome.png", size, False, False),
+            # Inset and 2.25x like the foreground, and for the same reason: this
+            # is an adaptive layer too, scaled to fill the 108 dp canvas, so a
+            # full-bleed render loses its lead-in and lead-out under the mask.
+            (folder / "ic_launcher_monochrome.png", size * 9 // 4, True, False),
             # 2.25x the launcher size: the adaptive foreground's own canvas.
             (folder / "ic_launcher_foreground.png", size * 9 // 4, True, False),
         ]
