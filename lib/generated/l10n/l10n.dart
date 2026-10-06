@@ -9572,6 +9572,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{minutes} min'**
   String cfResourceWindowFmt(int minutes);
+
+  /// Runs one node alert check immediately instead of waiting for the periodic worker
+  ///
+  /// In en, this message translates to:
+  /// **'Check now'**
+  String get cfAlertCheckNow;
+
+  /// Result of a manual alert check
+  ///
+  /// In en, this message translates to:
+  /// **'Checked {count} nodes, {notified} alert(s) sent'**
+  String cfAlertCheckOk(int count, int notified);
+
+  /// Manual alert check failed because no site URL is configured
+  ///
+  /// In en, this message translates to:
+  /// **'Set the site address first'**
+  String get cfAlertCheckNoSite;
+
+  /// Manual alert check failed because no credential is stored
+  ///
+  /// In en, this message translates to:
+  /// **'Log in to the site first, so the check can read it'**
+  String get cfAlertCheckNoToken;
+
+  /// Manual alert check failed because the site answered 401/403
+  ///
+  /// In en, this message translates to:
+  /// **'The site rejected the stored login — reopen this page to sign in again'**
+  String get cfAlertCheckAuth;
+
+  /// Manual alert check failed on the network
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the site'**
+  String get cfAlertCheckNetwork;
+
+  /// Manual alert check found no condition met
+  ///
+  /// In en, this message translates to:
+  /// **'Checked {count} nodes, nothing to alert about'**
+  String cfAlertCheckClear(int count);
+
+  /// Manual alert check found alerts that were already sent today
+  ///
+  /// In en, this message translates to:
+  /// **'Checked {count} nodes, already reminded today'**
+  String cfAlertCheckSuppressed(int count);
 }
 
 class _AppLocalizationsDelegate

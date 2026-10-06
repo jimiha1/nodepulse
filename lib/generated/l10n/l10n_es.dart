@@ -5644,4 +5644,36 @@ class AppLocalizationsEs extends AppLocalizations {
   String cfResourceWindowFmt(int minutes) {
     return '$minutes min';
   }
+
+  @override
+  String get cfAlertCheckNow => 'Check now';
+
+  @override
+  String cfAlertCheckOk(int count, int notified) {
+    return 'Checked $count nodes, $notified alert(s) sent';
+  }
+
+  @override
+  String get cfAlertCheckNoSite => 'Set the site address first';
+
+  @override
+  String get cfAlertCheckNoToken =>
+      'Log in to the site first, so the check can read it';
+
+  @override
+  String get cfAlertCheckAuth =>
+      'The site rejected the stored login — reopen this page to sign in again';
+
+  @override
+  String get cfAlertCheckNetwork => 'Could not reach the site';
+
+  @override
+  String cfAlertCheckClear(int count) {
+    return 'Checked $count nodes, nothing to alert about';
+  }
+
+  @override
+  String cfAlertCheckSuppressed(int count) {
+    return 'Checked $count nodes, already reminded today';
+  }
 }

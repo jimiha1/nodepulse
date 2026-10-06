@@ -1572,5 +1572,13 @@
   "cfResourceMetricNetOut": "出站网速",
   "cfResourceTriggerAvg": "窗口平均值超过阈值",
   "cfResourceTriggerAll": "窗口内全部样本超过阈值",
-  "cfResourceWindowFmt": "{minutes} 分钟"
+  "cfResourceWindowFmt": "{minutes} 分钟",
+  "cfAlertCheckNow": "立即检查",
+  "cfAlertCheckOk": "已检查 {count} 个节点，发送 {notified} 条告警",
+  "cfAlertCheckNoSite": "请先填写站点地址",
+  "cfAlertCheckNoToken": "请先登录站点，否则无法读取",
+  "cfAlertCheckAuth": "站点拒绝了已保存的登录，请重新打开本页登录",
+  "cfAlertCheckNetwork": "无法连接到站点",
+  "cfAlertCheckClear": "已检查 {count} 个节点，一切正常",
+  "cfAlertCheckSuppressed": "已检查 {count} 个节点，今日已提醒过"
 }

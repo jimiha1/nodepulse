@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import kotlinx.coroutines.runBlocking
 import android.appwidget.AppWidgetManager
 import tech.lolli.toolbox.alert.AlertSettings
 import tech.lolli.toolbox.alert.AlertWorker
@@ -261,6 +262,42 @@ class MainActivity: FlutterFragmentActivity() {
                     }
                     "widgetTokenState" -> {
                         result.success(WidgetStore.tokenState(applicationContext))
+                    }
+                    // Runs one alert check right now and reports what it found,
+                    // so a threshold just set can be confirmed without waiting
+                    // for the periodic worker's next slot. Off the main thread
+                    // for the same reason `lastExitInfo` is: this is a network
+                    // round trip, and the UI thread is waiting on the result.
+                    "checkAlertsNow" -> {
+                        val settings = AlertSettings.load(applicationContext)
+                        Thread {
+                            val report = try {
+                                when (val outcome = runBlocking {
+                                    AlertWorker.runCheck(applicationContext, settings)
+                                }) {
+                                    is AlertWorker.CheckOutcome.Done -> mapOf(
+                                        "ok" to true,
+                                        "checked" to outcome.checked,
+                                        "notified" to outcome.notified,
+                                        // `[[title, text], ...]`: the alerts
+                                        // held back as already announced, so
+                                        // the dialog can show what they said
+                                        // instead of a bare "0 sent".
+                                        "suppressed" to outcome.suppressed.map {
+                                            listOf(it.first, it.second)
+                                        },
+                                    )
+                                    is AlertWorker.CheckOutcome.Failed -> mapOf(
+                                        "ok" to false,
+                                        "reason" to outcome.reason,
+                                    )
+                                }
+                            } catch (e: Exception) {
+                                android.util.Log.w("MainActivity", "Alert check failed: ${e.message}")
+                                mapOf("ok" to false, "reason" to AlertWorker.REASON_NETWORK)
+                            }
+                            runOnUiThread { result.success(report) }
+                        }.start()
                     }
                     else -> {
                         result.notImplemented()

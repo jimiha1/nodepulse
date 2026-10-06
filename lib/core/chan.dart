@@ -188,6 +188,31 @@ abstract final class MethodChans {
     }
   }
 
+  /// Runs one alert check now, and returns what it found.
+  ///
+  /// The periodic worker's slot can be fifteen minutes away, so without this
+  /// a threshold just set is unverifiable: an alert that will never fire and
+  /// one that is merely waiting look exactly alike.
+  ///
+  /// Keys on success: `ok` (true), `checked` (nodes read), `notified`
+  /// (notifications posted), and `suppressed` — the alerts that qualified but
+  /// were held back as already announced, as `[[title, text], ...]`. That
+  /// last one is what lets the caller tell "nothing to alert about" apart
+  /// from "already reminded today", which look identical from `notified`
+  /// alone. On failure: `ok` (false) and `reason`, a short code the caller
+  /// maps to a sentence — `no_site`, `no_token`, `auth`, `network`. Null off
+  /// Android.
+  static Future<Map<String, Object?>?> checkAlertsNow() async {
+    if (!isAndroid) return null;
+    try {
+      final result = await _channel.invokeMethod('checkAlertsNow');
+      return result is Map ? result.cast<String, Object?>() : null;
+    } catch (e, s) {
+      Loggers.app.warning('Failed to run an alert check', e, s);
+      return {'ok': false, 'reason': 'network'};
+    }
+  }
+
   /// Query whether the Android foreground service is currently running.
   /// How the process ended last time, as Android recorded it.
   ///

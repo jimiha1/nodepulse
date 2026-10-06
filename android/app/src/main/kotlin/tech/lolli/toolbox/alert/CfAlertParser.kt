@@ -24,14 +24,45 @@ object CfAlertParser {
         val text: String,
     )
 
+    /** Why an alert that qualifies was not sent. */
+    enum class SuppressedReason {
+        /**
+         * Expiry, already sent once today. It comes back tomorrow — the
+         * reminder is daily, not one-shot.
+         */
+        TODAY,
+
+        /**
+         * Traffic, at a tier already announced. Unlike expiry this does not
+         * come back on its own: only crossing into a higher tier sends again.
+         */
+        TIER,
+    }
+
+    /** An alert the dedup state held back, and what held it. */
+    data class Suppressed(
+        val alert: Alert,
+        val reason: SuppressedReason,
+    )
+
     private val TIERS = listOf(80, 90, 95)
 
+    /**
+     * Reads the fleet and returns the alerts to send.
+     *
+     * [suppressed], when given, is filled with the alerts that qualified but
+     * were held back by the dedup state. The periodic worker passes nothing —
+     * a held-back alert is not news to it — but the settings page's "check
+     * now" does, because "already sent today" and "nothing to send" are
+     * different answers and the user is owed the right one.
+     */
     fun check(
         json: String,
         trafficThresholdPct: Int,
         expiryDays: Int,
         state: MutableMap<String, String>,
         today: LocalDate = LocalDate.now(),
+        suppressed: MutableList<Suppressed>? = null,
     ): List<Alert> {
         val root = try {
             JSONObject(json)
@@ -67,18 +98,19 @@ object CfAlertParser {
                 if (highestTier != null) {
                     val key = "alert_${id}_traffic"
                     val lastTier = state[key]?.toIntOrNull() ?: 0
+                    val alert = Alert(
+                        nodeId = id,
+                        nodeName = name,
+                        kind = AlertKind.TRAFFIC,
+                        tierOrDays = highestTier,
+                        title = "$name 流量达到 ${highestTier}%",
+                        text = "当月流量已用 ${(ratio * 100.0).formatOneDecimal()}%（限额: ${formatBytes(limitBytes.toDouble())}）",
+                    )
                     if (highestTier > lastTier) {
                         state[key] = highestTier.toString()
-                        alerts.add(
-                            Alert(
-                                nodeId = id,
-                                nodeName = name,
-                                kind = AlertKind.TRAFFIC,
-                                tierOrDays = highestTier,
-                                title = "$name 流量达到 ${highestTier}%",
-                                text = "当月流量已用 ${(ratio * 100.0).formatOneDecimal()}%（限额: ${formatBytes(limitBytes.toDouble())}）",
-                            )
-                        )
+                        alerts.add(alert)
+                    } else {
+                        suppressed?.add(Suppressed(alert, SuppressedReason.TIER))
                     }
                 }
             }
@@ -94,33 +126,35 @@ object CfAlertParser {
 
                     if (daysUntil < 0) {
                         // Expired
+                        val alert = Alert(
+                            nodeId = id,
+                            nodeName = name,
+                            kind = AlertKind.EXPIRED,
+                            tierOrDays = daysUntil,
+                            title = "$name 已过期",
+                            text = "节点到期日为 $expireRaw，目前已过期 ${-daysUntil} 天",
+                        )
                         if (lastNotifiedDate != todayStr) {
                             state[expireKey] = todayStr
-                            alerts.add(
-                                Alert(
-                                    nodeId = id,
-                                    nodeName = name,
-                                    kind = AlertKind.EXPIRED,
-                                    tierOrDays = daysUntil,
-                                    title = "$name 已过期",
-                                    text = "节点到期日为 $expireRaw，目前已过期 ${-daysUntil} 天",
-                                )
-                            )
+                            alerts.add(alert)
+                        } else {
+                            suppressed?.add(Suppressed(alert, SuppressedReason.TODAY))
                         }
                     } else if (daysUntil <= expiryDays) {
                         // Expiring soon
+                        val alert = Alert(
+                            nodeId = id,
+                            nodeName = name,
+                            kind = AlertKind.EXPIRE,
+                            tierOrDays = daysUntil,
+                            title = "$name 即将到期",
+                            text = "节点将于 $daysUntil 天后到期（$expireRaw）",
+                        )
                         if (lastNotifiedDate != todayStr) {
                             state[expireKey] = todayStr
-                            alerts.add(
-                                Alert(
-                                    nodeId = id,
-                                    nodeName = name,
-                                    kind = AlertKind.EXPIRE,
-                                    tierOrDays = daysUntil,
-                                    title = "$name 即将到期",
-                                    text = "节点将于 $daysUntil 天后到期（$expireRaw）",
-                                )
-                            )
+                            alerts.add(alert)
+                        } else {
+                            suppressed?.add(Suppressed(alert, SuppressedReason.TODAY))
                         }
                     }
                 }

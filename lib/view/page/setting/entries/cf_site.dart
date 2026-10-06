@@ -27,6 +27,9 @@ final class _CfSiteSettingsPageState extends ConsumerState<CfSiteSettingsPage> {
   /// would otherwise stack two logins and two reads.
   bool _testing = false;
 
+  /// The same guard for [checkNow]: the check is a network round trip too.
+  bool _checking = false;
+
   @override
   void initState() {
     super.initState();
@@ -120,6 +123,117 @@ final class _CfSiteSettingsPageState extends ConsumerState<CfSiteSettingsPage> {
       if (mounted) setState(() => _testing = false);
     }
   }
+
+  /// Runs one alert check now and says what it found.
+  ///
+  /// The periodic worker's slot can be fifteen minutes away, and an alert
+  /// whose threshold is not met yet posts nothing at all — so without this,
+  /// "configured correctly" and "never going to fire" are indistinguishable
+  /// to the user who just set a threshold.
+  ///
+  /// The check is native, and it is the same one the worker runs: running a
+  /// second implementation here would let the button report one thing while
+  /// the background job did another.
+  Future<void> _checkNow() async {
+    if (_checking) return;
+    setState(() => _checking = true);
+
+    // Cleared as soon as the answer is in, not when the dialog closes: the
+    // spinner belongs to the check, and leaving it turning under a dialog that
+    // already holds the result reads as a check still running.
+    Map<String, Object?>? result;
+    try {
+      result = await MethodChans.checkAlertsNow();
+    } catch (e, s) {
+      Loggers.app.warning('Alert check failed', e, s);
+      result = null;
+    } finally {
+      if (mounted) setState(() => _checking = false);
+    }
+
+    if (!mounted) return;
+    if (result == null) {
+      await context.showRoundDialog(
+        title: l10n.cfAlertCheckNow,
+        child: Text(l10n.cfAlertCheckNetwork),
+      );
+      return;
+    }
+    if (result['ok'] != true) {
+      await context.showRoundDialog(
+        title: l10n.cfAlertCheckNow,
+        child: Text(_checkFailureText('${result['reason']}')),
+      );
+      return;
+    }
+
+    // Three different answers, and `notified` alone cannot tell them apart:
+    // zero means either "nothing qualified" or "already sent today", and a
+    // user pressing the button twice is owed the difference. The suppressed
+    // list is what separates them, and its contents are the alert that would
+    // have been sent — shown so the second press explains itself rather than
+    // reading as a check that did nothing.
+    final count = result['checked'] as int? ?? 0;
+    final notified = result['notified'] as int? ?? 0;
+    final suppressed = _suppressedOf(result);
+    await context.showRoundDialog(
+      title: l10n.cfAlertCheckNow,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            switch ((notified, suppressed.isEmpty)) {
+              // Sent: say how many.
+              (final n, _) when n > 0 => l10n.cfAlertCheckOk(count, n),
+              // Nothing sent, but something qualified and was held back:
+              // the reminder already went out today.
+              (_, false) => l10n.cfAlertCheckSuppressed(count),
+              // Nothing qualified at all — the ordinary, reassuring answer.
+              _ => l10n.cfAlertCheckClear(count),
+            },
+          ),
+          for (final (title, text) in suppressed) ...[
+            const SizedBox(height: 9),
+            Text(title, style: UIs.text13Bold),
+            Text(text, style: UIs.text13Grey),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// The `[[title, text], ...]` the native side reports, defensively read.
+  ///
+  /// The value crosses a method channel, so its shape is the other side's
+  /// promise and not a type the compiler checks here; anything unexpected is
+  /// dropped rather than thrown, because losing a line of detail is a better
+  /// outcome than a dialog that never opens.
+  List<(String, String)> _suppressedOf(Map<String, Object?> result) {
+    final raw = result['suppressed'];
+    if (raw is! List) return const [];
+    final out = <(String, String)>[];
+    for (final entry in raw) {
+      if (entry is List && entry.length >= 2) {
+        final title = entry[0];
+        final text = entry[1];
+        if (title is String && text is String) out.add((title, text));
+      }
+    }
+    return out;
+  }
+
+  /// The sentence for one of [MethodChans.checkAlertsNow]'s failure codes.
+  ///
+  /// The codes are built natively, where the l10n files are not reachable, so
+  /// the mapping lives here; an unrecognised one falls back to the network
+  /// wording rather than showing a raw identifier.
+  String _checkFailureText(String reason) => switch (reason) {
+        'no_site' => l10n.cfAlertCheckNoSite,
+        'no_token' => l10n.cfAlertCheckNoToken,
+        'auth' => l10n.cfAlertCheckAuth,
+        _ => l10n.cfAlertCheckNetwork,
+      };
 
   /// Persists the typed credentials as they are submitted, and logs in with
   /// them when nothing has yet: a stored pair alone becomes a session only
@@ -325,6 +439,17 @@ final class _CfSiteSettingsPageState extends ConsumerState<CfSiteSettingsPage> {
                                   ],
                                 ),
                                 onTap: () => CfResourceAlertsPage.route.go(context),
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.play_circle_outline),
+                                title: Text(l10n.cfAlertCheckNow),
+                                trailing: _checking
+                                    ? const SizedBox.square(
+                                        dimension: 15,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    : const Icon(Icons.chevron_right, size: 18),
+                                onTap: _checkNow,
                               ),
                             ],
                           )

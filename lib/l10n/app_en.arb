@@ -7272,5 +7272,55 @@
         "type": "int"
       }
     }
+  },
+  "cfAlertCheckNow": "Check now",
+  "@cfAlertCheckNow": {
+    "description": "Runs one node alert check immediately instead of waiting for the periodic worker"
+  },
+  "cfAlertCheckOk": "Checked {count} nodes, {notified} alert(s) sent",
+  "@cfAlertCheckOk": {
+    "description": "Result of a manual alert check",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "notified": {
+        "type": "int"
+      }
+    }
+  },
+  "cfAlertCheckNoSite": "Set the site address first",
+  "@cfAlertCheckNoSite": {
+    "description": "Manual alert check failed because no site URL is configured"
+  },
+  "cfAlertCheckNoToken": "Log in to the site first, so the check can read it",
+  "@cfAlertCheckNoToken": {
+    "description": "Manual alert check failed because no credential is stored"
+  },
+  "cfAlertCheckAuth": "The site rejected the stored login — reopen this page to sign in again",
+  "@cfAlertCheckAuth": {
+    "description": "Manual alert check failed because the site answered 401/403"
+  },
+  "cfAlertCheckNetwork": "Could not reach the site",
+  "@cfAlertCheckNetwork": {
+    "description": "Manual alert check failed on the network"
+  },
+  "cfAlertCheckClear": "Checked {count} nodes, nothing to alert about",
+  "@cfAlertCheckClear": {
+    "description": "Manual alert check found no condition met",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cfAlertCheckSuppressed": "Checked {count} nodes, already reminded today",
+  "@cfAlertCheckSuppressed": {
+    "description": "Manual alert check found alerts that were already sent today",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

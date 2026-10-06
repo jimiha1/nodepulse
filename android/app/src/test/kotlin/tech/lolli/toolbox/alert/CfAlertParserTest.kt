@@ -157,4 +157,107 @@ class CfAlertParserTest {
         assertEquals(-1, expiredAlerts[0].tierOrDays)
         assertEquals("2026-10-02", state["alert_node-1_expire"])
     }
+
+    // The settings page's "check now" button reports what it found. An alert
+    // held back because it was already sent today is not the same answer as
+    // "nothing to alert about", and the button has to be able to say which.
+
+    @Test
+    fun anExpiryAlreadyNotifiedTodayIsReportedAsSuppressed() {
+        // Traffic kept low on purpose: this fixture is about the expiry path,
+        // and the default 92% would raise a traffic alert alongside it.
+        val json = sampleServerJson(
+            rxMonthly = (1.0 * 1024 * 1024 * 1024 * 1024).toLong(), // 10%
+            expireDate = "2026-10-07", // 5 days out
+        )
+        val state = mutableMapOf<String, String>("alert_node-1_expire" to "2026-10-02")
+        val suppressed = mutableListOf<CfAlertParser.Suppressed>()
+
+        val alerts = CfAlertParser.check(
+            json = json,
+            trafficThresholdPct = 90,
+            expiryDays = 7,
+            state = state,
+            today = LocalDate.of(2026, 10, 2),
+            suppressed = suppressed,
+        )
+
+        assertEquals(0, alerts.size)
+        assertEquals(1, suppressed.size)
+        assertEquals(CfAlertParser.AlertKind.EXPIRE, suppressed[0].alert.kind)
+        assertEquals(CfAlertParser.SuppressedReason.TODAY, suppressed[0].reason)
+        // The content the user would have received, so the button can show it.
+        assertEquals("Tokyo Node 即将到期", suppressed[0].alert.title)
+        assertEquals("节点将于 5 天后到期（2026-10-07）", suppressed[0].alert.text)
+    }
+
+    @Test
+    fun aTrafficTierAlreadyAnnouncedIsReportedAsSuppressed() {
+        // Expiry pushed out of the window, so only traffic is in play.
+        val json = sampleServerJson(
+            rxMonthly = (9.3 * 1024 * 1024 * 1024 * 1024).toLong(), // 93%
+            expireDate = "2027-10-07",
+        )
+        val state = mutableMapOf<String, String>("alert_node-1_traffic" to "90")
+        val suppressed = mutableListOf<CfAlertParser.Suppressed>()
+
+        val alerts = CfAlertParser.check(
+            json = json,
+            trafficThresholdPct = 90,
+            expiryDays = 7,
+            state = state,
+            today = LocalDate.of(2026, 10, 2),
+            suppressed = suppressed,
+        )
+
+        assertEquals(0, alerts.size)
+        assertEquals(1, suppressed.size)
+        assertEquals(CfAlertParser.AlertKind.TRAFFIC, suppressed[0].alert.kind)
+        // Not TODAY: a tier is announced once, not once a day, and saying
+        // "already today" of it would be untrue.
+        assertEquals(CfAlertParser.SuppressedReason.TIER, suppressed[0].reason)
+    }
+
+    @Test
+    fun aConditionThatIsNotMetIsNotReportedAsSuppressed() {
+        // Nothing to alert about at all: this is the ordinary answer, and it
+        // must not be dressed up as something held back.
+        val json = sampleServerJson(
+            rxMonthly = (1.0 * 1024 * 1024 * 1024 * 1024).toLong(), // 10%
+            expireDate = "2027-10-07",
+        )
+        val suppressed = mutableListOf<CfAlertParser.Suppressed>()
+
+        val alerts = CfAlertParser.check(
+            json = json,
+            trafficThresholdPct = 90,
+            expiryDays = 7,
+            state = mutableMapOf(),
+            today = LocalDate.of(2026, 10, 2),
+            suppressed = suppressed,
+        )
+
+        assertEquals(0, alerts.size)
+        assertEquals(0, suppressed.size)
+    }
+
+    @Test
+    fun anUnsentCheckReportsNothingAsSuppressed() {
+        // The default: the periodic worker does not ask, and pays nothing.
+        val json = sampleServerJson(
+            rxMonthly = (1.0 * 1024 * 1024 * 1024 * 1024).toLong(), // 10%
+            expireDate = "2026-10-07",
+        )
+        val state = mutableMapOf<String, String>("alert_node-1_expire" to "2026-10-02")
+
+        val alerts = CfAlertParser.check(
+            json = json,
+            trafficThresholdPct = 90,
+            expiryDays = 7,
+            state = state,
+            today = LocalDate.of(2026, 10, 2),
+        )
+
+        assertEquals(0, alerts.size)
+    }
 }

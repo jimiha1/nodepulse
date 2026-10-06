@@ -5227,6 +5227,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String cfResourceWindowFmt(int minutes) {
     return '$minutes 分钟';
   }
+
+  @override
+  String get cfAlertCheckNow => '立即检查';
+
+  @override
+  String cfAlertCheckOk(int count, int notified) {
+    return '已检查 $count 个节点，发送 $notified 条告警';
+  }
+
+  @override
+  String get cfAlertCheckNoSite => '请先填写站点地址';
+
+  @override
+  String get cfAlertCheckNoToken => '请先登录站点，否则无法读取';
+
+  @override
+  String get cfAlertCheckAuth => '站点拒绝了已保存的登录，请重新打开本页登录';
+
+  @override
+  String get cfAlertCheckNetwork => '无法连接到站点';
+
+  @override
+  String cfAlertCheckClear(int count) {
+    return '已检查 $count 个节点，一切正常';
+  }
+
+  @override
+  String cfAlertCheckSuppressed(int count) {
+    return '已检查 $count 个节点，今日已提醒过';
+  }
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
