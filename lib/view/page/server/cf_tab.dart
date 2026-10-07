@@ -188,6 +188,12 @@ class CfNoSiteView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Through `context`, not the module-level `l10n`, so this registers a
+    // dependency on `Localizations` and is rebuilt when the language changes.
+    // The global is a snapshot: a `const` widget that reads it is canonicalized
+    // to one instance, so `Element.updateChild` sees an unchanged widget and
+    // skips the rebuild — and the text stays in the language it first built in.
+    final l10n = context.l10n;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
