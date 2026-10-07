@@ -20,7 +20,6 @@ final class _IntroPage extends StatelessWidget {
 
   static final _setting = Stores.setting;
 
-  static const _kIconSize = 23.0;
   static const _kIntroListPad = 17.0;
   static const _kMaxPadTop = 120.0;
 
@@ -29,7 +28,6 @@ final class _IntroPage extends StatelessWidget {
   /// A list rather than a map: the order is the list's, and nothing needs a
   /// number to refer to a step by.
   static List<_IntroStep> get _steps => [
-    (applies: _isFirstLaunch, build: _buildAppSettings),
     (applies: _needsBackupPassword, build: _buildBackupPasswordMigration),
   ];
 
@@ -43,9 +41,6 @@ final class _IntroPage extends StatelessWidget {
   }
 
   // — When a step applies ————————————————————————————————————————————
-
-  /// Nothing has ever completed the intro on this install.
-  static Future<bool> _isFirstLaunch() async => _setting.introVer.fetch() == 0;
 
   /// Upgrading from a build that predates the backup password, without one set.
   ///
@@ -122,53 +117,7 @@ final class _IntroPage extends StatelessWidget {
     );
   }
 
-  /// A page's title with the breathing room above and below it.
-  static List<Widget> _head(String title, double padTop, {Widget? mark}) => [
-    SizedBox(height: padTop),
-    IntroPage.title(text: title, big: true, mark: mark),
-    SizedBox(height: padTop),
-  ];
-
   // — Pages —————————————————————————————————————————————————————————
-
-  static Widget _buildAppSettings(BuildContext ctx, double padTop) {
-    final libL10n = ctx.libL10n;
-    final l10n = ctx.l10n;
-
-    return _introList(
-      children: [
-        ..._head(libL10n.init, padTop),
-        ListTile(
-          leading: const Icon(IonIcons.language),
-          title: Text(libL10n.language),
-          onTap: () => _selectLocale(ctx),
-          trailing: Text(
-            ctx.localeNativeName,
-            style: const TextStyle(fontSize: 15, color: Colors.grey),
-          ),
-        ).cardx,
-        ListTile(
-          leading: const Icon(Icons.update),
-          title: Text(libL10n.checkUpdate),
-          subtitle: isAndroid
-              ? Text(l10n.fdroidReleaseTip, style: UIs.textGrey)
-              : null,
-          trailing: StoreSwitch(prop: _setting.autoCheckAppUpdate),
-        ).cardx,
-        ListTile(
-          leading: const Icon(MingCute.delete_2_fill),
-          title: TipText('rm -r', l10n.sftpRmrDirSummary),
-          trailing: StoreSwitch(prop: _setting.sftpRmrDir),
-        ).cardx,
-        ListTile(
-          leading: const Icon(MingCute.chart_line_line, size: _kIconSize),
-          title: TipText(l10n.dockerStatistics, l10n.parseContainerStatsTip),
-          trailing: StoreSwitch(prop: _setting.containerParseStat),
-        ).cardx,
-        UIs.height77,
-      ],
-    );
-  }
 
   static Widget _buildBackupPasswordMigration(BuildContext ctx, double padTop) {
     final l10n = ctx.l10n;
@@ -201,18 +150,6 @@ final class _IntroPage extends StatelessWidget {
   }
 
   // — Actions ———————————————————————————————————————————————————————
-
-  static Future<void> _selectLocale(BuildContext ctx) async {
-    final selected = await ctx.showPickSingleDialog(
-      title: ctx.libL10n.language,
-      items: AppLocalizations.supportedLocales,
-      display: (locale) => locale.nativeName,
-      initial: _setting.locale.fetch().toLocale,
-    );
-    if (selected == null || !ctx.mounted) return;
-
-    _setting.locale.put(selected.code);
-  }
 
   static Future<void> _askBackupPassword(BuildContext ctx) async {
     final controller = MaskedTextEditingController();

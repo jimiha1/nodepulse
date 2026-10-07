@@ -88,14 +88,7 @@ class AppLocalizationsAz extends AppLocalizations {
   String get distro => 'Distributiv';
 
   @override
-  String get dockerStatistics => 'Docker statistikası';
-
-  @override
   String get envVars => 'Mühit dəyişəni';
-
-  @override
-  String get fdroidReleaseTip =>
-      'Bu tətbiqi F-Droid vasitəsilə endirmisənsə, bu seçimi söndürmək tövsiyə olunur.';
 
   @override
   String get fullScreen => 'Tam ekran';
@@ -130,10 +123,6 @@ class AppLocalizationsAz extends AppLocalizations {
   String get needRestart => 'Tətbiq yenidən başladılmalıdır';
 
   @override
-  String get parseContainerStatsTip =>
-      'Docker resurs istifadəsi vəziyyətinin təhlili nisbətən yavaşdır.';
-
-  @override
   String get restart => 'Yenidən başlat';
 
   @override
@@ -158,10 +147,6 @@ class AppLocalizationsAz extends AppLocalizations {
   String selected(int count) {
     return '$count seçilib';
   }
-
-  @override
-  String get sftpRmrDirSummary =>
-      'SFTP daxilində qovluğu silmək üçün `rm -r` istifadə et.';
 
   @override
   String get syncAppSettings => 'Tətbiq parametrlərini sinxronlaşdır';

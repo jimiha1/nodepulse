@@ -1,32 +1,5 @@
 {
   "@@locale": "en",
-  "@crashCollect": {
-    "description": "User-facing label or message for crash collect."
-  },
-  "@crashCollectIntro": {
-    "description": "Introductory text for the crash collect screen or section."
-  },
-  "@crashCollectNone": {
-    "description": "Empty-state message for crash collect none."
-  },
-  "@crashCollectNoneTip": {
-    "description": "Help text for the crash collect none setting or action."
-  },
-  "@crashCollectBasic": {
-    "description": "User-facing label or message for crash collect basic."
-  },
-  "@crashCollectBasicTip": {
-    "description": "Help text for the crash collect basic setting or action."
-  },
-  "@crashCollectFull": {
-    "description": "User-facing label or message for crash collect full."
-  },
-  "@crashCollectFullTip": {
-    "description": "Help text for the crash collect full setting or action."
-  },
-  "@crashCollectFooter": {
-    "description": "User-facing label or message for crash collect footer."
-  },
   "privacy": "Privacy",
   "@privacy": {
     "description": "User-facing label or message for privacy."
@@ -119,17 +92,9 @@
   "@distro": {
     "description": "User-facing label or message for distro."
   },
-  "dockerStatistics": "Docker Statistics",
-  "@dockerStatistics": {
-    "description": "User-facing label or message for docker statistics."
-  },
   "envVars": "Environment variable",
   "@envVars": {
     "description": "User-facing label or message for env vars."
-  },
-  "fdroidReleaseTip": "If you downloaded this app from F-Droid, it is recommended to turn off this option.",
-  "@fdroidReleaseTip": {
-    "description": "Help text for the F-Droid release setting or action."
   },
   "fullScreen": "Full screen",
   "@fullScreen": {
@@ -171,10 +136,6 @@
   "@needRestart": {
     "description": "User-facing label or message for need restart."
   },
-  "parseContainerStatsTip": "Parsing the occupancy status of Docker is relatively slow.",
-  "@parseContainerStatsTip": {
-    "description": "Help text for the parse container stats setting or action."
-  },
   "restart": "Restart",
   "@restart": {
     "description": "Action label for restart."
@@ -211,10 +172,6 @@
         "type": "int"
       }
     }
-  },
-  "sftpRmrDirSummary": "Use `rm -r` to delete a folder in SFTP.",
-  "@sftpRmrDirSummary": {
-    "description": "User-facing label or message for sftp rmr dir summary."
   },
   "syncAppSettings": "Sync app settings",
   "@syncAppSettings": {

@@ -87,14 +87,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get distro => 'Distributie';
 
   @override
-  String get dockerStatistics => 'Docker-statistieken';
-
-  @override
   String get envVars => 'Omgevingsvariabele';
-
-  @override
-  String get fdroidReleaseTip =>
-      'Als u deze app van F-Droid heeft gedownload, wordt aanbevolen deze optie uit te schakelen.';
 
   @override
   String get fullScreen => 'Volledig scherm';
@@ -128,10 +121,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get needRestart => 'App moet opnieuw worden gestart';
 
   @override
-  String get parseContainerStatsTip =>
-      'Het parsen van de bezettingsstatus van Docker is relatief langzaam.';
-
-  @override
   String get restart => 'Opnieuw starten';
 
   @override
@@ -156,10 +145,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String selected(int count) {
     return '$count geselecteerd';
   }
-
-  @override
-  String get sftpRmrDirSummary =>
-      'Gebruik `rm -r` om een map te verwijderen in SFTP.';
 
   @override
   String get syncAppSettings => 'App-instellingen synchroniseren';

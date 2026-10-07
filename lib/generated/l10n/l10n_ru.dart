@@ -87,14 +87,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get distro => 'Дистрибутив';
 
   @override
-  String get dockerStatistics => 'Статистика Docker';
-
-  @override
   String get envVars => 'Переменная окружения';
-
-  @override
-  String get fdroidReleaseTip =>
-      'Если вы скачали это приложение с F-Droid, рекомендуется отключить эту опцию.';
 
   @override
   String get fullScreen => 'Полный экран';
@@ -128,10 +121,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get needRestart => 'Требуется перезапуск приложения';
 
   @override
-  String get parseContainerStatsTip =>
-      'Анализ статуса использования Docker может быть медленным';
-
-  @override
   String get restart => 'Перезапустить';
 
   @override
@@ -156,10 +145,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String selected(int count) {
     return 'Выбрано: $count';
   }
-
-  @override
-  String get sftpRmrDirSummary =>
-      'Использовать `rm -r` в SFTP для удаления папок';
 
   @override
   String get syncAppSettings => 'Синхронизировать настройки приложения';

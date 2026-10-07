@@ -80,13 +80,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get distro => '发行版';
 
   @override
-  String get dockerStatistics => 'Docker 统计';
-
-  @override
   String get envVars => '环境变量';
-
-  @override
-  String get fdroidReleaseTip => '如果你是从 F-Droid 下载的本应用，推荐关闭此选项';
 
   @override
   String get fullScreen => '全屏';
@@ -119,9 +113,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get needRestart => '需要重启 App';
 
   @override
-  String get parseContainerStatsTip => 'Docker 解析占用状态较为缓慢';
-
-  @override
   String get restart => '重启';
 
   @override
@@ -146,9 +137,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String selected(int count) {
     return '已选 $count 项';
   }
-
-  @override
-  String get sftpRmrDirSummary => '在 SFTP 中使用 `rm -r` 来删除文件夹';
 
   @override
   String get syncAppSettings => '同步应用设置';
@@ -586,13 +574,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get distro => '發行版';
 
   @override
-  String get dockerStatistics => 'Docker 統計';
-
-  @override
   String get envVars => '環境變數';
-
-  @override
-  String get fdroidReleaseTip => '如果你是從 F-Droid 下載的本App，推薦關閉此選項';
 
   @override
   String get fullScreen => '全螢幕';
@@ -625,9 +607,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get needRestart => '需要重開 App';
 
   @override
-  String get parseContainerStatsTip => 'Docker 解析消耗狀態較為緩慢';
-
-  @override
   String get restart => '重新啟動';
 
   @override
@@ -652,9 +631,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String selected(int count) {
     return '已選 $count 項';
   }
-
-  @override
-  String get sftpRmrDirSummary => '在 SFTP 中使用 `rm -r` 來刪除檔案夾';
 
   @override
   String get syncAppSettings => '同步 App 設定';

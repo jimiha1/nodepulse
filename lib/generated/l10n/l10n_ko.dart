@@ -83,13 +83,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get distro => '배포판';
 
   @override
-  String get dockerStatistics => 'Docker 통계';
-
-  @override
   String get envVars => '환경 변수';
-
-  @override
-  String get fdroidReleaseTip => 'F-Droid에서 이 앱을 다운로드한 경우, 이 옵션을 끄는 것을 권장합니다.';
 
   @override
   String get fullScreen => '전체 화면';
@@ -123,9 +117,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get needRestart => '앱을 다시 시작해야 합니다';
 
   @override
-  String get parseContainerStatsTip => 'Docker 점유 상태 파싱이 비교적 느립니다.';
-
-  @override
   String get restart => '재시작';
 
   @override
@@ -150,9 +141,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String selected(int count) {
     return '$count개 선택됨';
   }
-
-  @override
-  String get sftpRmrDirSummary => 'SFTP에서 `rm -r`을 사용하여 폴더를 삭제합니다.';
 
   @override
   String get syncAppSettings => '앱 설정 동기화';

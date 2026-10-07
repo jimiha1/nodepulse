@@ -263,23 +263,11 @@ abstract class AppLocalizations {
   /// **'Distribution'**
   String get distro;
 
-  /// User-facing label or message for docker statistics.
-  ///
-  /// In en, this message translates to:
-  /// **'Docker Statistics'**
-  String get dockerStatistics;
-
   /// User-facing label or message for env vars.
   ///
   /// In en, this message translates to:
   /// **'Environment variable'**
   String get envVars;
-
-  /// Help text for the F-Droid release setting or action.
-  ///
-  /// In en, this message translates to:
-  /// **'If you downloaded this app from F-Droid, it is recommended to turn off this option.'**
-  String get fdroidReleaseTip;
 
   /// User-facing label or message for full screen.
   ///
@@ -341,12 +329,6 @@ abstract class AppLocalizations {
   /// **'App needs to be restarted'**
   String get needRestart;
 
-  /// Help text for the parse container stats setting or action.
-  ///
-  /// In en, this message translates to:
-  /// **'Parsing the occupancy status of Docker is relatively slow.'**
-  String get parseContainerStatsTip;
-
   /// Action label for restart.
   ///
   /// In en, this message translates to:
@@ -394,12 +376,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} selected'**
   String selected(int count);
-
-  /// User-facing label or message for sftp rmr dir summary.
-  ///
-  /// In en, this message translates to:
-  /// **'Use `rm -r` to delete a folder in SFTP.'**
-  String get sftpRmrDirSummary;
 
   /// User-facing label or message for sync app settings.
   ///

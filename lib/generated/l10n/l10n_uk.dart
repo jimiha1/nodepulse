@@ -88,14 +88,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get distro => 'Дистрибутив';
 
   @override
-  String get dockerStatistics => 'Статистика Docker';
-
-  @override
   String get envVars => 'Змінні середовища';
-
-  @override
-  String get fdroidReleaseTip =>
-      'Якщо ви завантажили цей застосунок з F-Droid, рекомендується відключити цю опцію.';
 
   @override
   String get fullScreen => 'Повний екран';
@@ -129,10 +122,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get needRestart => 'Необхідно перезапустити застосунок';
 
   @override
-  String get parseContainerStatsTip =>
-      'Парсинг статусу зайнятості Docker є відносно повільним.';
-
-  @override
   String get restart => 'Перезапустити';
 
   @override
@@ -157,10 +146,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String selected(int count) {
     return 'Вибрано: $count';
   }
-
-  @override
-  String get sftpRmrDirSummary =>
-      'Використовуйте `rm -r`, щоб видалити папку в SFTP.';
 
   @override
   String get syncAppSettings => 'Синхронізувати налаштування застосунку';

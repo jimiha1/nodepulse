@@ -159,9 +159,6 @@ class SettingStore extends SqliteStore with ThemeSettings {
   /// nowhere to find the width to go back to.
   late final paneListCollapsed = propertyDefault('paneListCollapsed', false);
 
-  /// Whether use `rm -r` to delete directory on SFTP
-  late final sftpRmrDir = propertyDefault('sftpRmrDir', false);
-
   /// Only valid on iOS / Android / Windows
   late final useBioAuth = propertyDefault('useBioAuth', false);
 
@@ -207,9 +204,6 @@ class SettingStore extends SqliteStore with ThemeSettings {
     // What this device's themes directory holds, like `appThemePackage`.
     'bundledThemesSeeded',
   };
-
-  /// Whether to collect container resource statistics.
-  late final containerParseStat = propertyDefault('containerParseStat', true);
 
   late final lastVer = propertyDefault('lastVer', 0);
 

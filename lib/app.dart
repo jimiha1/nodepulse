@@ -4,7 +4,6 @@ import 'dart:math' as math;
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fl_lib/fl_lib.dart';
 import 'package:fl_lib/theme.dart';
-import 'package:icons_plus/icons_plus.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:nodepulse/core/app_navigator.dart';
 import 'package:nodepulse/core/chan.dart';

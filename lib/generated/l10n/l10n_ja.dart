@@ -82,14 +82,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get distro => 'ディストリビューション';
 
   @override
-  String get dockerStatistics => 'Docker 統計';
-
-  @override
   String get envVars => '環境変数';
-
-  @override
-  String get fdroidReleaseTip =>
-      'このアプリをF-Droidからダウンロードした場合、このオプションをオフにすることをお勧めします。';
 
   @override
   String get fullScreen => 'フルスクリーン';
@@ -123,9 +116,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get needRestart => 'アプリを再起動する必要があります';
 
   @override
-  String get parseContainerStatsTip => 'Dockerの使用状況の解析は比較的遅いです';
-
-  @override
   String get restart => '再起動';
 
   @override
@@ -150,9 +140,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String selected(int count) {
     return '$count 件選択';
   }
-
-  @override
-  String get sftpRmrDirSummary => 'SFTPで`rm -r`を使用してフォルダーを削除';
 
   @override
   String get syncAppSettings => 'アプリ設定を同期';
