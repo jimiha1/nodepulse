@@ -125,60 +125,6 @@ abstract class AppLocalizations {
     Locale('zh', 'TW'),
   ];
 
-  /// User-facing label or message for crash collect.
-  ///
-  /// In en, this message translates to:
-  /// **'Diagnostic data'**
-  String get crashCollect;
-
-  /// Introductory text for the crash collect screen or section.
-  ///
-  /// In en, this message translates to:
-  /// **'NodePulse records what happens while it runs so problems can be fixed. Choose how much information to send.'**
-  String get crashCollectIntro;
-
-  /// Empty-state message for crash collect none.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing'**
-  String get crashCollectNone;
-
-  /// Help text for the crash collect none setting or action.
-  ///
-  /// In en, this message translates to:
-  /// **'Reports remain on this device; after a crash, you can send one manually.'**
-  String get crashCollectNoneTip;
-
-  /// User-facing label or message for crash collect basic.
-  ///
-  /// In en, this message translates to:
-  /// **'Basic information'**
-  String get crashCollectBasic;
-
-  /// Help text for the crash collect basic setting or action.
-  ///
-  /// In en, this message translates to:
-  /// **'Only crash information is included; logs and performance data are not. **This helps us improve the app and fix bugs.**'**
-  String get crashCollectBasicTip;
-
-  /// User-facing label or message for crash collect full.
-  ///
-  /// In en, this message translates to:
-  /// **'Full information'**
-  String get crashCollectFull;
-
-  /// Help text for the crash collect full setting or action.
-  ///
-  /// In en, this message translates to:
-  /// **'Along with the crash log, performance data and which features are used are included: **they show what is slow, and which features are worth keeping.**'**
-  String get crashCollectFullTip;
-
-  /// User-facing label or message for crash collect footer.
-  ///
-  /// In en, this message translates to:
-  /// **'At every level, known server names, addresses and usernames are replaced with placeholders when recorded. You can change the collection level later in Settings.'**
-  String get crashCollectFooter;
-
   /// User-facing label or message for privacy.
   ///
   /// In en, this message translates to:

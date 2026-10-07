@@ -24,9 +24,6 @@ final class _IntroPage extends StatelessWidget {
   static const _kIntroListPad = 17.0;
   static const _kMaxPadTop = 120.0;
 
-  /// Horizontal room for a paragraph, and the gap above and below it.
-  static const _kProsePad = EdgeInsets.symmetric(horizontal: 13, vertical: 8);
-
   /// Every step there is, in the order they are shown.
   ///
   /// A list rather than a map: the order is the list's, and nothing needs a
@@ -34,7 +31,6 @@ final class _IntroPage extends StatelessWidget {
   static List<_IntroStep> get _steps => [
     (applies: _isFirstLaunch, build: _buildAppSettings),
     (applies: _needsBackupPassword, build: _buildBackupPasswordMigration),
-    (applies: _needsDiagnosticsConsent, build: _buildDiagnostics),
   ];
 
   /// The steps this launch should show.
@@ -59,23 +55,6 @@ final class _IntroPage extends StatelessWidget {
     if (_setting.lastVer.fetch() == 0) return false;
     if (_setting.introVer.fetch() >= 2) return false;
     return (await SecureStoreProps.bakPwd.read())?.isNotEmpty != true;
-  }
-
-  /// The user has not seen the current diagnostics arrangement.
-  ///
-  /// Its own counter rather than [SettingStore.introVer], which [onDone] sets
-  /// to the *build number* — so every step below it is permanently "already
-  /// seen" for anyone who has completed an intro, and a newly added one could
-  /// never appear. Keyed on the arrangement instead, which is also what lets a
-  /// change to what is collected ask again.
-  ///
-  /// Not asked at all in a build that cannot upload — one made with an empty
-  /// `SENTRY_DSN`. Every level then behaves identically, so the page would put
-  /// a question whose answer changes nothing, and the settings page already
-  /// hides the same control under the same condition.
-  static Future<bool> _needsDiagnosticsConsent() async {
-    if (!DiagnosticsUpload.availableInBuild) return false;
-    return _setting.diagnosticsConsentVer.fetch() < kDiagnosticsConsentVer;
   }
 
   // — Widget build ——————————————————————————————————————————————————
@@ -105,15 +84,8 @@ final class _IntroPage extends StatelessWidget {
       _setting.introVer.putSync(BuildData.build);
       final lastVer = _setting.lastVer;
       if (lastVer.fetch() == 0) lastVer.putSync(BuildData.build);
-      // Written here rather than on the page itself, so that leaving the intro
-      // without reaching the end counts as unanswered and asks again.
-      _setting.diagnosticsConsentVer.putSync(kDiagnosticsConsentVer);
       _setting.featureIntroVer.putSync(_kFeatureIntroVer);
     });
-    // Applies whatever was chosen a moment ago. Nothing has been uploaded
-    // before this point — `DiagnosticsUpload.sync` refuses to start until the
-    // consent counter above says the question was put.
-    unawaited(DiagnosticsUpload.sync());
     Navigator.of(ctx).pushReplacement(
       MaterialPageRoute(builder: (_) => _buildHomeWithWindowFrame()),
     );
@@ -156,10 +128,6 @@ final class _IntroPage extends StatelessWidget {
     IntroPage.title(text: title, big: true, mark: mark),
     SizedBox(height: padTop),
   ];
-
-  /// A sentence of explanation, indented to line up with the tiles under it.
-  static Widget _prose(String text) =>
-      Padding(padding: _kProsePad, child: Text(text, style: UIs.textGrey));
 
   // — Pages —————————————————————————————————————————————————————————
 
@@ -227,43 +195,6 @@ final class _IntroPage extends StatelessWidget {
         // title and `backupPasswordTip` on the tile — already say what this
         // step is and why. A third sentence restating it was also the one
         // string on this page that was never translated.
-        UIs.height77,
-      ],
-    );
-  }
-
-  /// Where diagnostics collection is explained and chosen.
-  ///
-  /// Shown before anything is uploaded, and that ordering is the point: the
-  /// desktop default is `basic`, so without being asked first a user would be
-  /// sending before they had been told. [_onDone] is what releases it.
-  ///
-  /// A radio list rather than a switch, because three levels do not read as
-  /// one — and the middle level is the whole reason to offer a choice instead
-  /// of an on/off.
-  static Widget _buildDiagnostics(BuildContext ctx, double padTop) {
-    final l10n = ctx.l10n;
-
-    return _introList(
-      children: [
-        ..._head(l10n.crashCollect, padTop),
-        _prose(l10n.crashCollectIntro),
-        // Stored only, so no callback: nothing starts uploading until the
-        // intro is finished, which is what makes leaving it early mean "not
-        // answered". Settings passes one, because there the change is now.
-        const DiagnosticsLevelPicker(),
-        _prose(l10n.crashCollectFooter),
-        // On the page where the question is put, not only in Settings
-        // afterwards. A tile can say what a level sends; where it goes, how
-        // long it is kept and what a report was checked not to contain need
-        // somewhere to be written down, and an answer given without that is
-        // an answer to the summary.
-        ListTile(
-          leading: const Icon(Icons.privacy_tip_outlined, size: _kIconSize),
-          title: Text(l10n.privacyPolicy),
-          trailing: const Icon(Icons.open_in_new, size: 17),
-          onTap: Urls.privacyPolicy.launchUrl,
-        ).cardx,
         UIs.height77,
       ],
     );

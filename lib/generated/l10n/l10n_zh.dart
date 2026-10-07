@@ -9,37 +9,6 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get crashCollect => '诊断信息';
-
-  @override
-  String get crashCollectIntro =>
-      'NodePulse 会记录运行过程中发生的情况，以便修复问题。你可以选择要发送多少信息。';
-
-  @override
-  String get crashCollectNone => '不发送';
-
-  @override
-  String get crashCollectNoneTip => '报告会保留在本机；发生崩溃后，你可手动发送。';
-
-  @override
-  String get crashCollectBasic => '基本信息';
-
-  @override
-  String get crashCollectBasicTip =>
-      '只包含崩溃信息，不包含日志或性能数据。**这些信息可帮助我们改进 App 并修复问题。**';
-
-  @override
-  String get crashCollectFull => '完整信息';
-
-  @override
-  String get crashCollectFullTip =>
-      '包含崩溃日志、性能数据和功能使用情况。**这些信息可帮助我们定位性能问题，并了解哪些功能真正有人使用。**';
-
-  @override
-  String get crashCollectFooter =>
-      '无论选择哪个级别，记录时都会将已知服务器名称、地址和用户名替换为占位符。之后可在设置中更改收集级别。';
-
-  @override
   String get privacy => '隐私';
 
   @override
@@ -544,36 +513,6 @@ class AppLocalizationsZh extends AppLocalizations {
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
 class AppLocalizationsZhTw extends AppLocalizationsZh {
   AppLocalizationsZhTw() : super('zh_TW');
-
-  @override
-  String get crashCollect => '診斷資料';
-
-  @override
-  String get crashCollectIntro => 'NodePulse 會記錄執行期間發生的情況，以便修正問題。你可以選擇要傳送多少資料。';
-
-  @override
-  String get crashCollectNone => '不傳送';
-
-  @override
-  String get crashCollectNoneTip => '報告仍會保留在本機；當機後你仍可手動傳送。';
-
-  @override
-  String get crashCollectBasic => '基本資料';
-
-  @override
-  String get crashCollectBasicTip =>
-      '只包含當機資訊，不包含日誌或效能資料。**這有助於我們改善 App 和修正錯誤。**';
-
-  @override
-  String get crashCollectFull => '完整資料';
-
-  @override
-  String get crashCollectFullTip =>
-      '除了當機日誌外，也會包含效能資料和功能使用情況：用於定位變慢的問題，以及了解哪些功能真的有人用。';
-
-  @override
-  String get crashCollectFooter =>
-      '無論選擇哪個等級，記錄時都會將已知伺服器名稱、位址和使用者名稱替換為預留位置。之後可在設定中更改收集等級。';
 
   @override
   String get privacy => '隱私';

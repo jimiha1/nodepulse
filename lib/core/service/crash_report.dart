@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:fl_lib/fl_lib.dart';
 import 'package:flutter/foundation.dart';
-import 'package:nodepulse/core/service/diagnostics_upload.dart';
 import 'package:nodepulse/core/service/native_exit.dart';
 import 'package:nodepulse/data/res/build_data.dart';
 
@@ -90,34 +89,21 @@ abstract final class CrashReport {
     previousExitTrace: NativeExitReport.shared.lastExitTrace,
   );
 
-  /// Keeps the previous run's report, and sends the part that may be sent.
+  /// Keeps the previous run's report, for the user to read and hand over.
   ///
-  /// Called once at launch, after `NativeExitReport.shared.collect` has had its say
-  /// about how the process died and after `DiagnosticsUpload.sync` has put the
-  /// sink in — the first decides whether there is anything to report, the
-  /// second decides whether it goes anywhere.
-  ///
-  /// **The two halves go to different places on purpose.** The report holds
-  /// the previous run's log, and the log stays on the device at every level:
-  /// `crashCollectNoneTip` and `crashCollectBasicTip` both say so, and the log
-  /// is the one thing this app writes that nobody has audited for what it
-  /// might name — see the note on this class. So the file is written for the
-  /// user to read and copy, and what is uploaded is the error alone.
-  static Future<void> collect() async {
-    await keep();
-    report();
-  }
+  /// Called once at launch, after `NativeExitReport.shared.collect` has had its
+  /// say about how the process died. The file is the whole product: nothing is
+  /// sent from here, at any time, and the log it quotes is the one thing this
+  /// app writes that nobody has audited for what it might name — see the note
+  /// on this class. A crash reaches the developer only when somebody opens
+  /// Settings → Privacy, copies the report and sends it.
+  static Future<void> collect() async => keep();
 
   /// Writes the report, and waits for nothing to do it.
   ///
-  /// **Separate from [report] because only one of the two needs the upload
-  /// sink.** Chained behind `DiagnosticsUpload.sync`, this waited on
-  /// `Sentry.init` and two analytics clients — network-capable work the line
-  /// starting them says must not hold up startup. Somebody on `full` with a
-  /// slow endpoint who went straight to Settings → Privacy found no row: the
-  /// file was not written yet, and `saved()` is a future that page's build
-  /// captured rather than a listenable, so it did not appear until they left
-  /// and came back.
+  /// Nothing is uploaded from here, so this is only file work. It is kept
+  /// separate from [collect] because a caller may want the report on disk
+  /// without the rest of what a launch does.
   static Future<void> keep() async {
     if (!CrashLog.lastRunEndedBadly) return;
     final path = savedPath;
@@ -130,12 +116,6 @@ abstract final class CrashReport {
     } catch (e, s) {
       Loggers.app.warning('Could not keep the crash report', e, s);
     }
-  }
-
-  /// Files the error, which needs a sink and so has to come after one.
-  static void report() {
-    if (!CrashLog.lastRunEndedBadly) return;
-    _reportPrevious();
   }
 
   /// The kept report, or null when nothing has crashed since it was last read.
@@ -166,32 +146,6 @@ abstract final class CrashReport {
     } catch (e, s) {
       Loggers.app.warning('Could not drop the kept crash report', e, s);
     }
-  }
-
-  /// Files the error the previous run died on, without the log around it.
-  ///
-  /// Two things keep this from reporting a crash twice. [CrashLog.lastRunError]
-  /// is null for a crash a sink already uploaded live — see
-  /// [CrashLog.uploadsNow] — and it is null for one the platform reported,
-  /// which `NativeExitReport.shared.reportPending` sends on its own path. What is
-  /// left is the case neither reaches: an error early in startup, before there
-  /// was a sink to hand it to. That was previously reported by nobody, and it
-  /// is the class of failure a user can say least about.
-  static void _reportPrevious() {
-    if (!DiagnosticsUpload.level.uploads) return;
-    final detail = CrashLog.lastRunError;
-    if (detail == null) return;
-
-    // Split rather than sent whole: a backend groups by the error's text, and
-    // a stack folded into it would file every occurrence as its own issue.
-    final split = detail.indexOf('\n');
-    final message = split == -1 ? detail : detail.substring(0, split);
-    final stack = split == -1 ? null : detail.substring(split + 1).trim();
-    Diag.error(
-      PreviousRunError(message),
-      stack == null || stack.isEmpty ? null : StackTrace.fromString(stack),
-      'previous run',
-    );
   }
 
   @visibleForTesting
@@ -266,26 +220,4 @@ abstract final class CrashReport {
     buf.writeln('```');
     return buf.toString();
   }
-}
-
-/// An error the previous run died on, replayed on this one.
-///
-/// A type of its own rather than the original error rebuilt, because the
-/// original is a *string* by the time it gets here — the marker holds text,
-/// not an object — and handing a backend a bare string would file it under
-/// whatever class that string happened to name. Wrapping says plainly that
-/// this is a report about another run, which is the difference between "the
-/// app crashed" and "the app crashed while starting up last time".
-///
-/// The message is the error's own text, so a backend groups these the way it
-/// groups the live reports of the same failure. Mirrors [NativeExitError],
-/// which does the same job for a death outside Dart.
-final class PreviousRunError implements Exception {
-  const PreviousRunError(this.message);
-
-  /// The first line of what the marker kept: the error, without its stack.
-  final String message;
-
-  @override
-  String toString() => 'Previous run: $message';
 }

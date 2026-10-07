@@ -9,38 +9,6 @@ class AppLocalizationsAz extends AppLocalizations {
   AppLocalizationsAz([String locale = 'az']) : super(locale);
 
   @override
-  String get crashCollect => 'Diaqnostika məlumatları';
-
-  @override
-  String get crashCollectIntro =>
-      'NodePulse problemləri aradan qaldırmaq üçün işləyərkən baş verənləri qeydə alır. Göndəriləcək məlumatın həcmini seç.';
-
-  @override
-  String get crashCollectNone => 'Heç nə';
-
-  @override
-  String get crashCollectNoneTip =>
-      'Hesabatlar bu cihazda qalır; qəza baş verdikdən sonra hesabatı əl ilə göndərə bilərsən.';
-
-  @override
-  String get crashCollectBasic => 'Əsas məlumatlar';
-
-  @override
-  String get crashCollectBasicTip =>
-      'Yalnız qəza məlumatları daxil edilir; jurnallar və məhsuldarlıq məlumatları daxil edilmir. **Bu, tətbiqi təkmilləşdirməyimizə və xətaları düzəltməyimizə kömək edir.**';
-
-  @override
-  String get crashCollectFull => 'Tam məlumatlar';
-
-  @override
-  String get crashCollectFullTip =>
-      'Qəza jurnalı ilə yanaşı məhsuldarlıq məlumatları və hansı funksiyaların istifadə olunduğu da daxil edilir: **bunlar nəyin yavaş işlədiyini və hansı funksiyaları saxlamağa dəyər olduğunu göstərir.**';
-
-  @override
-  String get crashCollectFooter =>
-      'Bütün səviyyələrdə məlum server adları, ünvanlar və istifadəçi adları qeydə alınarkən yer tutucularla əvəz olunur. Məlumat toplama səviyyəsini daha sonra parametrlərdə dəyişə bilərsən.';
-
-  @override
   String get privacy => 'Məxfilik';
 
   @override

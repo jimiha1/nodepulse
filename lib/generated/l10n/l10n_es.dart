@@ -9,38 +9,6 @@ class AppLocalizationsEs extends AppLocalizations {
   AppLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
-  String get crashCollect => 'Datos de diagnóstico';
-
-  @override
-  String get crashCollectIntro =>
-      'NodePulse registra lo que ocurre mientras se ejecuta para poder solucionar los problemas. Elige cuánta información se envía.';
-
-  @override
-  String get crashCollectNone => 'Nada';
-
-  @override
-  String get crashCollectNoneTip =>
-      'Los informes se conservan en este dispositivo; después de un fallo, puedes enviar uno manualmente.';
-
-  @override
-  String get crashCollectBasic => 'Información básica';
-
-  @override
-  String get crashCollectBasicTip =>
-      'Solo se incluye información sobre el fallo; no se incluyen registros ni datos de rendimiento. **Esto nos ayuda a mejorar la aplicación y corregir errores.**';
-
-  @override
-  String get crashCollectFull => 'Información completa';
-
-  @override
-  String get crashCollectFullTip =>
-      'Además del registro del fallo, se incluyen datos de rendimiento y el uso de funciones: **Sirven para localizar qué va lento y qué funciones se usan realmente.**';
-
-  @override
-  String get crashCollectFooter =>
-      'En todos los niveles, los nombres de servidores conocidos, sus direcciones y nombres de usuario se sustituyen por marcadores al registrarlos. Puedes cambiar el nivel de recopilación más adelante en Ajustes.';
-
-  @override
   String get privacy => 'Privacidad';
 
   @override

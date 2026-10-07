@@ -13,7 +13,6 @@ import 'package:nodepulse/core/diag.dart';
 import 'package:nodepulse/core/motion.dart';
 import 'package:nodepulse/core/service/alert_sync.dart';
 import 'package:nodepulse/core/service/crash_report.dart';
-import 'package:nodepulse/core/service/diagnostics_upload.dart';
 import 'package:nodepulse/core/service/native_exit.dart';
 import 'package:nodepulse/core/service/theme_host.dart';
 import 'package:nodepulse/core/service/widget_sync.dart';
@@ -95,7 +94,9 @@ void _setupDebug() {
     DebugProvider.addLog(record);
   });
   CrashLog.handleErrors();
-  CrashLog.uploadsNow = () => DiagnosticsUpload.uploading;
+  // `CrashLog.uploadsNow` is deliberately left null: nothing this app records
+  // is uploaded, so every crash is worth describing to the next launch, which
+  // is what makes it keep the report the user copies out by hand.
   Diag.install(LocalDiagnosticsSink());
 
   AppRouteObserver.addListener((settings, type) {
@@ -123,15 +124,9 @@ Future<void> _doPlatformRelated(ProviderContainer container) async {
 
   await NativeExitReport.shared.collect();
 
-  unawaited(() async {
-    await CrashReport.keep();
-    try {
-      await DiagnosticsUpload.sync();
-    } catch (e, s) {
-      Loggers.app.warning('Crash upload sync failed', e, s);
-    }
-    CrashReport.report();
-  }());
+  // The kept report is the whole delivery path: nothing is sent from here, so
+  // this is only the file the user copies out of Settings → Privacy.
+  unawaited(CrashReport.keep());
 
   if (isIOS || isAndroid) {
     unawaited(

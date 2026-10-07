@@ -9,38 +9,6 @@ class AppLocalizationsTr extends AppLocalizations {
   AppLocalizationsTr([String locale = 'tr']) : super(locale);
 
   @override
-  String get crashCollect => 'Tanılama verileri';
-
-  @override
-  String get crashCollectIntro =>
-      'NodePulse, sorunların düzeltilebilmesi için çalışırken olanları kaydeder. Ne kadar bilgi gönderileceğini seçin.';
-
-  @override
-  String get crashCollectNone => 'Hiçbir şey';
-
-  @override
-  String get crashCollectNoneTip =>
-      'Raporlar bu cihazda tutulur; çökmenin ardından bir raporu elle gönderebilirsiniz.';
-
-  @override
-  String get crashCollectBasic => 'Temel bilgiler';
-
-  @override
-  String get crashCollectBasicTip =>
-      'Yalnızca çökme bilgileri dahil edilir; günlükler ve performans verileri dahil edilmez. **Bu, uygulamayı geliştirmemize ve hataları düzeltmemize yardımcı olur.**';
-
-  @override
-  String get crashCollectFull => 'Tüm bilgiler';
-
-  @override
-  String get crashCollectFullTip =>
-      'Çökme günlüğüne ek olarak performans verileri ve hangi özelliklerin kullanıldığı da dahil edilir: **Neyin yavaş olduğunu ve hangi özelliklerin gerçekten kullanıldığını bulmaya yarar.**';
-
-  @override
-  String get crashCollectFooter =>
-      'Her düzeyde bilinen sunucu adları, adresler ve kullanıcı adları kaydedilirken yer tutucularla değiştirilir. Toplama düzeyini daha sonra Ayarlar\'dan değiştirebilirsiniz.';
-
-  @override
   String get privacy => 'Gizlilik';
 
   @override

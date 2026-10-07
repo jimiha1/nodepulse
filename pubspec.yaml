@@ -67,11 +67,8 @@ dependencies:
     path: packages/plain_notification_token
   fl_lib:
     path: packages/fl_lib
-  sentry: ^9.30.0
   protobuf: ^6.1.0
   fixnum: ^1.1.1
-  device_info_plus: ^13.2.0
-  aptabase_flutter: ^0.5.0
   material_ui: ^1.5.0
   ffi: ^2.2.0
   path_provider: ^2.1.6

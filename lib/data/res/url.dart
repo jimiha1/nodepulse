@@ -63,11 +63,10 @@ abstract final class Urls {
   /// means `<`, and a unit that does not fit its metric never fires.
   static const monitorRulesDoc = '$monitorAgentDoc#alert-rules';
 
-  /// What is collected at each diagnostics level, and what is not.
+  /// What is kept on the device, and what leaves it.
   ///
-  /// Linked from the intro page that asks the question and from the setting
-  /// that revisits it. Three sentences on a radio tile can say what a level
-  /// sends; they cannot say where it goes or how long it is kept, and consent
-  /// given without somewhere to read that is consent to a summary.
+  /// Linked from Settings → Privacy. Nothing is uploaded automatically, so the
+  /// page's job is to say what the app writes locally and what a crash report
+  /// contains — a summary on a tile cannot say that.
   static const privacyPolicy = '$docs/privacy/';
 }

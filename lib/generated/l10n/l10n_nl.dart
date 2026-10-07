@@ -9,38 +9,6 @@ class AppLocalizationsNl extends AppLocalizations {
   AppLocalizationsNl([String locale = 'nl']) : super(locale);
 
   @override
-  String get crashCollect => 'Diagnostische gegevens';
-
-  @override
-  String get crashCollectIntro =>
-      'NodePulse legt vast wat er tijdens het gebruik gebeurt, zodat problemen kunnen worden opgelost. Kies hoeveel informatie er wordt verstuurd.';
-
-  @override
-  String get crashCollectNone => 'Niets';
-
-  @override
-  String get crashCollectNoneTip =>
-      'Rapporten blijven op dit apparaat; na een crash kun je er handmatig een versturen.';
-
-  @override
-  String get crashCollectBasic => 'Basisgegevens';
-
-  @override
-  String get crashCollectBasicTip =>
-      'Bevat alleen informatie over de crash; logboeken en prestatiegegevens worden niet opgenomen. **Zo help je ons de app te verbeteren en bugs op te lossen.**';
-
-  @override
-  String get crashCollectFull => 'Volledige gegevens';
-
-  @override
-  String get crashCollectFullTip =>
-      'Naast het crashlogboek bevat dit ook prestatiegegevens en het gebruik van functies: daarmee is te vinden wat traag is en welke functies echt worden gebruikt.';
-
-  @override
-  String get crashCollectFooter =>
-      'Op elk niveau worden bekende servernamen, adressen en gebruikersnamen al bij het vastleggen vervangen door plaatsaanduidingen. Je kunt het verzamelingsniveau later wijzigen in de instellingen.';
-
-  @override
   String get privacy => 'Privacy';
 
   @override

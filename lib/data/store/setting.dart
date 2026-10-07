@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:fl_lib/fl_lib.dart';
 import 'package:fl_lib/theme.dart';
-import 'package:nodepulse/data/model/app/diagnostics_level.dart';
 import 'package:nodepulse/data/model/app/motion.dart';
 import 'package:nodepulse/data/model/app/tab.dart';
 import 'package:nodepulse/data/model/cf/cf_resource_alert.dart';
@@ -125,43 +124,12 @@ class SettingStore extends SqliteStore with ThemeSettings {
     updateLastModified: false,
   );
 
-  /// How much of a crash is uploaded — see `DiagnosticsLevel`.
-  ///
-  /// Stored by name, never by index: an index changes meaning the moment a
-  /// case is inserted, and this value outlives the build that wrote it.
-  ///
-  /// The default is `defaultDiagnosticsLevel`: `none` on Android, `basic`
-  /// everywhere else. The split is about F-Droid, which distributes only the
-  /// Android build and requires collection to be off by default — see that
-  /// getter for why it is decided at runtime rather than by a compile-time
-  /// flag.
-  ///
-  /// Either way nothing is uploaded until the user has been shown the intro
-  /// page that explains the three levels. That ordering is what makes this
-  /// "asked before it happens" rather than collection by surprise.
-  late final diagnosticsLevel = propertyDefault(
-    'diagnosticsLevel',
-    defaultDiagnosticsLevel.name,
-  );
-
-  /// The revision of the crash-collection notice this install has seen.
-  ///
-  /// Its own counter rather than `introVer`, which is set to the *build
-  /// number* when an intro completes — so every key in `_builders` is
-  /// permanently below it for anyone who has ever seen one, and a newly added
-  /// page could never appear. Bumping `kDiagnosticsConsentVer` shows this again,
-  /// which is what a change to what is collected would need.
-  late final diagnosticsConsentVer = propertyDefault(
-    'diagnosticsConsentVer',
-    0,
-  );
-
   /// The revision of the feature pages in the intro this install has seen.
   ///
-  /// Its own counter for `diagnosticsConsentVer`'s reason: `introVer` holds a
-  /// build number, which is above any small constant, so a page keyed on it
-  /// could never appear for anyone who has finished an intro. Each page names
-  /// the revision it arrived in, and completing the intro records the latest.
+  /// Its own counter for `introVer`'s reason: `introVer` holds a build number,
+  /// which is above any small constant, so a page keyed on it could never
+  /// appear for anyone who has finished an intro. Each page names the revision
+  /// it arrived in, and completing the intro records the latest.
   late final featureIntroVer = propertyDefault('featureIntroVer', 0);
 
   late final autoCheckAppUpdate = propertyDefault('autoCheckAppUpdate', true);

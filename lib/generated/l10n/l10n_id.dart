@@ -9,38 +9,6 @@ class AppLocalizationsId extends AppLocalizations {
   AppLocalizationsId([String locale = 'id']) : super(locale);
 
   @override
-  String get crashCollect => 'Data diagnostik';
-
-  @override
-  String get crashCollectIntro =>
-      'NodePulse mencatat apa yang terjadi saat berjalan agar masalah dapat diperbaiki. Pilih jumlah informasi yang dikirim.';
-
-  @override
-  String get crashCollectNone => 'Tidak ada';
-
-  @override
-  String get crashCollectNoneTip =>
-      'Laporan tetap tersimpan di perangkat ini; setelah terjadi kerusakan, Anda dapat mengirimkannya secara manual.';
-
-  @override
-  String get crashCollectBasic => 'Informasi dasar';
-
-  @override
-  String get crashCollectBasicTip =>
-      'Hanya informasi kerusakan yang disertakan; log dan data performa tidak disertakan. **Ini membantu kami menyempurnakan aplikasi dan memperbaiki bug.**';
-
-  @override
-  String get crashCollectFull => 'Informasi lengkap';
-
-  @override
-  String get crashCollectFullTip =>
-      'Selain log kerusakan, data performa dan penggunaan fitur juga disertakan: **Berguna untuk menemukan apa yang lambat dan fitur mana yang benar-benar dipakai.**';
-
-  @override
-  String get crashCollectFooter =>
-      'Pada tingkat apa pun, nama server yang dikenal beserta alamat dan nama penggunanya diganti dengan placeholder saat dicatat. Tingkat pengumpulan dapat diubah nanti di Pengaturan.';
-
-  @override
   String get privacy => 'Privasi';
 
   @override

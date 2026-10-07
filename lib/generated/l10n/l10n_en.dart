@@ -9,38 +9,6 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get crashCollect => 'Diagnostic data';
-
-  @override
-  String get crashCollectIntro =>
-      'NodePulse records what happens while it runs so problems can be fixed. Choose how much information to send.';
-
-  @override
-  String get crashCollectNone => 'Nothing';
-
-  @override
-  String get crashCollectNoneTip =>
-      'Reports remain on this device; after a crash, you can send one manually.';
-
-  @override
-  String get crashCollectBasic => 'Basic information';
-
-  @override
-  String get crashCollectBasicTip =>
-      'Only crash information is included; logs and performance data are not. **This helps us improve the app and fix bugs.**';
-
-  @override
-  String get crashCollectFull => 'Full information';
-
-  @override
-  String get crashCollectFullTip =>
-      'Along with the crash log, performance data and which features are used are included: **they show what is slow, and which features are worth keeping.**';
-
-  @override
-  String get crashCollectFooter =>
-      'At every level, known server names, addresses and usernames are replaced with placeholders when recorded. You can change the collection level later in Settings.';
-
-  @override
   String get privacy => 'Privacy';
 
   @override

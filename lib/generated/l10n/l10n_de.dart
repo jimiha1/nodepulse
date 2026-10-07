@@ -9,38 +9,6 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
-  String get crashCollect => 'Diagnosedaten';
-
-  @override
-  String get crashCollectIntro =>
-      'NodePulse zeichnet während des Betriebs auf, was passiert, damit Probleme behoben werden können. Wählen Sie, wie viele Informationen gesendet werden.';
-
-  @override
-  String get crashCollectNone => 'Nichts';
-
-  @override
-  String get crashCollectNoneTip =>
-      'Berichte bleiben auf diesem Gerät; nach einem Absturz können Sie manuell einen senden.';
-
-  @override
-  String get crashCollectBasic => 'Grundlegende Informationen';
-
-  @override
-  String get crashCollectBasicTip =>
-      'Es werden nur Absturzinformationen erfasst; Protokoll- und Leistungsdaten sind nicht enthalten. **Damit helfen Sie uns, die App zu verbessern und Fehler zu beheben.**';
-
-  @override
-  String get crashCollectFull => 'Vollständige Informationen';
-
-  @override
-  String get crashCollectFullTip =>
-      'Neben dem Absturzprotokoll werden Leistungsdaten und die Nutzung von Funktionen erfasst: **Damit lässt sich finden, was langsam ist und welche Funktionen tatsächlich genutzt werden.**';
-
-  @override
-  String get crashCollectFooter =>
-      'Unabhängig von der Stufe werden bekannte Servernamen, -adressen und Benutzernamen bereits beim Aufzeichnen durch Platzhalter ersetzt. Die Erfassungsstufe kann später in den Einstellungen geändert werden.';
-
-  @override
   String get privacy => 'Datenschutz';
 
   @override
