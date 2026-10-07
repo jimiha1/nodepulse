@@ -57,7 +57,15 @@ class _HomePageState extends ConsumerState<HomePage>
   var _consumingPending = false;
   Future<void>? _authed;
 
-  late final _notifier = ref.read(cfServersProvider.notifier);
+  /// Captured in [initState], not lazily.
+  ///
+  /// `ref.read` builds the notifier on first touch, and [dispose] touches it
+  /// through `_stopServerRefreshCycle`. As a `late final` initializer that
+  /// first touch could land in `dispose`, where the element is already
+  /// deactivated and Riverpod refuses the read — a page opened and closed
+  /// without ever going to the background hit exactly that. Reading it while
+  /// the element is still mounted is what the error asks for.
+  late final CfServers _notifier;
 
   late List<AppTab> _barTabs = Stores.setting.homeTabs.fetch();
   late List<AppTab> _tabs = _barTabs;
@@ -100,6 +108,7 @@ class _HomePageState extends ConsumerState<HomePage>
   @override
   void initState() {
     super.initState();
+    _notifier = ref.read(cfServersProvider.notifier);
     SystemUIs.switchStatusBar(hide: false);
     WidgetsBinding.instance.addObserver(this);
     MethodChans.onOpened(() => unawaited(_consumePending()));
