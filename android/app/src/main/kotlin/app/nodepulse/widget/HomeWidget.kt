@@ -18,6 +18,7 @@ import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -50,6 +51,46 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
                     }
                 )
             }
+        }
+
+        /** How many widgets are on the home screen, of either size. */
+        fun placedCount(context: Context): Int {
+            val manager = AppWidgetManager.getInstance(context)
+            return providers.sumOf {
+                manager.getAppWidgetIds(ComponentName(context, it)).size
+            }
+        }
+
+        /**
+         * Refreshes every placed widget now, answering the work each one
+         * started.
+         *
+         * Called directly rather than through [broadcastUpdate]: this runs from
+         * the periodic worker, which is already the thing that was supposed to
+         * happen, and a broadcast would only hand it to a receiver the system
+         * may defer again — the very behaviour the schedule exists to route
+         * around.
+         *
+         * The jobs come back rather than being left to run, because the worker
+         * holds a wake lock for exactly as long as `doWork` runs: a caller that
+         * returns while the fetch is still in flight can have the process
+         * frozen underneath it, which on a device that already defers the
+         * launcher's broadcast is most of the way to not refreshing at all.
+         */
+        fun refreshAll(context: Context): List<Job> {
+            val manager = AppWidgetManager.getInstance(context)
+            val started = mutableListOf<Job>()
+            for (provider in providers) {
+                val ids = manager.getAppWidgetIds(ComponentName(context, provider))
+                val widget = when (provider) {
+                    StatusWidgetSmall::class.java -> StatusWidgetSmall()
+                    else -> StatusWidgetMedium()
+                }
+                for (id in ids) {
+                    widget.update(context, manager, id)?.let { started += it }
+                }
+            }
+            return started
         }
 
         /**
@@ -151,6 +192,13 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
     }
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, appWidgetIds: IntArray) {
+        // Re-asserted on every update rather than only when the first widget
+        // appears: `UPDATE` is idempotent, so this puts the schedule back if
+        // the system dropped it, and the caller does not have to know whether
+        // it was ever there.
+        if (WidgetPeriodicRefreshPolicy.shouldSchedule(placedCount(context))) {
+            WidgetPeriodicRefresh.schedule(context)
+        }
         for (id in appWidgetIds) update(context, manager, id)
     }
 
@@ -169,12 +217,30 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             WidgetSnapshot.forget(context, id)
             WidgetRetry.cancel(context, id)
         }
+        // Runs after the system has forgotten them, so this counts what is
+        // left. The last widget leaving is what stops the schedule: a job that
+        // refreshes nothing still wakes the process every fifteen minutes.
+        if (!WidgetPeriodicRefreshPolicy.shouldSchedule(placedCount(context))) {
+            WidgetPeriodicRefresh.cancel(context)
+        }
     }
 
-    internal fun update(context: Context, manager: AppWidgetManager, appWidgetId: Int) {
+    /**
+     * Starts this widget's refresh, answering the work it launched.
+     *
+     * Null when there is nothing to wait for: an update already in flight, or
+     * a widget with no server to fetch from. Both have already put their state
+     * on screen by the time this returns, so a caller that awaits nothing is
+     * not missing anything — it just has no fetch to wait on.
+     */
+    internal fun update(
+        context: Context,
+        manager: AppWidgetManager,
+        appWidgetId: Int,
+    ): Job? {
         if (!activeUpdates.begin(appWidgetId, System.currentTimeMillis())) {
             Log.d(TAG, "Widget $appWidgetId is already updating, skipping")
-            return
+            return null
         }
 
         val views = RemoteViews(context.packageName, R.layout.home_widget)
@@ -196,7 +262,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         if (server == null) {
             showError(context, views, manager, appWidgetId, R.string.widget_err_not_configured)
             activeUpdates.release(appWidgetId)
-            return
+            return null
         }
 
         val bounds = boundsOf(context, manager, appWidgetId)
@@ -223,7 +289,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             showLoading(context, views, manager, appWidgetId, server.name)
         }
 
-        CoroutineScope(Dispatchers.IO).launch {
+        return CoroutineScope(Dispatchers.IO).launch {
             try {
                 withTimeoutOrNull(COROUTINE_TIMEOUT) {
                     try {

@@ -1,4 +1,5 @@
 import 'package:fl_lib/fl_lib.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart';
 import 'package:nodepulse/data/res/misc.dart';
 import 'package:nodepulse/data/res/store.dart';
@@ -32,14 +33,52 @@ abstract final class MethodChans {
     }
   }
 
+  /// Asks the home-screen widgets to refresh now, because the app came
+  /// forward.
+  ///
+  /// Gated on [SettingStore.autoUpdateHomeWidget] on iOS only — see
+  /// [pushesWidgetRefreshOnResume] for why, and for the bug that reading it on
+  /// both platforms caused.
   static Future<void> updateHomeWidget() async {
-    if (!isIOS && !isAndroid) return;
-    if (!Stores.setting.autoUpdateHomeWidget.fetch()) return;
+    if (!pushesWidgetRefreshOnResume(
+      isIOS: isIOS,
+      isAndroid: isAndroid,
+      autoUpdateHomeWidget: Stores.setting.autoUpdateHomeWidget.fetch(),
+    )) {
+      return;
+    }
     try {
       await _channel.invokeMethod('updateHomeWidget');
     } catch (e, s) {
       Loggers.app.warning('Failed to update home widget', e, s);
     }
+  }
+
+  /// Whether coming forward should push a widget refresh.
+  ///
+  /// iOS follows its own switch. That setting exists because iOS gives a
+  /// widget no schedule of its own worth relying on, and its label ("when
+  /// opening the app") describes the only moment the app can push one.
+  ///
+  /// Android does not read that switch, and used to. The setting's default is
+  /// `isIOS` — always false on Android — and its control lived on the iOS
+  /// settings page alone, so the check made this call a no-op on every
+  /// Android device, with no way for a user to tell why. Android wants the
+  /// opposite default anyway: the widget keeps a schedule of its own
+  /// (`WidgetPeriodicRefresh`), and this is the cheap extra that makes a
+  /// deliberate app launch show fresh numbers.
+  ///
+  /// Split out from [updateHomeWidget] because the platform flags are fixed
+  /// at runtime and the decision is the part worth testing: the wrong answer
+  /// is invisible, and shows up only as a reading whose age keeps growing.
+  @visibleForTesting
+  static bool pushesWidgetRefreshOnResume({
+    required bool isIOS,
+    required bool isAndroid,
+    required bool autoUpdateHomeWidget,
+  }) {
+    if (isIOS) return autoUpdateHomeWidget;
+    return isAndroid;
   }
 
   /// Hand the home-screen widgets the current monitor server list and a
