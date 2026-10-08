@@ -82,7 +82,17 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
 
         private const val TAG = "HomeWidget"
 
-        private const val COROUTINE_TIMEOUT = 20_000L
+        /**
+         * The whole refresh's budget, covering both requests in sequence.
+         *
+         * Larger than their sum ([WidgetApi.SERVERS_TIMEOUT_MS] +
+         * [WidgetApi.HISTORY_TIMEOUT_MS]) so it can only fire on a fetch that
+         * is genuinely stuck. Set to a value that merely felt generous, it
+         * would instead cut off the history request while it was still
+         * legitimately in flight — which is the same "暂无历史" failure
+         * arriving from the other side.
+         */
+        internal const val COROUTINE_TIMEOUT = 30_000L
 
         /**
          * How long an in-flight claim may stand before a later update takes it
@@ -90,7 +100,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
          * is never double-run, and short enough that a claim stranded by a
          * frozen process does not outlive the next periodic update.
          */
-        private const val UPDATE_CLAIM_STALE_MS = 60_000L
+        internal const val UPDATE_CLAIM_STALE_MS = 90_000L
 
         private val activeUpdates = UpdateGuard(UPDATE_CLAIM_STALE_MS)
 
@@ -217,18 +227,38 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             try {
                 withTimeoutOrNull(COROUTINE_TIMEOUT) {
                     try {
-                        val (reading, history) = WidgetApi.load(context, server)
-                        // Data is on screen again: whatever the retry was going
-                        // to fix is fixed, and leaving it queued would only put
-                        // the widget through a fetch it does not need.
-                        WidgetRetry.cancel(context, appWidgetId)
+                        val fetched = WidgetApi.load(context, server)
+                        val reading = fetched.reading
+                        // A failed history is not a successful refresh: it
+                        // keeps the rows already on screen and leaves the retry
+                        // in place, so the chart comes back on its own instead
+                        // of staying blank until the launcher's next update.
+                        val plan = WidgetRefresh.plan(
+                            fetched = fetched.history,
+                            failed = fetched.historyFailed,
+                            held = held?.history.orEmpty(),
+                        )
+                        if (!plan.retry) {
+                            // Data is on screen again: whatever the retry was
+                            // going to fix is fixed, and leaving it queued would
+                            // only put the widget through a fetch it does not
+                            // need.
+                            WidgetRetry.cancel(context, appWidgetId)
+                        }
                         WidgetSnapshot.save(
                             context,
                             appWidgetId,
-                            WidgetSnapshot.Shown(server.id, reading, history),
+                            WidgetSnapshot.Shown(server.id, reading, plan.history),
                         )
                         withContext(Dispatchers.Main) {
-                            showData(context, views, manager, appWidgetId, config, reading, history, bounds)
+                            showData(
+                                context, views, manager, appWidgetId, config,
+                                reading, plan.history, bounds,
+                            )
+                        }
+                        if (plan.retry) {
+                            Log.w(TAG, "Widget $appWidgetId history missing, retrying")
+                            WidgetRetry.schedule(context, appWidgetId)
                         }
                     } catch (e: CancellationException) {
                         throw e

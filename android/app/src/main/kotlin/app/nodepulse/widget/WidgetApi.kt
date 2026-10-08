@@ -2,6 +2,7 @@ package app.nodepulse.widget
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -18,6 +19,8 @@ import java.util.TimeZone
  * Fetches CF-Server-Monitor endpoints directly for home widgets.
  */
 object WidgetApi {
+    private const val TAG = "WidgetApi"
+
     class InsecureException : IOException("HTTPS required")
 
     class MissingSiteUrlException : IOException("No site URL configured")
@@ -65,37 +68,82 @@ object WidgetApi {
         val loss: Double = 0.0,
     )
 
-    private const val TIMEOUT_MS = 8_000
+    /**
+     * How long `/api/servers` may take.
+     *
+     * The reading is the point of the widget, so this stays short: a node whose
+     * metrics cannot be read is a failure worth showing.
+     */
+    const val SERVERS_TIMEOUT_MS = 8_000
+
+    /**
+     * How long `/api/history/all` may take.
+     *
+     * Longer than [SERVERS_TIMEOUT_MS] because this request is the slow one and
+     * it is allowed to be. The site answers a warm query from memory in
+     * milliseconds, but a cold one runs a sampling query over the history table
+     * — measured at 9-16s against a real site — and its cache only holds a
+     * `hours=24` answer for 15 minutes. At the reading's 8s this request was
+     * cut off routinely, and because the caller could not tell a cut-off from
+     * an empty answer, the chart it had already drawn was replaced by "暂无历史".
+     */
+    const val HISTORY_TIMEOUT_MS = 20_000
+
+    /** What one refresh hands back: the reading, and how the history went. */
+    data class Fetched(
+        val reading: Reading,
+        /**
+         * The history rows, or empty when [historyFailed]. Callers must run
+         * this through [WidgetRefresh.plan] rather than showing it directly:
+         * empty is ambiguous here, and the two cases want opposite handling.
+         */
+        val history: List<HistoryPoint>,
+        /** Whether the history request failed, as opposed to answering empty. */
+        val historyFailed: Boolean,
+    )
 
     suspend fun load(
         context: Context,
         server: WidgetStore.WidgetServer,
-    ): Pair<Reading, List<HistoryPoint>> = withContext(Dispatchers.IO) {
+    ): Fetched = withContext(Dispatchers.IO) {
         val siteUrl = WidgetStore.siteUrl(context) ?: throw MissingSiteUrlException()
         val token = WidgetStore.token(context)
         val reading = try {
-            val serversBody = get(siteUrl, "/api/servers", token)
+            val serversBody = get(siteUrl, "/api/servers", token, SERVERS_TIMEOUT_MS)
             parseCfMetrics(server, serversBody)
         } catch (e: RejectedTokenException) {
             WidgetStore.setToken(context, null)
             throw e
         }
 
-        // History failing is not fatal: e.g. history disabled or empty
+        // History is not fatal to the reading — but it is not the same as an
+        // empty history either, and the difference is the whole of this call's
+        // contract: an empty array is a site that has history turned off, and
+        // must be shown as such; a failure is a request that has to be made
+        // again, and must leave the chart that is already up alone until it
+        // succeeds. Swallowing the failure into `emptyList()` here is what made
+        // a slow history request look like a node with nothing to plot.
         val history = try {
-            val historyBody = get(siteUrl, "/api/history/all?id=${server.id}&hours=24", token)
-            parseCfHistory(historyBody)
-        } catch (_: Exception) {
-            emptyList()
+            val historyBody = get(
+                siteUrl,
+                "/api/history/all?id=${server.id}&hours=24",
+                token,
+                HISTORY_TIMEOUT_MS,
+            )
+            parseCfHistory(historyBody) to false
+        } catch (e: Exception) {
+            Log.w(TAG, "History for ${server.id} failed: ${e.message}")
+            emptyList<HistoryPoint>() to true
         }
 
-        reading to history
+        Fetched(reading = reading, history = history.first, historyFailed = history.second)
     }
 
     private fun get(
         siteUrl: String,
         path: String,
         token: String?,
+        timeoutMs: Int = SERVERS_TIMEOUT_MS,
     ): String {
         val base = siteUrl.trimEnd('/')
         val url = URL(base + path)
@@ -111,7 +159,7 @@ object WidgetApi {
                 url = url.toString(),
                 userAgent = "NodePulse-Widget/2",
                 token = token,
-                timeoutMs = TIMEOUT_MS,
+                timeoutMs = timeoutMs,
             )
         } catch (e: CfHttp.HttpStatusException) {
             if (e.code == 401 || e.code == 403) throw RejectedTokenException()
@@ -380,4 +428,44 @@ object WidgetApi {
 
     fun displayHost(addr: String): String =
         runCatching { Uri.parse(addr).host ?: addr }.getOrDefault(addr)
+}
+
+/**
+ * What to draw for the history half of a refresh, and whether another attempt
+ * is owed.
+ *
+ * Apart from [WidgetApi.load] so it can be tested without an Android runtime:
+ * the decision is the part that was wrong — a failed history was stored as an
+ * empty one, which blanked a chart that was already on screen and cancelled the
+ * retry that would have refilled it.
+ */
+internal object WidgetRefresh {
+    data class Plan(
+        val history: List<WidgetApi.HistoryPoint>,
+        val retry: Boolean,
+    )
+
+    /**
+     * [fetched] is what this refresh got, [failed] says whether getting it went
+     * wrong, and [held] is what the widget already had on screen.
+     *
+     * A failure keeps [held] — the last rows the node did report, which are
+     * still the best answer available — and asks for another attempt, because
+     * nothing else will: the launcher's own update is half an hour away at best
+     * and this device's vendor build defers it further.
+     *
+     * A success is taken at its word, including an empty one. A site with
+     * history turned off answers with `[]`, and that is an answer: retrying it
+     * would poll forever for something that is not coming, and keeping the old
+     * points would draw a chart the site has stopped producing.
+     */
+    fun plan(
+        fetched: List<WidgetApi.HistoryPoint>,
+        failed: Boolean,
+        held: List<WidgetApi.HistoryPoint>,
+    ): Plan = if (failed) {
+        Plan(history = held, retry = true)
+    } else {
+        Plan(history = fetched, retry = false)
+    }
 }
