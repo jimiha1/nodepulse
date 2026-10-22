@@ -126,15 +126,17 @@ class WidgetConfigureActivity : Activity() {
 
         fun updateUI() {
             if (kind == WidgetKind.TALL) {
+                // The tall card's rows are fixed by its layout, so there is
+                // nothing to choose beyond the server and how old its data may
+                // get — the two settings below are the whole form.
                 mediumModeContainer.visibility = View.GONE
                 chartCountContainer.visibility = View.GONE
                 chartContainer.visibility = View.GONE
                 chart2Container.visibility = View.GONE
                 chart3Container.visibility = View.GONE
                 chart4Container.visibility = View.GONE
-                fieldsContainer.visibility = View.VISIBLE
-                fieldsCapHint.text = "(Max ${WidgetConfig.DEFAULT_READING_FIELDS.size})"
-                expiryContainer.visibility = View.GONE
+                fieldsContainer.visibility = View.GONE
+                expiryContainer.visibility = View.VISIBLE
             } else {
                 mediumModeContainer.visibility = View.VISIBLE
                 expiryContainer.visibility = View.VISIBLE
@@ -184,21 +186,22 @@ class WidgetConfigureActivity : Activity() {
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
         }
 
-        // Limit checkbox selection based on current cap
+        // Limit checkbox selection based on current cap. The tall card has no
+        // checkbox list at all, so its cap never applies — the branch is kept
+        // for the medium modes only.
         fun setupCheckboxListeners() {
             for ((field, cb) in checkBoxes) {
                 cb.setOnCheckedChangeListener { _, isChecked ->
                     if (isChecked) {
-                        val cap = if (kind == WidgetKind.TALL) {
-                            WidgetConfig.DEFAULT_READING_FIELDS.size
+                        val selectedMode = when (modeGroup.checkedRadioButtonId) {
+                            R.id.mode_reading -> MediumMode.READING
+                            R.id.mode_combined -> MediumMode.COMBINED
+                            else -> MediumMode.CHART
+                        }
+                        val cap = if (selectedMode == MediumMode.COMBINED) {
+                            WidgetConfig.CAP_COMBINED_FIELDS
                         } else {
-                            val selectedMode = when (modeGroup.checkedRadioButtonId) {
-                                R.id.mode_reading -> MediumMode.READING
-                                R.id.mode_combined -> MediumMode.COMBINED
-                                else -> MediumMode.CHART
-                            }
-                            if (selectedMode == MediumMode.COMBINED) WidgetConfig.CAP_COMBINED_FIELDS
-                            else WidgetConfig.CAP_MEDIUM_READING_FIELDS
+                            WidgetConfig.CAP_MEDIUM_READING_FIELDS
                         }
                         val currentlyChecked = checkBoxes.values.count { it.isChecked }
                         if (currentlyChecked > cap) {
@@ -218,14 +221,16 @@ class WidgetConfigureActivity : Activity() {
             modeGroup.setOnCheckedChangeListener { _, _ ->
                 updateUI()
             }
+        }
 
-            when (existing.expiry) {
-                WidgetExpiry.M10 -> expiryGroup.check(R.id.expiry_10m)
-                WidgetExpiry.M30 -> expiryGroup.check(R.id.expiry_30m)
-                WidgetExpiry.H1 -> expiryGroup.check(R.id.expiry_1h)
-                WidgetExpiry.H2 -> expiryGroup.check(R.id.expiry_2h)
-                WidgetExpiry.NEVER -> expiryGroup.check(R.id.expiry_never)
-            }
+        // Both sizes warn when the data goes old, so both restore and save this
+        // setting; only the tall card has nothing else to configure.
+        when (existing.expiry) {
+            WidgetExpiry.M10 -> expiryGroup.check(R.id.expiry_10m)
+            WidgetExpiry.M30 -> expiryGroup.check(R.id.expiry_30m)
+            WidgetExpiry.H1 -> expiryGroup.check(R.id.expiry_1h)
+            WidgetExpiry.H2 -> expiryGroup.check(R.id.expiry_2h)
+            WidgetExpiry.NEVER -> expiryGroup.check(R.id.expiry_never)
         }
 
         setupCheckboxListeners()
@@ -235,6 +240,9 @@ class WidgetConfigureActivity : Activity() {
             val index = serverGroup.checkedRadioButtonId
             if (index !in servers.indices) return@setOnClickListener
 
+            // The tall card's rows are fixed, so it stores no field list; the
+            // mode is meaningless for it but the config model needs a value,
+            // and CHART is the one that reads as "no field selection".
             val selectedMode = if (kind == WidgetKind.TALL) {
                 MediumMode.CHART
             } else {
@@ -245,16 +253,18 @@ class WidgetConfigureActivity : Activity() {
                 }
             }
 
-            val cap = when {
-                kind == WidgetKind.TALL -> WidgetConfig.DEFAULT_READING_FIELDS.size
-                selectedMode == MediumMode.READING -> WidgetConfig.CAP_MEDIUM_READING_FIELDS
-                selectedMode == MediumMode.COMBINED -> WidgetConfig.CAP_COMBINED_FIELDS
-                else -> 0
+            val selectedFields = if (kind == WidgetKind.TALL) {
+                emptyList()
+            } else {
+                val cap = when (selectedMode) {
+                    MediumMode.READING -> WidgetConfig.CAP_MEDIUM_READING_FIELDS
+                    MediumMode.COMBINED -> WidgetConfig.CAP_COMBINED_FIELDS
+                    MediumMode.CHART -> 0
+                }
+                WidgetField.entries
+                    .filter { checkBoxes[it]?.isChecked == true }
+                    .take(cap)
             }
-
-            val selectedFields = WidgetField.entries
-                .filter { checkBoxes[it]?.isChecked == true }
-                .take(cap)
 
             val chart1 = CHART_METRICS.getOrNull(metricSpinner.selectedItemPosition) ?: WidgetConfig.DEFAULT_CHART
             val chart2 = CHART_METRICS.getOrNull(chart2Spinner.selectedItemPosition) ?: WidgetConfig.DEFAULT_CHART2
@@ -262,16 +272,12 @@ class WidgetConfigureActivity : Activity() {
             val chart4 = CHART_METRICS.getOrNull(chart4Spinner.selectedItemPosition) ?: WidgetConfig.DEFAULT_CHART4
             val count = chartCountOptions.getOrElse(chartCountSpinner.selectedItemPosition) { 1 }
 
-            val selectedExpiry = if (kind == WidgetKind.TALL) {
-                WidgetExpiry.DEFAULT
-            } else {
-                when (expiryGroup.checkedRadioButtonId) {
-                    R.id.expiry_10m -> WidgetExpiry.M10
-                    R.id.expiry_1h -> WidgetExpiry.H1
-                    R.id.expiry_2h -> WidgetExpiry.H2
-                    R.id.expiry_never -> WidgetExpiry.NEVER
-                    else -> WidgetExpiry.M30
-                }
+            val selectedExpiry = when (expiryGroup.checkedRadioButtonId) {
+                R.id.expiry_10m -> WidgetExpiry.M10
+                R.id.expiry_1h -> WidgetExpiry.H1
+                R.id.expiry_2h -> WidgetExpiry.H2
+                R.id.expiry_never -> WidgetExpiry.NEVER
+                else -> WidgetExpiry.M30
             }
 
             WidgetConfig.save(

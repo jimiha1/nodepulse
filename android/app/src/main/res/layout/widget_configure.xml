@@ -242,7 +242,7 @@
                     android:orientation="vertical" />
             </LinearLayout>
 
-            <!-- Data Expiry Selector (MEDIUM only) -->
+            <!-- Data Expiry Selector (MEDIUM and TALL) -->
             <LinearLayout
                 android:id="@+id/expiry_container"
                 android:layout_width="match_parent"
