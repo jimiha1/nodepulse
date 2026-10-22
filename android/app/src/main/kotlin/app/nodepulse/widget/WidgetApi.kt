@@ -86,6 +86,12 @@ object WidgetApi {
         val pingCt: Double? = null,
         val pingCu: Double? = null,
         val pingCm: Double? = null,
+        // Kept per carrier, not just as the `loss` average above: that average
+        // is 0.0 when a site reports no loss at all, and a stability score
+        // cannot tell that apart from a perfect link.
+        val lossCt: Double? = null,
+        val lossCu: Double? = null,
+        val lossCm: Double? = null,
     )
 
     /**
@@ -373,6 +379,9 @@ object WidgetApi {
                 pingCt = o.optDoubleOrNull("ping_ct"),
                 pingCu = o.optDoubleOrNull("ping_cu"),
                 pingCm = o.optDoubleOrNull("ping_cm"),
+                lossCt = lCt,
+                lossCu = lCu,
+                lossCm = lCm,
             )
         }
     }
