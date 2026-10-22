@@ -135,6 +135,20 @@ object WidgetApi {
     )
 
     /**
+     * [historyHours] as the query string spells it: `24`, not `24.0`.
+     *
+     * The whole numbers are what this widget has always sent, and a `Double`
+     * formatted straight into the URL would have changed the request for the
+     * 4x2 too — a change nothing asked for and nothing would have caught
+     * short of the site rejecting it. The fractional ranges keep their
+     * decimal because that is the only way to spell them.
+     */
+    internal fun historyHoursParam(hours: Double): String {
+        val asInt = hours.toInt()
+        return if (asInt.toDouble() == hours) asInt.toString() else hours.toString()
+    }
+
+    /**
      * Fetches one server's reading and history.
      *
      * [historyHours] is the window the caller wants to plot. It is not free
@@ -168,7 +182,7 @@ object WidgetApi {
         val history = try {
             val historyBody = get(
                 siteUrl,
-                "/api/history/all?id=${server.id}&hours=$historyHours",
+                "/api/history/all?id=${server.id}&hours=${historyHoursParam(historyHours)}",
                 token,
                 HISTORY_TIMEOUT_MS,
             )

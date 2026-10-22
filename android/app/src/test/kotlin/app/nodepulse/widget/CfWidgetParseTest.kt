@@ -283,6 +283,18 @@ class CfWidgetParseTest {
     }
 
     @Test
+    fun historyHoursKeepsTheWireFormatTheSiteExpects() {
+        // The 4x2 has always asked for `hours=24`; a Double formatted straight
+        // into the URL would have turned that into `24.0` for a widget that
+        // did not change. The fractional ranges still need their decimal.
+        assertEquals("24", WidgetApi.historyHoursParam(24.0))
+        assertEquals("1", WidgetApi.historyHoursParam(1.0))
+        assertEquals("168", WidgetApi.historyHoursParam(168.0))
+        assertEquals("0.167", WidgetApi.historyHoursParam(0.167))
+        assertEquals("0.5", WidgetApi.historyHoursParam(0.5))
+    }
+
+    @Test
     fun formatBytesOmitsTrailingZeroDecimals() {
         val gb = 1024.0 * 1024.0 * 1024.0
         assertEquals("500g", WidgetApi.formatBytes(500.0 * gb))
