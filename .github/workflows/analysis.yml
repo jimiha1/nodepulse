@@ -271,13 +271,11 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 24
-      # npm, and a `package-lock.json`, because Dependabot maintains one and
-      # does not maintain a `bun.lock`: it bumped `@astrojs/starlight` in
-      # docs/package.json alone, and `bun install --frozen-lockfile` refused
-      # the tree it left behind. Every Dependabot PR against docs/ or website/
-      # failed that way and no version of it could pass — the update the PR
-      # exists for is the one thing the bot cannot write. The other three npm
-      # directories here have always had both files updated together.
+      # npm, and a `package-lock.json`, because the lockfile is the one a
+      # manifest-only edit leaves behind: a version bumped in docs/package.json
+      # alone made `bun install --frozen-lockfile` refuse the tree, and no
+      # version of that update could pass. The other three npm directories here
+      # have always had both files updated together.
       - name: Install and build
         working-directory: docs
         run: |
@@ -320,7 +318,7 @@ jobs:
         with:
           node-version: 24
       # Same as the docs above, npm for the same reason. This one had not broken
-      # yet, which was luck rather than a difference: its next Dependabot PR
+      # yet, which was luck rather than a difference: a manifest-only bump
       # would have.
       - name: Install and build
         working-directory: website

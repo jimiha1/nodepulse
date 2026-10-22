@@ -39,7 +39,7 @@ Flutter app for managing servers, in a Rust workspace monorepo. Feature-specific
 
 - `cargo build -p sbm_ffi` before FFI tests (`test/helpers/rust_lib_helper.dart` loads the dylib from `target/`), and again after codegen.
 - `flutter_rust_bridge_codegen generate` after changing `crates/sbm_ffi/src/api` (output `lib/src/rust/`, do not edit). **Never run `flutter_rust_bridge_codegen integrate`** — it reformats every package and submodule.
-- `flutter_rust_bridge` is pinned in `pubspec.yaml` and `crates/sbm_ffi/Cargo.toml`; both must equal the codegen version that generated `lib/src/rust/`, or `RustLib.init` fails at launch. Bumping = both manifests + `cargo install flutter_rust_bridge_codegen --version <v>` + regenerate (Dependabot does only the first).
+- `flutter_rust_bridge` is pinned in `pubspec.yaml` and `crates/sbm_ffi/Cargo.toml`; both must equal the codegen version that generated `lib/src/rust/`, or `RustLib.init` fails at launch. Bumping = both manifests + `cargo install flutter_rust_bridge_codegen --version <v>` + regenerate. Editing the two manifests alone is not a bump.
 - `crates/sbm_ffi/rust-toolchain.toml` lists every shipped target; a missing one silently builds for the host. App builds compile Rust through `hook/build.dart` (no plugin, podspec or `Package.swift`).
 
 ## Architecture
