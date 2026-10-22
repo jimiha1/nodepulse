@@ -348,10 +348,9 @@
 
             <TextView
                 android:id="@+id/widget_row_ct_label"
-                android:layout_width="wrap_content"
+                android:layout_width="46dp"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
-                android:minWidth="26dp"
                 android:singleLine="true"
                 android:textColor="@color/widgetSummaryText"
                 android:textSize="10sp"
@@ -368,12 +367,11 @@
 
             <TextView
                 android:id="@+id/widget_row_ct_value"
-                android:layout_width="wrap_content"
+                android:layout_width="34dp"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:fontFamily="monospace"
                 android:gravity="end"
-                android:minWidth="34dp"
                 android:singleLine="true"
                 android:textColor="@color/widgetText"
                 android:textSize="10sp"
@@ -393,10 +391,9 @@
 
             <TextView
                 android:id="@+id/widget_row_cu_label"
-                android:layout_width="wrap_content"
+                android:layout_width="46dp"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
-                android:minWidth="26dp"
                 android:singleLine="true"
                 android:textColor="@color/widgetSummaryText"
                 android:textSize="10sp"
@@ -413,12 +410,11 @@
 
             <TextView
                 android:id="@+id/widget_row_cu_value"
-                android:layout_width="wrap_content"
+                android:layout_width="34dp"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:fontFamily="monospace"
                 android:gravity="end"
-                android:minWidth="34dp"
                 android:singleLine="true"
                 android:textColor="@color/widgetText"
                 android:textSize="10sp"
@@ -438,10 +434,9 @@
 
             <TextView
                 android:id="@+id/widget_row_cm_label"
-                android:layout_width="wrap_content"
+                android:layout_width="46dp"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
-                android:minWidth="26dp"
                 android:singleLine="true"
                 android:textColor="@color/widgetSummaryText"
                 android:textSize="10sp"
@@ -458,12 +453,11 @@
 
             <TextView
                 android:id="@+id/widget_row_cm_value"
-                android:layout_width="wrap_content"
+                android:layout_width="34dp"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:fontFamily="monospace"
                 android:gravity="end"
-                android:minWidth="34dp"
                 android:singleLine="true"
                 android:textColor="@color/widgetText"
                 android:textSize="10sp"

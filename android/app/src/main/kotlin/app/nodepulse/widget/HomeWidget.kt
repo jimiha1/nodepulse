@@ -158,10 +158,10 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         private const val TALL_HEADER_SP = 13f
 
         /**
-         * What a ping row reserves beside its bar: the two text columns'
-         * `minWidth` (26dp + 34dp) and the bar's horizontal margins.
+         * What a ping row reserves beside its bar: the fixed 46dp label column,
+         * the 34dp value column, and the bar's 6dp margin either side.
          */
-        private const val TALL_BAR_INSET_DP = 72f
+        private const val TALL_BAR_INSET_DP = 92f
 
         private const val TALL_PING_BAR_DP = 6f
         private const val TALL_STABILITY_BAR_DP = 5f
