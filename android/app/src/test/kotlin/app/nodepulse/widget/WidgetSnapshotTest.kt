@@ -126,4 +126,46 @@ class WidgetSnapshotTest {
         assertEquals("A", WidgetSnapshot.loadFromPrefs(prefs, 12, "srv-1")!!.reading.name)
         assertEquals("B", WidgetSnapshot.loadFromPrefs(prefs, 13, "srv-2")!!.reading.name)
     }
+
+    @Test
+    fun historyRoundTripsThePingColumns() {
+        val points = listOf(
+            WidgetApi.HistoryPoint(
+                cpu = 1.0, memory = 2.0, disk = 3.0, netRx = 4.0, netTx = 5.0,
+                pingCt = 10.0, pingCu = null, pingCm = 30.0,
+            ),
+        )
+        val back = WidgetSnapshot.historyFrom(WidgetSnapshot.historyTo(points)).single()
+        assertEquals(10.0, back.pingCt!!, 0.001)
+        assertNull(back.pingCu)
+        assertEquals(30.0, back.pingCm!!, 0.001)
+    }
+
+    @Test
+    fun historyRoundTripsThePerCarrierLoss() {
+        val points = listOf(
+            WidgetApi.HistoryPoint(
+                cpu = 1.0, memory = 2.0, disk = 3.0, netRx = 4.0, netTx = 5.0,
+                lossCt = 0.2, lossCu = null, lossCm = 1.5,
+            ),
+        )
+        val back = WidgetSnapshot.historyFrom(WidgetSnapshot.historyTo(points)).single()
+        assertEquals(0.2, back.lossCt!!, 0.001)
+        assertNull(back.lossCu)
+        assertEquals(1.5, back.lossCm!!, 0.001)
+    }
+
+    @Test
+    fun aTenFieldSnapshotStillLoads() {
+        // What the previous release wrote: ten numbers, no ping or loss columns.
+        val legacy = "1.00,2.00,3.00,4.00,5.00,6.00,7.00,8.00,9.00,0.00"
+        val back = WidgetSnapshot.historyFrom(legacy).single()
+        assertEquals(1.0, back.cpu, 0.001)
+        assertNull(back.pingCt)
+        assertNull(back.pingCu)
+        assertNull(back.pingCm)
+        assertNull(back.lossCt)
+        assertNull(back.lossCu)
+        assertNull(back.lossCm)
+    }
 }

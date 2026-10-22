@@ -114,6 +114,20 @@ object WidgetSnapshot {
         .put("procText", r.procText)
         .put("avgLoss", r.avgLoss.json())
         .put("lastUpdated", r.lastUpdated.json())
+        .put("cpuCores", r.cpuCores.json())
+        .put("region", r.region.json())
+        .put("netIn", r.netIn)
+        .put("netOut", r.netOut)
+        .put("netRxMonthly", r.netRxMonthly)
+        .put("netTxMonthly", r.netTxMonthly)
+        .put("load5", r.load5)
+        .put("load15", r.load15)
+        .put("pingCt", r.pingCt.json())
+        .put("pingCu", r.pingCu.json())
+        .put("pingCm", r.pingCm.json())
+        .put("lossCt", r.lossCt.json())
+        .put("lossCu", r.lossCu.json())
+        .put("lossCm", r.lossCm.json())
 
     private fun readingFrom(o: JSONObject): WidgetApi.Reading = WidgetApi.Reading(
         name = o.optString("name"),
@@ -136,11 +150,31 @@ object WidgetSnapshot {
         procText = o.optString("procText"),
         avgLoss = o.doubleOrNull("avgLoss"),
         lastUpdated = o.longOrNull("lastUpdated"),
+        // Absent from snapshots written before the 2x4 widget existed; the
+        // defaults are exactly what those snapshots should read as.
+        cpuCores = o.intOrNull("cpuCores"),
+        region = o.stringOrNull("region"),
+        netIn = o.optDouble("netIn", 0.0),
+        netOut = o.optDouble("netOut", 0.0),
+        netRxMonthly = o.optDouble("netRxMonthly", 0.0),
+        netTxMonthly = o.optDouble("netTxMonthly", 0.0),
+        load5 = o.optDouble("load5", 0.0),
+        load15 = o.optDouble("load15", 0.0),
+        pingCt = o.doubleOrNull("pingCt"),
+        pingCu = o.doubleOrNull("pingCu"),
+        pingCm = o.doubleOrNull("pingCm"),
+        lossCt = o.doubleOrNull("lossCt"),
+        lossCu = o.doubleOrNull("lossCu"),
+        lossCm = o.doubleOrNull("lossCm"),
     )
 
     private fun Double?.json(): Any = this ?: JSONObject.NULL
 
     private fun Long?.json(): Any = this ?: JSONObject.NULL
+
+    private fun Int?.json(): Any = this ?: JSONObject.NULL
+
+    private fun String?.json(): Any = this ?: JSONObject.NULL
 
     private fun JSONObject.doubleOrNull(key: String): Double? =
         if (!has(key) || isNull(key)) null else optDouble(key)
@@ -148,41 +182,68 @@ object WidgetSnapshot {
     private fun JSONObject.longOrNull(key: String): Long? =
         if (!has(key) || isNull(key)) null else optLong(key)
 
+    private fun JSONObject.intOrNull(key: String): Int? =
+        if (!has(key) || isNull(key)) null else optInt(key)
+
+    private fun JSONObject.stringOrNull(key: String): String? =
+        if (!has(key) || isNull(key)) null else optString(key).takeIf { it.isNotEmpty() }
+
     // MARK: - History
 
     private const val POINT_SEP = ";"
     private const val FIELD_SEP = ","
+    private const val MISSING = "-"
+    private const val LEGACY_FIELDS = 10
 
     /**
-     * The chart history as text: one point per `;`-separated group, its ten
+     * The chart history as text: one point per `;`-separated group, its
      * numbers `,`-separated to two decimals.
      *
      * Two decimals is all a chart can show, and it keeps a full day of history
      * — 120 points — near five kilobytes, which is a reasonable thing to hold
      * in preferences beside the reading itself.
+     *
+     * A missing ping or loss is written as `-` rather than `0`, because the
+     * stability score treats "no reading" and "a perfect reading" differently
+     * and a zero here would erase the distinction on the way through disk.
      */
     fun historyTo(points: List<WidgetApi.HistoryPoint>): String =
         points.joinToString(POINT_SEP) { p ->
-            listOf(p.cpu, p.memory, p.disk, p.netRx, p.netTx, p.load, p.io, p.conn, p.proc, p.loss)
-                .joinToString(FIELD_SEP) { String.format(Locale.US, "%.2f", it) }
+            (
+                listOf(p.cpu, p.memory, p.disk, p.netRx, p.netTx, p.load, p.io, p.conn, p.proc, p.loss)
+                    .map { String.format(Locale.US, "%.2f", it) } +
+                    listOf(p.pingCt, p.pingCu, p.pingCm, p.lossCt, p.lossCu, p.lossCm)
+                        .map { it?.let { v -> String.format(Locale.US, "%.2f", v) } ?: MISSING }
+                ).joinToString(FIELD_SEP)
         }
 
     fun historyFrom(raw: String?): List<WidgetApi.HistoryPoint> {
         if (raw.isNullOrEmpty()) return emptyList()
         return raw.split(POINT_SEP).mapNotNull { group ->
-            val fields = group.split(FIELD_SEP).map { it.toDoubleOrNull() }
-            if (fields.size < 10 || fields.any { it == null }) return@mapNotNull null
+            val fields = group.split(FIELD_SEP)
+            // Ten fields is what the release before the 2x4 widget wrote; the
+            // ping and loss columns came after it. Both are read, and only a
+            // group too short to hold the original ten is dropped.
+            if (fields.size < LEGACY_FIELDS) return@mapNotNull null
+            val numbers = fields.take(10).map { it.toDoubleOrNull() ?: return@mapNotNull null }
+            val extras = fields.drop(10).map { it.toDoubleOrNull() }
             WidgetApi.HistoryPoint(
-                cpu = fields[0]!!,
-                memory = fields[1]!!,
-                disk = fields[2]!!,
-                netRx = fields[3]!!,
-                netTx = fields[4]!!,
-                load = fields[5]!!,
-                io = fields[6]!!,
-                conn = fields[7]!!,
-                proc = fields[8]!!,
-                loss = fields[9]!!,
+                cpu = numbers[0],
+                memory = numbers[1],
+                disk = numbers[2],
+                netRx = numbers[3],
+                netTx = numbers[4],
+                load = numbers[5],
+                io = numbers[6],
+                conn = numbers[7],
+                proc = numbers[8],
+                loss = numbers[9],
+                pingCt = extras.getOrNull(0),
+                pingCu = extras.getOrNull(1),
+                pingCm = extras.getOrNull(2),
+                lossCt = extras.getOrNull(3),
+                lossCu = extras.getOrNull(4),
+                lossCm = extras.getOrNull(5),
             )
         }
     }
