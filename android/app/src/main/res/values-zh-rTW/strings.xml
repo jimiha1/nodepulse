@@ -30,6 +30,5 @@
     <string name="widget_disk_desc">磁碟使用率</string>
     <string name="widget_net_desc">網路使用量</string>
     <string name="widget_refresh_desc">重新整理</string>
-    <string name="widget_small_label">伺服器數值</string>
     <string name="widget_medium_label">伺服器曲線</string>
 </resources>

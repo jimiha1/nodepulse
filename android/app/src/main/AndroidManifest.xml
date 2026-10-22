@@ -117,14 +117,14 @@
 
         <!--
             Two providers, so the launcher's picker offers two widgets. The size
-            and what it shows are one decision: 2x2 holds readings, 4x2 holds
-            charts, and neither resizes. One resizable provider meant a layout
-            could be chosen and then silently overruled by the size.
+            and what it shows are one decision: 2x4 holds one server's status,
+            4x2 holds charts, and neither resizes. One resizable provider meant a
+            layout could be chosen and then silently overruled by the size.
         -->
         <receiver
-            android:name=".widget.StatusWidgetSmall"
+            android:name=".widget.StatusWidgetTall"
             android:exported="false"
-            android:label="@string/widget_small_label">
+            android:label="@string/widget_tall_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="app.nodepulse.UPDATE_WIDGET" />
@@ -132,7 +132,7 @@
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/widget_small" />
+                android:resource="@xml/widget_tall" />
         </receiver>
 
         <receiver

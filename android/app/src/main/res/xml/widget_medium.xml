@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    The medium widget: charts, at a fixed 4x2. See `widget_small.xml` for why
+    The medium widget: charts, at a fixed 4x2. See `widget_tall.xml` for why
     neither one resizes.
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"

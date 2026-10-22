@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    The small widget: readings as text, at a fixed 2x2.
+    The tall widget: one server's status, at a fixed 2x4.
 
-    `resizeMode="none"` on purpose. Two fixed sizes, each bound to what it can
-    show, is what replaced one resizable widget whose layout choice the size
-    could silently overrule — a setting that appears to do nothing is worse
-    than a size that cannot be changed.
+    `resizeMode="none"` for the same reason as `widget_medium.xml`: the rows
+    are laid out for exactly this height, and letting a resize reflow them
+    would only produce a card whose contents no longer match what it claims
+    to show.
 
     `targetCellWidth`/`targetCellHeight` are the API 31+ way of asking for a
     size in grid cells and are ignored below it, so `minWidth`/`minHeight` say
@@ -13,11 +13,11 @@
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="110dp"
-    android:minHeight="110dp"
+    android:minHeight="250dp"
     android:targetCellWidth="2"
-    android:targetCellHeight="2"
+    android:targetCellHeight="4"
     android:updatePeriodMillis="1800000"
-    android:initialLayout="@layout/home_widget"
+    android:initialLayout="@layout/home_widget_tall"
     android:configure="app.nodepulse.widget.WidgetConfigureActivity"
     android:resizeMode="none"
     android:widgetCategory="home_screen">

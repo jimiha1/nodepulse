@@ -30,6 +30,5 @@
     <string name="widget_disk_desc">Використання диска</string>
     <string name="widget_net_desc">Використання мережі</string>
     <string name="widget_refresh_desc">Оновити</string>
-    <string name="widget_small_label">Значення сервера</string>
     <string name="widget_medium_label">Графіки сервера</string>
 </resources>

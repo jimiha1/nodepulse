@@ -84,7 +84,6 @@
     <string name="widget_row_disk" translatable="false">Disk</string>
     <string name="widget_row_net" translatable="false">Net</string>
 
-    <string name="widget_small_label">Server readings</string>
     <string name="widget_medium_label">Server charts</string>
 
     <string name="widget_expiry_title">Data Expiry Alert</string>
@@ -93,4 +92,19 @@
     <string name="widget_expiry_1h">1 hour</string>
     <string name="widget_expiry_2h">2 hours</string>
     <string name="widget_expiry_never">Disabled</string>
+
+    <string name="widget_tall_label">Server status</string>
+    <string name="widget_row_cpu_cores">CPU · %1$d cores</string>
+    <string name="widget_row_memory">Memory</string>
+    <string name="widget_row_disk_tall">Disk</string>
+    <string name="widget_row_load">Load</string>
+    <string name="widget_row_live">Live</string>
+    <string name="widget_row_month">This month</string>
+    <string name="widget_row_uptime">Uptime</string>
+    <string name="widget_row_telecom">Telecom</string>
+    <string name="widget_row_unicom">Unicom</string>
+    <string name="widget_row_mobile">China Mobile</string>
+    <string name="widget_stability_title">Stability last hour</string>
+    <string name="widget_stability_footer">loss %1$s · jitter %2$s · spikes %3$s</string>
+    <string name="widget_bar_desc">Signal quality</string>
 </resources>

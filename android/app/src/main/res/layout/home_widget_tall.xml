@@ -1,0 +1,567 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The tall widget: one server, eleven rows, a stability bar and a footer.
+
+    Every row carries `layout_height="0dp"` and `layout_weight="1"` so the
+    eleven of them split whatever height the launcher actually hands over —
+    four cells are not the same number of dp on every device. Each row is a
+    single line, so a shorter card tightens the spacing rather than dropping
+    a reading.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/widget_tall_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <LinearLayout
+        android:id="@+id/widget_tall_body"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:baselineAligned="false"
+        android:orientation="vertical">
+
+        <!-- Header: status dot, server name, region pill, refresh -->
+        <LinearLayout
+            android:id="@+id/widget_row_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/widget_dot"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="●"
+                android:textColor="@color/widgetSummaryText"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/widget_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="@color/widgetText"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                tools:text="aliyun-hk-01" />
+
+            <TextView
+                android:id="@+id/widget_region"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:background="@drawable/widget_region_bg"
+                android:paddingHorizontal="5dp"
+                android:paddingVertical="1dp"
+                android:textColor="@color/widgetSummaryText"
+                android:textSize="9sp"
+                android:visibility="gone"
+                tools:text="HK"
+                tools:visibility="visible" />
+
+            <ImageView
+                android:id="@+id/widget_refresh"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="2dp"
+                android:contentDescription="@string/widget_refresh_desc"
+                android:padding="5dp"
+                android:src="@drawable/refresh_24" />
+        </LinearLayout>
+
+        <!-- CPU -->
+        <LinearLayout
+            android:id="@+id/widget_row_cpu"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/widget_row_cpu_label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="@color/widgetSummaryText"
+                android:textSize="10sp"
+                tools:text="CPU · 2 cores" />
+
+            <TextView
+                android:id="@+id/widget_row_cpu_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:ellipsize="end"
+                android:fontFamily="monospace"
+                android:singleLine="true"
+                android:textColor="@color/widgetText"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                tools:text="0.0%" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginVertical="3dp"
+            android:background="@drawable/widget_divider" />
+
+        <!-- Memory -->
+        <LinearLayout
+            android:id="@+id/widget_row_mem"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/widget_row_mem_label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="@color/widgetSummaryText"
+                android:textSize="10sp"
+                tools:text="Memory" />
+
+            <TextView
+                android:id="@+id/widget_row_mem_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:ellipsize="end"
+                android:fontFamily="monospace"
+                android:singleLine="true"
+                android:textColor="@color/widgetText"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                tools:text="233 / 431 MiB" />
+        </LinearLayout>
+
+        <!-- Disk -->
+        <LinearLayout
+            android:id="@+id/widget_row_disk"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/widget_row_disk_label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="@color/widgetSummaryText"
+                android:textSize="10sp"
+                tools:text="Disk" />
+
+            <TextView
+                android:id="@+id/widget_row_disk_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:ellipsize="end"
+                android:fontFamily="monospace"
+                android:singleLine="true"
+                android:textColor="@color/widgetText"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                tools:text="412 / 1021 MiB" />
+        </LinearLayout>
+
+        <!-- Load -->
+        <LinearLayout
+            android:id="@+id/widget_row_load"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/widget_row_load_label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="@color/widgetSummaryText"
+                android:textSize="10sp"
+                tools:text="Load" />
+
+            <TextView
+                android:id="@+id/widget_row_load_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:ellipsize="end"
+                android:fontFamily="monospace"
+                android:singleLine="true"
+                android:textColor="@color/widgetText"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                tools:text="0.00 0.00 0.00" />
+        </LinearLayout>
+
+        <!-- Live throughput -->
+        <LinearLayout
+            android:id="@+id/widget_row_live"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/widget_row_live_label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="@color/widgetSummaryText"
+                android:textSize="10sp"
+                tools:text="Live" />
+
+            <TextView
+                android:id="@+id/widget_row_live_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:ellipsize="end"
+                android:fontFamily="monospace"
+                android:singleLine="true"
+                android:textColor="@color/widgetText"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                tools:text="↓14.1 · ↑13.2 KiB/s" />
+        </LinearLayout>
+
+        <!-- Monthly traffic -->
+        <LinearLayout
+            android:id="@+id/widget_row_month"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/widget_row_month_label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="@color/widgetSummaryText"
+                android:textSize="10sp"
+                tools:text="This month" />
+
+            <TextView
+                android:id="@+id/widget_row_month_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:ellipsize="end"
+                android:fontFamily="monospace"
+                android:singleLine="true"
+                android:textColor="@color/widgetText"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                tools:text="↓317 · ↑314 MiB" />
+        </LinearLayout>
+
+        <!-- Uptime -->
+        <LinearLayout
+            android:id="@+id/widget_row_uptime"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/widget_row_uptime_label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="@color/widgetSummaryText"
+                android:textSize="10sp"
+                tools:text="Uptime" />
+
+            <TextView
+                android:id="@+id/widget_row_uptime_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:ellipsize="end"
+                android:fontFamily="monospace"
+                android:singleLine="true"
+                android:textColor="@color/widgetText"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                tools:text="7h 39m" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginVertical="3dp"
+            android:background="@drawable/widget_divider" />
+
+        <!-- Telecom ping -->
+        <LinearLayout
+            android:id="@+id/widget_row_ct"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/widget_row_ct_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:minWidth="26dp"
+                android:singleLine="true"
+                android:textColor="@color/widgetSummaryText"
+                android:textSize="10sp"
+                tools:text="Telecom" />
+
+            <ImageView
+                android:id="@+id/widget_bar_ct"
+                android:layout_width="0dp"
+                android:layout_height="6dp"
+                android:layout_marginHorizontal="6dp"
+                android:layout_weight="1"
+                android:contentDescription="@string/widget_bar_desc"
+                android:scaleType="fitXY" />
+
+            <TextView
+                android:id="@+id/widget_row_ct_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="monospace"
+                android:gravity="end"
+                android:minWidth="34dp"
+                android:singleLine="true"
+                android:textColor="@color/widgetText"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                tools:text="10ms" />
+        </LinearLayout>
+
+        <!-- Unicom ping -->
+        <LinearLayout
+            android:id="@+id/widget_row_cu"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/widget_row_cu_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:minWidth="26dp"
+                android:singleLine="true"
+                android:textColor="@color/widgetSummaryText"
+                android:textSize="10sp"
+                tools:text="Unicom" />
+
+            <ImageView
+                android:id="@+id/widget_bar_cu"
+                android:layout_width="0dp"
+                android:layout_height="6dp"
+                android:layout_marginHorizontal="6dp"
+                android:layout_weight="1"
+                android:contentDescription="@string/widget_bar_desc"
+                android:scaleType="fitXY" />
+
+            <TextView
+                android:id="@+id/widget_row_cu_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="monospace"
+                android:gravity="end"
+                android:minWidth="34dp"
+                android:singleLine="true"
+                android:textColor="@color/widgetText"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                tools:text="7ms" />
+        </LinearLayout>
+
+        <!-- China Mobile ping -->
+        <LinearLayout
+            android:id="@+id/widget_row_cm"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/widget_row_cm_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:minWidth="26dp"
+                android:singleLine="true"
+                android:textColor="@color/widgetSummaryText"
+                android:textSize="10sp"
+                tools:text="China Mobile" />
+
+            <ImageView
+                android:id="@+id/widget_bar_cm"
+                android:layout_width="0dp"
+                android:layout_height="6dp"
+                android:layout_marginHorizontal="6dp"
+                android:layout_weight="1"
+                android:contentDescription="@string/widget_bar_desc"
+                android:scaleType="fitXY" />
+
+            <TextView
+                android:id="@+id/widget_row_cm_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="monospace"
+                android:gravity="end"
+                android:minWidth="34dp"
+                android:singleLine="true"
+                android:textColor="@color/widgetText"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                tools:text="16ms" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginVertical="3dp"
+            android:background="@drawable/widget_divider" />
+
+        <!-- Stability -->
+        <LinearLayout
+            android:id="@+id/widget_row_stability"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/widget_row_stability_label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="@color/widgetSummaryText"
+                android:textSize="10sp"
+                tools:text="Stability last hour" />
+
+            <TextView
+                android:id="@+id/widget_row_stability_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:fontFamily="monospace"
+                android:gravity="end"
+                android:singleLine="true"
+                android:textColor="@color/widgetText"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                tools:text="100" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/widget_bar_stability"
+            android:layout_width="match_parent"
+            android:layout_height="5dp"
+            android:layout_marginTop="3dp"
+            android:contentDescription="@string/widget_bar_desc"
+            android:scaleType="fitXY" />
+
+        <!-- Footer: loss/jitter/spikes, and the reading's age -->
+        <LinearLayout
+            android:id="@+id/widget_row_footer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/widget_footer_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="@color/widgetSummaryText"
+                android:textSize="9sp"
+                tools:text="loss 0.2% · jitter 2.0ms · spikes 0/90" />
+
+            <TextView
+                android:id="@+id/widget_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:fontFamily="monospace"
+                android:textColor="@color/widgetSummaryText"
+                android:textSize="9sp"
+                tools:text="14:20" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Error message fallback -->
+    <TextView
+        android:id="@+id/widget_error"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:textColor="@color/widgetSummaryText"
+        android:textSize="12sp"
+        android:visibility="gone"
+        tools:text="Tap to configure" />
+</LinearLayout>
