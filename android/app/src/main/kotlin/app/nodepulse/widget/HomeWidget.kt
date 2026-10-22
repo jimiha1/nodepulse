@@ -810,16 +810,19 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         views.setViewVisibility(R.id.widget_error, View.GONE)
         views.setViewVisibility(R.id.widget_tall_body, View.VISIBLE)
 
-        // Header
-        views.setTextViewText(R.id.widget_name, name)
+        // Header: the region code as the title, not the node's name.
+        //
+        // A node name is a hostname — `aliyun-hk-01`, `racknerd-lax-01` — and
+        // on a 130dp card at font_scale 1.15 it was truncated to `O...` the
+        // moment anything else shared the header. The two letters that say
+        // where the box is are the part that survives a glance anyway, so the
+        // title is `JP` / `US`; the full name is still a tap away in the
+        // configure screen. A node with no region keeps its name, because an
+        // empty title would say less than a truncated one.
+        val region = reading?.region?.takeIf { it.isNotEmpty() }
+        views.setTextViewText(R.id.widget_name, region?.uppercase(java.util.Locale.ROOT) ?: name)
         views.setTextColor(R.id.widget_dot, resolveDotColor(reading?.lastUpdated))
-        val region = reading?.region
-        if (region.isNullOrEmpty()) {
-            views.setViewVisibility(R.id.widget_region, View.GONE)
-        } else {
-            views.setTextViewText(R.id.widget_region, region)
-            views.setViewVisibility(R.id.widget_region, View.VISIBLE)
-        }
+        views.setViewVisibility(R.id.widget_region, View.GONE)
 
         // CPU, with the core count when the site reports one.
         views.setTextViewText(
@@ -845,10 +848,13 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         views.setTextViewText(R.id.widget_row_load_label, context.getString(R.string.widget_row_load))
         views.setTextViewText(R.id.widget_row_load_value, tallText(reading?.loadText))
 
-        views.setTextViewText(R.id.widget_row_live_label, context.getString(R.string.widget_row_live))
+        // Traffic left, not live throughput: this card refreshes every half
+        // hour, so a bytes-per-second figure was stale for most of the time it
+        // was on screen. What is left of the quota is still true at minute 29.
+        views.setTextViewText(R.id.widget_row_traffic_label, context.getString(R.string.widget_row_traffic))
         views.setTextViewText(
-            R.id.widget_row_live_value,
-            reading?.let { WidgetApi.formatSharedPair(it.netIn, it.netOut, perSecond = true) } ?: "--",
+            R.id.widget_row_traffic_value,
+            reading?.let { tallBytes(it.trafficRemainingBytes, it.trafficLimitBytes) } ?: "--",
         )
 
         views.setTextViewText(R.id.widget_row_month_label, context.getString(R.string.widget_row_month))
@@ -869,18 +875,21 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             views,
             R.id.widget_row_ct_label, R.id.widget_bar_ct, R.id.widget_row_ct_value,
             context.getString(R.string.widget_row_telecom), reading?.pingCt,
+            history.map { it.pingCt },
             barWidth, pingBarHeight, bounds.density,
         )
         tallPingRow(
             views,
             R.id.widget_row_cu_label, R.id.widget_bar_cu, R.id.widget_row_cu_value,
             context.getString(R.string.widget_row_unicom), reading?.pingCu,
+            history.map { it.pingCu },
             barWidth, pingBarHeight, bounds.density,
         )
         tallPingRow(
             views,
             R.id.widget_row_cm_label, R.id.widget_bar_cm, R.id.widget_row_cm_value,
             context.getString(R.string.widget_row_mobile), reading?.pingCm,
+            history.map { it.pingCm },
             barWidth, pingBarHeight, bounds.density,
         )
 
@@ -907,12 +916,15 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             views.setViewVisibility(R.id.widget_bar_stability, View.VISIBLE)
         }
 
+        // Whole numbers: the footer shares one 9sp line with the timestamp on
+        // a 150dp card, and `2.1%` reads the same as `2%` while costing a
+        // glyph that pushes the spikes count off the end.
         views.setTextViewText(
             R.id.widget_footer_text,
             context.getString(
                 R.string.widget_stability_footer,
-                stats.lossPct?.let { String.format(java.util.Locale.US, "%.1f%%", it) } ?: "--",
-                stats.jitterMs?.let { String.format(java.util.Locale.US, "%.1fms", it) } ?: "--",
+                stats.lossPct?.let { String.format(java.util.Locale.US, "%.0f%%", it) } ?: "--",
+                stats.jitterMs?.let { String.format(java.util.Locale.US, "%.0fms", it) } ?: "--",
                 if (stats.samples > 0) "${stats.spikes}/${stats.samples}" else "--",
             ),
         )
@@ -929,12 +941,17 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         value?.takeIf { it.isNotEmpty() } ?: "--"
 
     /**
-     * One carrier's row: its label, a segmented bar filled by how good the ping
-     * is, and the latency itself.
+     * One carrier's row: its label, a strip of the window's samples coloured by
+     * latency, and the current latency itself.
      *
-     * A missing ping leaves the bar's track only, which is what an empty
-     * fraction draws — a bar that filled itself would be claiming a latency
-     * nothing reported.
+     * The strip, not the current ping, is what carries the bar. This widget
+     * refreshes every half hour, so a bar of the moment would be stale for most
+     * of the time it is on screen and a spike between two refreshes would leave
+     * no trace; the strip keeps the last hour visible, and its colour is what
+     * says whether anything went wrong while nobody was looking.
+     *
+     * A missing ping leaves the strip's track only — a strip that coloured
+     * itself would be claiming a latency nothing reported.
      */
     private fun tallPingRow(
         views: RemoteViews,
@@ -943,13 +960,14 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         valueId: Int,
         label: String,
         pingMs: Double?,
+        history: List<Double?>,
         barWidth: Int,
         barHeight: Int,
         density: Float,
     ) {
         views.setTextViewText(labelId, label)
         views.setTextViewText(valueId, pingMs?.let { "${it.toInt()}ms" } ?: "--")
-        val bar = WidgetBars.segmented(WidgetBars.pingFraction(pingMs), barWidth, barHeight, density)
+        val bar = WidgetBars.history(history, barWidth, barHeight, density)
         if (bar == null) {
             views.setViewVisibility(barId, View.GONE)
         } else {

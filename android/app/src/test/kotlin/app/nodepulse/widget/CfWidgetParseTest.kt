@@ -346,6 +346,45 @@ class CfWidgetParseTest {
     }
 
     @Test
+    fun parseCfServerReportsTrafficRemainingInBytes() {
+        val server = WidgetStore.WidgetServer(id = "t", name = "T", region = "JP")
+        val body = """
+        {"servers":[{"id":"t","traffic_limit":"100 GB","traffic_calc_type":"total",
+          "net_rx_monthly":32212254720,"net_tx_monthly":10737418240}]}
+        """.trimIndent()
+        val r = WidgetApi.parseCfMetrics(server, body)
+        val gib = 1024.0 * 1024.0 * 1024.0
+        // 100 GiB limit, 30 + 10 GiB used: 60 GiB left, in bytes — the 2x4
+        // cannot subtract one formatted figure from another.
+        assertEquals(60.0 * gib, r.trafficRemainingBytes, 1.0)
+        assertEquals(100.0 * gib, r.trafficLimitBytes, 1.0)
+    }
+
+    @Test
+    fun parseCfServerClampsAnOvershotQuotaToNothingLeft() {
+        val server = WidgetStore.WidgetServer(id = "t", name = "T", region = "JP")
+        val body = """
+        {"servers":[{"id":"t","traffic_limit":"10 GB","traffic_calc_type":"total",
+          "net_rx_monthly":10737418240,"net_tx_monthly":10737418240}]}
+        """.trimIndent()
+        val r = WidgetApi.parseCfMetrics(server, body)
+        // A node past its quota has zero left; a negative remainder would be
+        // drawn as if the quota still had room.
+        assertEquals(0.0, r.trafficRemainingBytes, 0.001)
+    }
+
+    @Test
+    fun parseCfServerWithoutAQuotaHasNoTrafficFigures() {
+        val server = WidgetStore.WidgetServer(id = "t", name = "T", region = "JP")
+        val body = """{"servers":[{"id":"t","net_rx_monthly":1073741824}]}"""
+        val r = WidgetApi.parseCfMetrics(server, body)
+        // No limit: the tall row falls back to `--` rather than drawing
+        // "0 / 0 B", which reads as an exhausted quota.
+        assertEquals(0.0, r.trafficLimitBytes, 0.001)
+        assertEquals(0.0, r.trafficRemainingBytes, 0.001)
+    }
+
+    @Test
     fun parseCfHistoryReadsThePingColumns() {
         val body = """[{"timestamp":1,"cpu":1,"ping_ct":10,"ping_cu":null,"ping_cm":30}]"""
         val p = WidgetApi.parseCfHistory(body).single()
@@ -356,22 +395,25 @@ class CfWidgetParseTest {
 
     @Test
     fun sharedUnitMergesWhenBothSidesAgree() {
-        assertEquals("233 / 431 MiB", WidgetApi.formatSharedUnit(232.65 * 1048576, 431.0 * 1048576))
+        assertEquals("233 / 431 MB", WidgetApi.formatSharedUnit(232.65 * 1048576, 431.0 * 1048576))
     }
 
     @Test
     fun sharedUnitKeepsBothUnitsWhenTheyDiffer() {
-        assertEquals("512 MiB / 2 GiB", WidgetApi.formatSharedUnit(512.0 * 1048576, 2048.0 * 1048576))
+        assertEquals("512 MB / 2 GB", WidgetApi.formatSharedUnit(512.0 * 1048576, 2048.0 * 1048576))
     }
 
     @Test
     fun sharedPairPrefixesTheDirectionAndSharesTheUnit() {
+        // Whole numbers on both sides: the pair already spends its width on
+        // two arrows and a unit, and a decimal is what pushed the line past
+        // the 2x4's 130dp content box at font_scale 1.15.
         assertEquals(
-            "↓14.1 · ↑13.2 KiB/s",
+            "↓14 · ↑13 KB/s",
             WidgetApi.formatSharedPair(14.11 * 1024, 13.19 * 1024, perSecond = true),
         )
         assertEquals(
-            "↓317 · ↑314 MiB",
+            "↓317 · ↑314 MB",
             WidgetApi.formatSharedPair(317.0 * 1048576, 313.7 * 1048576),
         )
     }
@@ -379,7 +421,7 @@ class CfWidgetParseTest {
     @Test
     fun sharedPairSaysBothUnitsWhenTheyDiffer() {
         assertEquals(
-            "↓1.2 GiB · ↑512 MiB",
+            "↓1 GB · ↑512 MB",
             WidgetApi.formatSharedPair(1.2 * 1024 * 1048576, 512.0 * 1048576),
         )
     }

@@ -67,6 +67,12 @@ object WidgetApi {
         val netOut: Double = 0.0,
         val netRxMonthly: Double = 0.0,
         val netTxMonthly: Double = 0.0,
+        // The quota pair as bytes, so the 2x4 can show what is *left*: the
+        // formatted `trafficLeftText` is "used / limit", and subtracting one
+        // formatted figure from another would need their units to agree,
+        // which they do not — `4.6 GB` minus `98.1 GB` is not a byte count.
+        val trafficRemainingBytes: Double = 0.0,
+        val trafficLimitBytes: Double = 0.0,
         val load5: Double = 0.0,
         val load15: Double = 0.0,
         val pingCt: Double? = null,
@@ -277,6 +283,13 @@ object WidgetApi {
         } else {
             "${formatBytes(usedMonthly)} / ∞"
         }
+        // Clamped at zero: a node that overshot its quota has nothing left, and
+        // a negative "remaining" would be a bug drawn on the card.
+        val trafficRemainingBytes = if (limitBytes > 0) {
+            (limitBytes - usedMonthly).coerceAtLeast(0.0)
+        } else {
+            0.0
+        }
 
         // Connections
         val tcpConn = o.optIntOrNull("tcp_conn")
@@ -363,6 +376,8 @@ object WidgetApi {
             netOut = netOutSpeed,
             netRxMonthly = netRxMonthly,
             netTxMonthly = netTxMonthly,
+            trafficRemainingBytes = trafficRemainingBytes,
+            trafficLimitBytes = limitBytes.toDouble(),
             load5 = loads.getOrNull(1) ?: 0.0,
             load15 = loads.getOrNull(2) ?: 0.0,
             pingCt = pingCt,
@@ -506,14 +521,17 @@ object WidgetApi {
         }
     }
 
-    private val SHARED_UNITS = listOf("B", "KiB", "MiB", "GiB", "TiB", "PiB")
+    private val SHARED_UNITS = listOf("B", "KB", "MB", "GB", "TB", "PB")
 
     /**
      * A byte count in the largest unit it fills, and that unit's index.
      *
-     * Binary units spelled the way the reference design spells them — the
-     * lowercase `formatBytes` above stays as it is, because the 4x2 capsules
-     * have their own look and this is not the place to change it.
+     * The step is still 1024 — the site reports binary sizes — but the labels
+     * are spelled the short way. `KB` is what this widget's reader reads at a
+     * glance; `KiB` costs an extra glyph in every one of the four rows that
+     * show a size, on a card that is 150dp wide. The lowercase `formatBytes`
+     * above stays as it is, because the 4x2 capsules have their own look and
+     * this is not the place to change it.
      */
     private fun scaled(bytes: Double): Pair<Double, Int> {
         var value = bytes.coerceAtLeast(0.0)
@@ -538,9 +556,20 @@ object WidgetApi {
         }
 
     /**
+     * A throughput or traffic figure as a whole number.
+     *
+     * The down/up rows already spend their width on two arrows and two units,
+     * and at `font_scale` 1.15 a single decimal is the difference between the
+     * line ending in `KB/s` and the line ending in an ellipsis. `24` and
+     * `23.8` are the same statement about a live throughput.
+     */
+    private fun compactWhole(value: Double): String =
+        String.format(Locale.US, "%.0f", value)
+
+    /**
      * Two byte counts sharing one unit when they scale alike.
      *
-     * `232.65 MiB / 431.00 MiB` does not fit a two-cell row; `233 / 431 MiB`
+     * `232.65 MiB / 431.00 MiB` does not fit a two-cell row; `233 / 431 MB`
      * says the same thing in half the characters. A pair that lands in
      * different units keeps each of them, because collapsing those would
      * misstate one of the numbers.
@@ -561,10 +590,10 @@ object WidgetApi {
         val (uv, ui) = scaled(up)
         val suffix = if (perSecond) "/s" else ""
         return if (di == ui) {
-            "↓${compact(dv)} · ↑${compact(uv)} ${SHARED_UNITS[di]}$suffix"
+            "↓${compactWhole(dv)} · ↑${compactWhole(uv)} ${SHARED_UNITS[di]}$suffix"
         } else {
-            "↓${compact(dv)} ${SHARED_UNITS[di]}$suffix · " +
-                "↑${compact(uv)} ${SHARED_UNITS[ui]}$suffix"
+            "↓${compactWhole(dv)} ${SHARED_UNITS[di]}$suffix · " +
+                "↑${compactWhole(uv)} ${SHARED_UNITS[ui]}$suffix"
         }
     }
 

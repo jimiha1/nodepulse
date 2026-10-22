@@ -37,23 +37,23 @@
 
 ```
 ┌─────────────────────────────┐
-│ ● aliyun-hk-01      [HK] ⟳ │  header
-│ CPU · 2 cores         0.0%  │  row 1
+│ ● JP            19:11  ⟳ │  header
+│ CPU · 2 cores         8.9%  │  row 1
 │ ─────────────────────────── │  divider
-│ Memory       233 / 431 MiB  │  row 2
-│ Disk         412 / 1021 MiB │  row 3
-│ Load         0.00 0.00 0.00 │  row 4
-│ Live          ↓14.1 · ↑13.2 KiB/s │ row 5
-│ This month    ↓317 · ↑314 MiB │ row 6
-│ Uptime                7h 39m│  row 7
+│ 内存           4.6 / 11.7 GB│  row 2
+│ 磁盘          58.7 / 98.1 GB│  row 3
+│ 负载         0.09 0.20 0.21 │  row 4
+│ 流量          812 / 1000 GB │  row 5
+│ 本月            ↓92 · ↑70 GB│  row 6
+│ 运行时间             53d 1h │  row 7
 │ ─────────────────────────── │  divider
-│ 电信  ▮▮▮▮▮▮▮▮▮▮        10ms │  row 8
-│ 联通  ▮▮▮▮▮▮▮▮▮▮         7ms │  row 9
-│ 移动  ▮▮▮▮▮▮▮▮▮▮        16ms │  row 10
+│ 电信  ▮▮▮▮▮▮▮▮▮▮▮▮     196ms │  row 8
+│ 联通  ▮▮▮▮▮▮▮▮▮▮▮▮      98ms │  row 9
+│ 移动  ▮▮▮▮▮▮▮▮▮▮▮▮     325ms │  row 10
 │ ─────────────────────────── │  divider
-│ Stability last hour      100│  row 11
+│ 近 1 小时稳定性           91│  row 11
 │ ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬ │  bar
-│ loss 0.2% · jitter 2.0ms · spikes 0/90   14:20 │  footer
+│ 丢包 2%·抖动 40ms·尖刺 0/90 │  footer (7sp)
 └─────────────────────────────┘
 ```
 
@@ -64,7 +64,9 @@
 - 数值列：`@color/widgetText`，10sp，`monospace`，`textStyle=bold`，右对齐，`singleLine`，`ellipsize=end`。
 - 强调绿：`#34C759`（4x2 图表 CPU 曲线同色）。
 - 分隔线：`@color/widgetSummaryText` 12% 透明度，1dp 高，上下 4dp 外边距。
-- 头部：状态点用 `TextView` 文本 `●` + `setTextColor`，避免为一个圆点新增 drawable；服务器名 13sp bold；右侧 region 胶囊（`widget_region_bg.xml`，6dp 圆角，`#1A888888` 底，9sp）；最右是 24dp 刷新图标，沿用 4x2 的 `refresh_24`。
+- 头部：状态点用 `TextView` 文本 `●` + `setTextColor`，避免为一个圆点新增 drawable；**标题是 region 大写码**（`JP` / `US`）13sp bold；其右是 `HH:mm`（9sp monospace，颜色按新鲜度变化）；最右是 24dp 刷新图标，沿用 4x2 的 `refresh_24`。
+- 标题取 region 而不是服务器名：节点名是主机名（`aliyun-hk-01`），130dp 内容宽在 `font_scale` 1.15 下会被截成 `O...`；两字母的地区码才是扫一眼就有效的部分，完整名字在配置页仍可看到。region 缺失时回落到服务器名，空标题比截断的名字说得更少。
+- 单独的地区胶囊因此不再绘制（`widget_region` 恒为 `GONE`）；地区已经作为标题出现，重复一遍要占掉 20dp 以上。
 
 状态点取值沿用 Flutter 端 `CfServer._isOnline` 的规则，避免两处判断漂移：
 
@@ -80,10 +82,12 @@
 
 | 行 | 参考图 | 本设计 |
 |---|---|---|
-| Memory | `232.65 MiB / 431.00 MiB` | `233 / 431 MiB` |
-| Disk | `412.00 MiB / 1021.00 MiB` | `412 / 1021 MiB` |
-| Live | `14.11 KiB/s · 13.19 KiB/s` | `↓14.1 · ↑13.2 KiB/s` |
-| This month | `317.00 MiB / 313.70 MiB` | `↓317 · ↑314 MiB` |
+| Memory | `232.65 MiB / 431.00 MiB` | `233 / 431 MB` |
+| Disk | `412.00 MiB / 1021.00 MiB` | `412 / 1021 MB` |
+| 流量 | — | `812 / 1000 GB` |
+| This month | `317.00 MiB / 313.70 MiB` | `↓317 · ↑314 MB` |
+
+字节单位写作 `KB/MB/GB`（步进仍是 1024，只是标签用短拼写）：`KiB` 在四行里各多占一个字形，而这张卡只有 130dp。
 
 信息量不变（已用 / 总量 + 单位），字符数减半。`formatBytes` 新增 `sharedUnit(used, total)` 辅助函数：两者落在同一量级时合并单位，否则退回各自带单位的写法。
 
@@ -92,14 +96,15 @@
 - 百分比：`0.0%`（1 位小数，与图片一致；4x2 用 0 位，这里不复用）。
 - Load：`0.00 0.00 0.00`（1/5/15 分钟）。
 - Uptime：`7h 39m`（沿用 `WidgetApi.formatUptime`）。
-- 速率：`formatBytes` 的紧凑写法 + 两位有效小数，后缀 `KiB/s`。
+- 流量与本月：`formatSharedPair` 两侧都取整（`↓26 · ↑8 KB/s` 那种小数在 `font_scale` 1.15 下会把行尾挤成省略号）。
+- 流量行展示的是**剩余 / 总量**（`trafficRemainingBytes`），不是瞬时速率：卡片每 30 分钟才刷新一次，速率在它显示的大部分时间里已经过期，而剩余配额到第 29 分钟仍然成立。
 - 缺失值：`--`。
 - `cpu_cores` 缺失时第一行只写 `CPU`，不带 `· N cores`。
 - `region` 缺失或为空时胶囊整体 `GONE`，不占位。
 
 ### 4.4 数据新鲜度时间
 
-4x2 把 `HH:mm` 放在头部右侧；2x4 的头部右侧已被 region 胶囊占用，且宽度只有两格，所以时间挪到**脚注右端**，与 `loss · jitter · spikes` 同一行、右对齐。
+`HH:mm` 放在**头部**、地区码右边、刷新图标左边。早先它和 `loss · jitter · spikes` 挤在脚注同一行，结果在 130dp 上把尖刺数挤出了屏幕；脚注因此独占整行，时间上移到头部。
 
 颜色规则沿用 `HomeWidget.resolveTimeColorRes`，不新增判断：正常 `@color/widgetSummaryText`，过期 `@color/widgetTimeAging`，更久 `@color/widgetTimeStale`，阈值仍由 `WidgetExpiry` 决定。加载中显示 `…`，无时间戳显示 `--`。
 
@@ -181,12 +186,15 @@ data class Stats(
 
 `RemoteViews` 无法承载自定义 View，条形图必须以位图下发。新增 `WidgetBars`：
 
-- `segmented(context, fraction, color, w, h, density)`：20 段圆角小方块，用于三条 ping 条。
-- `continuous(context, fraction, color, w, h, density)`：单条圆角进度条，用于稳定性。
+- `history(columns, w, h, density)`：12 段圆角小方块，每段对应窗口里一个时间桶，**按该桶最差的 ping 着色**，用于三条 ping 条。
+- `bucket(values, count)`：把窗口切成 `count` 个桶，每桶取最差样本（不是均值——均值会把一次尖刺和九个安静样本抹平，而尖刺正是这段历史要显示的）；桶内无样本时返回 `null`，画成空轨道而不是绿色。样本数少于桶数时按样本数右对齐、左侧留空，不重复同一个样本。
+- `continuous(fraction, w, h, density)`：单条圆角进度条，用于稳定性。
 
 尺寸在布局里给定（ping 条高 6dp、稳定性条高 5dp），位图按 `ImageView` 实际宽度生成，单张约 1KB。一次更新最多 4 张，远低于 4x2 已有的 640KB 位图预算。
 
-颜色分档（ping 与稳定性共用）：
+ping 条画的是**历史**而不是当前值：卡片 30 分钟才刷新一次，画当前 ping 的条在它显示的大部分时间里都是过期的，而两次刷新之间的尖刺不会留下任何痕迹；12 段历史让「凌晨三点坏过」在上午九点仍然可见。
+
+颜色分档（历史列、当前 ping 与稳定性共用同一组阈值）：
 
 | 区间 | 颜色 |
 |---|---|
@@ -235,7 +243,7 @@ ping 条的填充比例：`clamp(1 − ping / 300, 0, 1)`。
 | `widget_row_memory` | `Memory` | `内存` |
 | `widget_row_disk_tall` | `Disk` | `磁盘` |
 | `widget_row_load` | `Load` | `负载` |
-| `widget_row_live` | `Live` | `实时` |
+| `widget_row_traffic` | `Traffic` | `流量` |
 | `widget_row_month` | `This month` | `本月` |
 | `widget_row_uptime` | `Uptime` | `运行时间` |
 | `widget_row_telecom` | `Telecom` | `电信` |

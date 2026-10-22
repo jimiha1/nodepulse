@@ -69,6 +69,22 @@
                 tools:text="HK"
                 tools:visibility="visible" />
 
+            <!--
+                The reading's age lives here, not in the footer: on a 150dp
+                card the footer's loss/jitter/spikes line needs the whole
+                width, and the timestamp beside it was what pushed the spikes
+                count off the end.
+            -->
+            <TextView
+                android:id="@+id/widget_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:fontFamily="monospace"
+                android:textColor="@color/widgetSummaryText"
+                android:textSize="9sp"
+                tools:text="14:20" />
+
             <ImageView
                 android:id="@+id/widget_refresh"
                 android:layout_width="24dp"
@@ -91,9 +107,8 @@
 
             <TextView
                 android:id="@+id/widget_row_cpu_label"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:ellipsize="end"
                 android:singleLine="true"
                 android:textColor="@color/widgetSummaryText"
@@ -102,10 +117,12 @@
 
             <TextView
                 android:id="@+id/widget_row_cpu_value"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:ellipsize="end"
+                android:gravity="end"
                 android:fontFamily="monospace"
                 android:singleLine="true"
                 android:textColor="@color/widgetText"
@@ -114,11 +131,19 @@
                 tools:text="0.0%" />
         </LinearLayout>
 
-        <View
+        <!--
+            An ImageView, not a View: RemoteViews inflates a fixed whitelist of
+            classes and `android.view.View` is not on it, so a plain View makes
+            the launcher reject the whole layout with "Class not allowed to be
+            inflated". ImageView is on that list, and with `fitXY` a 1dp-high
+            one draws exactly what the View did.
+        -->
+        <ImageView
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginVertical="3dp"
-            android:background="@drawable/widget_divider" />
+            android:scaleType="fitXY"
+            android:src="@drawable/widget_divider" />
 
         <!-- Memory -->
         <LinearLayout
@@ -132,9 +157,8 @@
 
             <TextView
                 android:id="@+id/widget_row_mem_label"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:ellipsize="end"
                 android:singleLine="true"
                 android:textColor="@color/widgetSummaryText"
@@ -143,16 +167,18 @@
 
             <TextView
                 android:id="@+id/widget_row_mem_value"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:ellipsize="end"
+                android:gravity="end"
                 android:fontFamily="monospace"
                 android:singleLine="true"
                 android:textColor="@color/widgetText"
                 android:textSize="10sp"
                 android:textStyle="bold"
-                tools:text="233 / 431 MiB" />
+                tools:text="6.5 / 11.7 GB" />
         </LinearLayout>
 
         <!-- Disk -->
@@ -167,9 +193,8 @@
 
             <TextView
                 android:id="@+id/widget_row_disk_label"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:ellipsize="end"
                 android:singleLine="true"
                 android:textColor="@color/widgetSummaryText"
@@ -178,16 +203,18 @@
 
             <TextView
                 android:id="@+id/widget_row_disk_value"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:ellipsize="end"
+                android:gravity="end"
                 android:fontFamily="monospace"
                 android:singleLine="true"
                 android:textColor="@color/widgetText"
                 android:textSize="10sp"
                 android:textStyle="bold"
-                tools:text="412 / 1021 MiB" />
+                tools:text="59 / 98 GB" />
         </LinearLayout>
 
         <!-- Load -->
@@ -202,9 +229,8 @@
 
             <TextView
                 android:id="@+id/widget_row_load_label"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:ellipsize="end"
                 android:singleLine="true"
                 android:textColor="@color/widgetSummaryText"
@@ -213,10 +239,12 @@
 
             <TextView
                 android:id="@+id/widget_row_load_value"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:ellipsize="end"
+                android:gravity="end"
                 android:fontFamily="monospace"
                 android:singleLine="true"
                 android:textColor="@color/widgetText"
@@ -225,9 +253,9 @@
                 tools:text="0.00 0.00 0.00" />
         </LinearLayout>
 
-        <!-- Live throughput -->
+        <!-- Traffic left of the quota -->
         <LinearLayout
-            android:id="@+id/widget_row_live"
+            android:id="@+id/widget_row_traffic"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
@@ -236,28 +264,29 @@
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/widget_row_live_label"
-                android:layout_width="0dp"
+                android:id="@+id/widget_row_traffic_label"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:ellipsize="end"
                 android:singleLine="true"
                 android:textColor="@color/widgetSummaryText"
                 android:textSize="10sp"
-                tools:text="Live" />
+                tools:text="流量" />
 
             <TextView
-                android:id="@+id/widget_row_live_value"
-                android:layout_width="wrap_content"
+                android:id="@+id/widget_row_traffic_value"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:ellipsize="end"
+                android:gravity="end"
                 android:fontFamily="monospace"
                 android:singleLine="true"
                 android:textColor="@color/widgetText"
                 android:textSize="10sp"
                 android:textStyle="bold"
-                tools:text="↓14.1 · ↑13.2 KiB/s" />
+                tools:text="812 / 1000 GB" />
         </LinearLayout>
 
         <!-- Monthly traffic -->
@@ -272,9 +301,8 @@
 
             <TextView
                 android:id="@+id/widget_row_month_label"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:ellipsize="end"
                 android:singleLine="true"
                 android:textColor="@color/widgetSummaryText"
@@ -283,16 +311,18 @@
 
             <TextView
                 android:id="@+id/widget_row_month_value"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:ellipsize="end"
+                android:gravity="end"
                 android:fontFamily="monospace"
                 android:singleLine="true"
                 android:textColor="@color/widgetText"
                 android:textSize="10sp"
                 android:textStyle="bold"
-                tools:text="↓317 · ↑314 MiB" />
+                tools:text="↓92 · ↑70 GB" />
         </LinearLayout>
 
         <!-- Uptime -->
@@ -307,9 +337,8 @@
 
             <TextView
                 android:id="@+id/widget_row_uptime_label"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:ellipsize="end"
                 android:singleLine="true"
                 android:textColor="@color/widgetSummaryText"
@@ -318,10 +347,12 @@
 
             <TextView
                 android:id="@+id/widget_row_uptime_value"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:ellipsize="end"
+                android:gravity="end"
                 android:fontFamily="monospace"
                 android:singleLine="true"
                 android:textColor="@color/widgetText"
@@ -330,11 +361,12 @@
                 tools:text="7h 39m" />
         </LinearLayout>
 
-        <View
+        <ImageView
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginVertical="3dp"
-            android:background="@drawable/widget_divider" />
+            android:scaleType="fitXY"
+            android:src="@drawable/widget_divider" />
 
         <!-- Telecom ping -->
         <LinearLayout
@@ -374,7 +406,7 @@
                 android:gravity="end"
                 android:singleLine="true"
                 android:textColor="@color/widgetText"
-                android:textSize="10sp"
+                android:textSize="9sp"
                 android:textStyle="bold"
                 tools:text="10ms" />
         </LinearLayout>
@@ -417,7 +449,7 @@
                 android:gravity="end"
                 android:singleLine="true"
                 android:textColor="@color/widgetText"
-                android:textSize="10sp"
+                android:textSize="9sp"
                 android:textStyle="bold"
                 tools:text="7ms" />
         </LinearLayout>
@@ -460,16 +492,17 @@
                 android:gravity="end"
                 android:singleLine="true"
                 android:textColor="@color/widgetText"
-                android:textSize="10sp"
+                android:textSize="9sp"
                 android:textStyle="bold"
                 tools:text="16ms" />
         </LinearLayout>
 
-        <View
+        <ImageView
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginVertical="3dp"
-            android:background="@drawable/widget_divider" />
+            android:scaleType="fitXY"
+            android:src="@drawable/widget_divider" />
 
         <!-- Stability -->
         <LinearLayout
@@ -483,9 +516,8 @@
 
             <TextView
                 android:id="@+id/widget_row_stability_label"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:ellipsize="end"
                 android:singleLine="true"
                 android:textColor="@color/widgetSummaryText"
@@ -494,7 +526,8 @@
 
             <TextView
                 android:id="@+id/widget_row_stability_value"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:fontFamily="monospace"
@@ -514,7 +547,7 @@
             android:contentDescription="@string/widget_bar_desc"
             android:scaleType="fitXY" />
 
-        <!-- Footer: loss/jitter/spikes, and the reading's age -->
+        <!-- Footer: loss/jitter/spikes, on a line of its own -->
         <LinearLayout
             android:id="@+id/widget_row_footer"
             android:layout_width="match_parent"
@@ -524,26 +557,24 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
+            <!--
+                7sp, not the 9 the other secondary text uses. `丢包 2% ·
+                抖动 40ms · 尖刺 0/90` is six CJK glyphs and eleven latin
+                ones; at 9sp (which font_scale 1.15 turns into 10.35) it needs
+                about 147dp on a card whose content box is 129dp, and even 8sp
+                cut the spikes count off. 7sp is what fits the whole line —
+                the alternative was dropping `尖刺`, which is one of the three
+                figures the footer exists to show.
+            -->
             <TextView
                 android:id="@+id/widget_footer_text"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:ellipsize="end"
                 android:singleLine="true"
                 android:textColor="@color/widgetSummaryText"
-                android:textSize="9sp"
-                tools:text="loss 0.2% · jitter 2.0ms · spikes 0/90" />
-
-            <TextView
-                android:id="@+id/widget_time"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:fontFamily="monospace"
-                android:textColor="@color/widgetSummaryText"
-                android:textSize="9sp"
-                tools:text="14:20" />
+                android:textSize="7sp"
+                tools:text="丢包 2%·抖动 40ms·尖刺 0/90" />
         </LinearLayout>
     </LinearLayout>
 

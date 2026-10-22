@@ -99,12 +99,13 @@
     <string name="widget_row_disk_tall">Disk</string>
     <string name="widget_row_load">Load</string>
     <string name="widget_row_live">Live</string>
+    <string name="widget_row_traffic">Traffic</string>
     <string name="widget_row_month">This month</string>
     <string name="widget_row_uptime">Uptime</string>
     <string name="widget_row_telecom">Telecom</string>
     <string name="widget_row_unicom">Unicom</string>
     <string name="widget_row_mobile">China Mobile</string>
     <string name="widget_stability_title">Stability last hour</string>
-    <string name="widget_stability_footer">loss %1$s · jitter %2$s · spikes %3$s</string>
+    <string name="widget_stability_footer">loss %1$s·jitter %2$s·spikes %3$s</string>
     <string name="widget_bar_desc">Signal quality</string>
 </resources>

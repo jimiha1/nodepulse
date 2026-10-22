@@ -27,8 +27,9 @@ internal object WidgetBars {
     /** The ping at which the bar is empty. */
     private const val WORST_PING_MS = 300.0
 
-    private const val SEGMENTS = 20
-    private const val SEGMENT_GAP_DP = 1f
+    /** Columns in a history strip, and the space between two of them. */
+    private const val SEGMENTS = 12
+    private const val SEGMENT_GAP_DP = 2f
 
     /**
      * How full the bar is for a ping: a perfect link fills it, 300ms or worse
@@ -46,29 +47,87 @@ internal object WidgetBars {
     }
 
     /**
-     * Twenty separate blocks, the way the reference design draws a ping bar.
-     * Blocks up to the fraction are filled; the rest stay a faint track.
+     * The colour of one historical sample, which is the whole point of the
+     * history strip: a latency that jumps for a few minutes shows up as a
+     * differently coloured column even though nobody was looking at the phone
+     * when it happened.
+     *
+     * Same bands as [colorFor], applied to the ping itself so a sample and a
+     * live reading never disagree about what counts as slow.
      */
-    fun segmented(fraction: Double?, w: Int, h: Int, density: Float): Bitmap? {
+    fun colorForPing(pingMs: Double?): Int = colorFor(pingFraction(pingMs))
+
+    /**
+     * One column per sample of the window, coloured by that sample's latency.
+     *
+     * This replaced a bar that filled itself by the *current* ping. The widget
+     * refreshes every thirty minutes, so a bar of the moment said almost
+     * nothing about the half hour it was drawn for — by the time anyone looked
+     * it was stale, and a spike between refreshes left no trace at all. Twelve
+     * columns span the fetched window instead: a carrier that went bad at 3am
+     * still shows red at 9am.
+     *
+     * Fewer, wider columns than the twenty the reference draws, because twelve
+     * 2dp-separated blocks are what this card's ~78dp of bar can hold at a
+     * glance; twenty thin ones read as a texture rather than as discrete
+     * samples, and the point here is the outlier, not the texture.
+     *
+     * Samples are bucketed, not merely truncated: a window with more samples
+     * than columns averages each bucket, so one bad sample in ten still colours
+     * its column rather than being dropped by a `take(12)`.
+     */
+    fun history(columns: List<Double?>, w: Int, h: Int, density: Float): Bitmap? {
         if (w <= 0 || h <= 0) return null
         val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         val gap = SEGMENT_GAP_DP * density
         val segW = (w - gap * (SEGMENTS - 1)) / SEGMENTS
         if (segW <= 0) {
-            // Too narrow for twenty gaps: one solid bar is better than nothing.
-            return continuous(fraction, w, h, density)
+            // Too narrow for the gaps: one solid strip is better than nothing.
+            val worst = columns.filterNotNull().maxOrNull()
+            return continuous(worst?.let { pingFraction(it) }, w, h, density)
         }
         val radius = minOf(h / 2f, segW / 2f)
-        val filled = ((fraction ?: 0.0) * SEGMENTS).toInt().coerceIn(0, SEGMENTS)
-        val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = colorFor(fraction) }
         val track = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = TRACK_COLOR }
+        val buckets = bucket(columns, SEGMENTS)
         for (i in 0 until SEGMENTS) {
             val left = i * (segW + gap)
             val rect = RectF(left, 0f, left + segW, h.toFloat())
-            canvas.drawRoundRect(rect, radius, radius, if (i < filled) fill else track)
+            // A bucket with no sample stays a bare track: a gap in the history
+            // is not a good latency, and a green column there would claim one.
+            val paint = buckets.getOrNull(i)?.let { sample ->
+                Paint(Paint.ANTI_ALIAS_FLAG).apply { color = colorForPing(sample) }
+            } ?: track
+            canvas.drawRoundRect(rect, radius, radius, paint)
         }
         return bitmap
+    }
+
+    /**
+     * [values] split into exactly [count] buckets, each one the worst sample it
+     * contains — the worst, not the mean, because a column exists to make a
+     * spike visible and averaging a spike with nine quiet samples hides it.
+     *
+     * Buckets with no samples come back null rather than absent, so the caller
+     * can keep their column width and draw an empty track.
+     */
+    internal fun bucket(values: List<Double?>, count: Int): List<Double?> {
+        if (count <= 0) return emptyList()
+        if (values.isEmpty()) return List(count) { null }
+        // Fewer samples than columns: one column per sample, newest on the
+        // right, and the rest empty. Spreading three samples across twelve
+        // columns would draw the same sample four times, which reads as four
+        // observations where there was one.
+        if (values.size < count) {
+            return List(count - values.size) { null } + values
+        }
+        return (0 until count).map { i ->
+            val from = i * values.size / count
+            val to = (i + 1) * values.size / count
+            values.subList(from, to.coerceAtLeast(from + 1).coerceAtMost(values.size))
+                .filterNotNull()
+                .maxOrNull()
+        }
     }
 
     /** One rounded bar, used for the stability score. */

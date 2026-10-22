@@ -124,6 +124,8 @@ object WidgetSnapshot {
         .put("netOut", r.netOut)
         .put("netRxMonthly", r.netRxMonthly)
         .put("netTxMonthly", r.netTxMonthly)
+        .put("trafficRemainingBytes", r.trafficRemainingBytes)
+        .put("trafficLimitBytes", r.trafficLimitBytes)
         .put("load5", r.load5)
         .put("load15", r.load15)
         .put("pingCt", r.pingCt.json())
@@ -166,6 +168,8 @@ object WidgetSnapshot {
         netOut = o.optDouble("netOut", 0.0),
         netRxMonthly = o.optDouble("netRxMonthly", 0.0),
         netTxMonthly = o.optDouble("netTxMonthly", 0.0),
+        trafficRemainingBytes = o.optDouble("trafficRemainingBytes", 0.0),
+        trafficLimitBytes = o.optDouble("trafficLimitBytes", 0.0),
         load5 = o.optDouble("load5", 0.0),
         load15 = o.optDouble("load15", 0.0),
         pingCt = o.doubleOrNull("pingCt"),
