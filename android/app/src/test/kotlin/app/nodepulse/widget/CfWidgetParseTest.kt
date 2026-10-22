@@ -245,6 +245,44 @@ class CfWidgetParseTest {
     }
 
     @Test
+    fun resolveDotColorTiers() {
+        val now = 1_759_410_000_000L
+
+        // Online: reported inside the 90-second window the app's server list
+        // uses, so the dot and the list cannot disagree about the same node.
+        assertEquals(
+            0xFF34C759.toInt(),
+            HomeWidget.resolveDotColor(now - 10_000L, now),
+        )
+        assertEquals(
+            0xFF34C759.toInt(),
+            HomeWidget.resolveDotColor(now - 89_999L, now),
+        )
+
+        // Offline: the window has passed.
+        assertEquals(
+            0xFFFF453A.toInt(),
+            HomeWidget.resolveDotColor(now - HomeWidget.ONLINE_WINDOW_MS, now),
+        )
+        assertEquals(
+            0xFFFF453A.toInt(),
+            HomeWidget.resolveDotColor(now - 60 * 60 * 1000L, now),
+        )
+
+        // No timestamp is grey, not red: nothing was reported, which is not
+        // evidence that the node is down.
+        assertEquals(0xFF888888.toInt(), HomeWidget.resolveDotColor(null, now))
+        assertEquals(0xFF888888.toInt(), HomeWidget.resolveDotColor(0L, now))
+        assertEquals(0xFF888888.toInt(), HomeWidget.resolveDotColor(-1L, now))
+
+        // A clock that ran backwards must not read as offline.
+        assertEquals(
+            0xFF34C759.toInt(),
+            HomeWidget.resolveDotColor(now + 60_000L, now),
+        )
+    }
+
+    @Test
     fun formatBytesOmitsTrailingZeroDecimals() {
         val gb = 1024.0 * 1024.0 * 1024.0
         assertEquals("500g", WidgetApi.formatBytes(500.0 * gb))

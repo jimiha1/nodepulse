@@ -57,6 +57,12 @@ object WidgetApi {
         // string that has already been formatted cannot do.
         val cpuCores: Int? = null,
         val region: String? = null,
+        // Bytes, not the MB the site reports: the memory and disk rows put
+        // both numbers under one shared unit, which needs the raw pair.
+        val ramUsedBytes: Double = 0.0,
+        val ramTotalBytes: Double = 0.0,
+        val diskUsedBytes: Double = 0.0,
+        val diskTotalBytes: Double = 0.0,
         val netIn: Double = 0.0,
         val netOut: Double = 0.0,
         val netRxMonthly: Double = 0.0,
@@ -128,9 +134,19 @@ object WidgetApi {
         val historyFailed: Boolean,
     )
 
+    /**
+     * Fetches one server's reading and history.
+     *
+     * [historyHours] is the window the caller wants to plot. It is not free
+     * to pick: the site accepts only the ranges `API.md` enumerates (0.167,
+     * 0.5, 1, 6, 12, 24, 48, 96, 168) and rejects anything else. The 2x4 asks
+     * for one hour because its stability section claims exactly that window;
+     * the 4x2 keeps the day it always had.
+     */
     suspend fun load(
         context: Context,
         server: WidgetStore.WidgetServer,
+        historyHours: Double = 24.0,
     ): Fetched = withContext(Dispatchers.IO) {
         val siteUrl = WidgetStore.siteUrl(context) ?: throw MissingSiteUrlException()
         val token = WidgetStore.token(context)
@@ -152,7 +168,7 @@ object WidgetApi {
         val history = try {
             val historyBody = get(
                 siteUrl,
-                "/api/history/all?id=${server.id}&hours=24",
+                "/api/history/all?id=${server.id}&hours=$historyHours",
                 token,
                 HISTORY_TIMEOUT_MS,
             )
@@ -325,6 +341,10 @@ object WidgetApi {
             lastUpdated = lastUpdated,
             cpuCores = o.optIntOrNull("cpu_cores"),
             region = o.optString("region").takeIf { it.isNotEmpty() } ?: server.region,
+            ramUsedBytes = ramUsedBytes,
+            ramTotalBytes = ramTotalBytes,
+            diskUsedBytes = diskUsedBytes,
+            diskTotalBytes = diskTotalBytes,
             netIn = netInSpeed,
             netOut = netOutSpeed,
             netRxMonthly = netRxMonthly,

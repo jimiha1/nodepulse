@@ -153,6 +153,44 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         private const val READINGS_CHART_MARGIN_DP = 6f
         private const val READINGS_HEADER_SP = 13f
 
+        /** The 2x4's card padding and header size, matching its layout XML. */
+        private const val TALL_PADDING_DP = 10f
+        private const val TALL_HEADER_SP = 13f
+
+        /**
+         * What a ping row reserves beside its bar: the two text columns'
+         * `minWidth` (26dp + 34dp) and the bar's horizontal margins.
+         */
+        private const val TALL_BAR_INSET_DP = 72f
+
+        private const val TALL_PING_BAR_DP = 6f
+        private const val TALL_STABILITY_BAR_DP = 5f
+
+        /**
+         * How recently a node must have reported to count as online.
+         *
+         * The same 90 seconds the Flutter app's `CfServer._isOnline` uses, so
+         * the dot and the server list cannot disagree about the same node.
+         */
+        internal const val ONLINE_WINDOW_MS = 90_000L
+
+        private const val DOT_ONLINE = 0xFF34C759.toInt()
+        private const val DOT_OFFLINE = 0xFFFF453A.toInt()
+        private const val DOT_UNKNOWN = 0xFF888888.toInt()
+
+        /**
+         * The header dot's colour for a reading of this age.
+         *
+         * A missing timestamp is grey rather than red: nothing was reported, so
+         * there is no evidence the node is down.
+         */
+        fun resolveDotColor(lastUpdated: Long?, now: Long = System.currentTimeMillis()): Int = when {
+            lastUpdated == null || lastUpdated <= 0 -> DOT_UNKNOWN
+            // A clock that moved backwards must not read as offline.
+            (now - lastUpdated).coerceAtLeast(0) < ONLINE_WINDOW_MS -> DOT_ONLINE
+            else -> DOT_OFFLINE
+        }
+
         private const val FOOTER_DP = 13f
         private const val HEADER_LINE_RATIO = 1.45f
 
@@ -243,7 +281,11 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             return null
         }
 
-        val views = RemoteViews(context.packageName, R.layout.home_widget)
+        // The two sizes are separate layouts rather than one resizable tree:
+        // their rows have nothing in common, and a single tree would have to
+        // hide most of itself to look like either.
+        val layout = if (kind == WidgetKind.TALL) R.layout.home_widget_tall else R.layout.home_widget
+        val views = RemoteViews(context.packageName, layout)
 
         // Read first: which click target the container gets depends on whether
         // a server has been picked yet.
@@ -266,15 +308,22 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         }
 
         val bounds = boundsOf(context, manager, appWidgetId)
-        views.setViewPadding(
-            R.id.widget_container,
-            bounds.paddingPx, bounds.paddingPx, bounds.paddingPx, bounds.paddingPx,
-        )
-        views.setTextViewTextSize(
-            R.id.widget_name,
-            TypedValue.COMPLEX_UNIT_SP,
-            bounds.headerSp,
-        )
+        if (kind == WidgetKind.TALL) {
+            views.setViewPadding(
+                R.id.widget_tall_container,
+                bounds.paddingPx, bounds.paddingPx, bounds.paddingPx, bounds.paddingPx,
+            )
+        } else {
+            views.setViewPadding(
+                R.id.widget_container,
+                bounds.paddingPx, bounds.paddingPx, bounds.paddingPx, bounds.paddingPx,
+            )
+            views.setTextViewTextSize(
+                R.id.widget_name,
+                TypedValue.COMPLEX_UNIT_SP,
+                bounds.headerSp,
+            )
+        }
 
         // What this widget last put on screen, redrawn rather than blanked to
         // the loading state: the numbers are still the last thing the node
@@ -286,14 +335,20 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         if (held != null) {
             showData(context, views, manager, appWidgetId, config, held.reading, held.history, bounds)
         } else {
-            showLoading(context, views, manager, appWidgetId, server.name)
+            showLoading(context, views, manager, appWidgetId, server.name, bounds)
         }
 
         return CoroutineScope(Dispatchers.IO).launch {
             try {
                 withTimeoutOrNull(COROUTINE_TIMEOUT) {
                     try {
-                        val fetched = WidgetApi.load(context, server)
+                        val fetched = WidgetApi.load(
+                            context,
+                            server,
+                            // The tall card's stability section says "last
+                            // hour", so it asks for one; the 4x2 keeps its day.
+                            historyHours = if (kind == WidgetKind.TALL) 1.0 else 24.0,
+                        )
                         val reading = fetched.reading
                         // A failed history is not a successful refresh: it
                         // keeps the rows already on screen and leaves the retry
@@ -434,8 +489,14 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         val rows = ((heightDp + 30) / 70).coerceAtLeast(1)
 
         val charts = kind.drawsCharts
-        val paddingDp = if (charts) CHART_PADDING_DP else READINGS_PADDING_DP
-        val headerSp = if (charts) CHART_HEADER_SP else READINGS_HEADER_SP
+        val paddingDp = when (kind) {
+            WidgetKind.TALL -> TALL_PADDING_DP
+            WidgetKind.MEDIUM -> if (charts) CHART_PADDING_DP else READINGS_PADDING_DP
+        }
+        val headerSp = when (kind) {
+            WidgetKind.TALL -> TALL_HEADER_SP
+            WidgetKind.MEDIUM -> if (charts) CHART_HEADER_SP else READINGS_HEADER_SP
+        }
         val marginDp = if (charts) CHART_MARGIN_DP else READINGS_CHART_MARGIN_DP
 
         val chartWidthDp = widthDp - paddingDp * 2
@@ -478,6 +539,14 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             PendingIntent.FLAG_UPDATE_CURRENT
         }
 
+        // Each size names its own outer view; binding the other size's id would
+        // leave the card with no tap target at all, silently.
+        val containerId = if (kind == WidgetKind.TALL) {
+            R.id.widget_tall_container
+        } else {
+            R.id.widget_container
+        }
+
         val configure = Intent(context, WidgetConfigureActivity::class.java).apply {
             putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
             data = android.net.Uri.parse("sbm://widget/$appWidgetId")
@@ -491,7 +560,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             // The name's own target, reached by tapping anywhere: a widget with
             // no server has no page to open.
             views.setOnClickPendingIntent(
-                R.id.widget_container,
+                containerId,
                 PendingIntent.getActivity(context, appWidgetId, configure, flag),
             )
         } else {
@@ -508,7 +577,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
             }
             views.setOnClickPendingIntent(
-                R.id.widget_container,
+                containerId,
                 PendingIntent.getActivity(context, appWidgetId + 1, open, flag),
             )
         }
@@ -532,7 +601,20 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         manager: AppWidgetManager,
         appWidgetId: Int,
         name: String,
+        bounds: Bounds,
     ) {
+        if (kind == WidgetKind.TALL) {
+            // A tall widget waiting for its first reading draws the card's own
+            // empty state — every row `--`, every bar a bare track — rather
+            // than a blank rectangle. The shape of what is coming is visible
+            // from the first moment, and no row has to move when it arrives.
+            showTall(context, views, name, null, emptyList(), WidgetExpiry.NEVER, bounds)
+            views.setViewVisibility(R.id.widget_error, View.GONE)
+            views.setViewVisibility(R.id.widget_tall_body, View.VISIBLE)
+            showTime(context, views, null, WidgetExpiry.NEVER, loading = true)
+            manager.updateAppWidget(appWidgetId, views)
+            return
+        }
         views.setTextViewText(R.id.widget_name, name)
         showTime(context, views, null, WidgetExpiry.NEVER, loading = true)
         views.setViewVisibility(R.id.error_message, View.GONE)
@@ -540,7 +622,10 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
     }
 
     /**
-     * The header time slot, which only the 4x2 widget uses.
+     * The header/footer time slot, shared by both sizes.
+     *
+     * The 4x2 puts it in the header; the 2x4 puts it at the right end of its
+     * footer, because its header's right side belongs to the region pill.
      *
      * Every branch sets the visibility explicitly: RemoteViews applies its
      * actions to a view tree that outlives them, so a slot hidden once — by
@@ -558,10 +643,6 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         expiry: WidgetExpiry,
         loading: Boolean = false,
     ) {
-        if (kind != WidgetKind.MEDIUM) {
-            views.setViewVisibility(R.id.widget_time, View.GONE)
-            return
-        }
         views.setViewVisibility(R.id.widget_time, View.VISIBLE)
         val text = when {
             loading -> "…"
@@ -587,119 +668,307 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         history: List<WidgetApi.HistoryPoint>,
         bounds: Bounds,
     ) {
+        if (kind == WidgetKind.TALL) {
+            showTall(context, views, reading.name, reading, history, config.expiry, bounds)
+            manager.updateAppWidget(appWidgetId, views)
+            return
+        }
+
         views.setTextViewText(R.id.widget_name, reading.name)
         showTime(context, views, reading.lastUpdated, config.expiry)
         views.setViewVisibility(R.id.error_message, View.GONE)
 
-        if (kind == WidgetKind.TALL) {
-            // TALL: the fixed rows replace this in the render task
-            views.setViewVisibility(R.id.widget_charts_container, View.GONE)
-            views.setViewVisibility(R.id.widget_content, View.VISIBLE)
-            showFieldCapsules(context, views, config.fields, reading)
-        } else {
-            // MEDIUM: 3 modes (CHART, READING, COMBINED)
-            when (config.mode) {
-                MediumMode.CHART -> {
-                    views.setViewVisibility(R.id.widget_content, View.GONE)
-                    views.setViewVisibility(R.id.widget_charts_container, View.VISIBLE)
+        // MEDIUM: 3 modes (CHART, READING, COMBINED)
+        when (config.mode) {
+            MediumMode.CHART -> {
+                views.setViewVisibility(R.id.widget_content, View.GONE)
+                views.setViewVisibility(R.id.widget_charts_container, View.VISIBLE)
 
-                    val count = config.chartCount
-                    val charts = listOf(config.chart, config.chart2, config.chart3, config.chart4).take(count)
+                val count = config.chartCount
+                val charts = listOf(config.chart, config.chart2, config.chart3, config.chart4).take(count)
 
-                    when (count) {
-                        1 -> {
-                            views.setViewVisibility(R.id.widget_chart_row_1, View.VISIBLE)
-                            views.setViewVisibility(R.id.widget_chart_1, View.VISIBLE)
-                            views.setViewVisibility(R.id.widget_chart_2, View.GONE)
-                            views.setViewVisibility(R.id.widget_chart_row_2, View.GONE)
+                when (count) {
+                    1 -> {
+                        views.setViewVisibility(R.id.widget_chart_row_1, View.VISIBLE)
+                        views.setViewVisibility(R.id.widget_chart_1, View.VISIBLE)
+                        views.setViewVisibility(R.id.widget_chart_2, View.GONE)
+                        views.setViewVisibility(R.id.widget_chart_row_2, View.GONE)
 
-                            val s = listOf(seriesForNamedMetric(context, charts[0], reading, history))
-                            val b = WidgetChart.render(context, s, bounds.widthPx, bounds.heightPx, bounds.density)
-                            if (b != null) views.setImageViewBitmap(R.id.widget_chart_1, b)
-                        }
-                        2 -> {
-                            views.setViewVisibility(R.id.widget_chart_row_1, View.VISIBLE)
-                            views.setViewVisibility(R.id.widget_chart_1, View.VISIBLE)
-                            views.setViewVisibility(R.id.widget_chart_2, View.VISIBLE)
-                            views.setViewVisibility(R.id.widget_chart_row_2, View.GONE)
+                        val s = listOf(seriesForNamedMetric(context, charts[0], reading, history))
+                        val b = WidgetChart.render(context, s, bounds.widthPx, bounds.heightPx, bounds.density)
+                        if (b != null) views.setImageViewBitmap(R.id.widget_chart_1, b)
+                    }
+                    2 -> {
+                        views.setViewVisibility(R.id.widget_chart_row_1, View.VISIBLE)
+                        views.setViewVisibility(R.id.widget_chart_1, View.VISIBLE)
+                        views.setViewVisibility(R.id.widget_chart_2, View.VISIBLE)
+                        views.setViewVisibility(R.id.widget_chart_row_2, View.GONE)
 
-                            val halfW = ((bounds.widthPx - 8 * bounds.density) / 2).toInt().coerceAtLeast(1)
-                            val s1 = listOf(seriesForNamedMetric(context, charts[0], reading, history))
-                            val b1 = WidgetChart.render(context, s1, halfW, bounds.heightPx, bounds.density)
-                            if (b1 != null) views.setImageViewBitmap(R.id.widget_chart_1, b1)
+                        val halfW = ((bounds.widthPx - 8 * bounds.density) / 2).toInt().coerceAtLeast(1)
+                        val s1 = listOf(seriesForNamedMetric(context, charts[0], reading, history))
+                        val b1 = WidgetChart.render(context, s1, halfW, bounds.heightPx, bounds.density)
+                        if (b1 != null) views.setImageViewBitmap(R.id.widget_chart_1, b1)
 
-                            val s2 = listOf(seriesForNamedMetric(context, charts[1], reading, history))
-                            val b2 = WidgetChart.render(context, s2, halfW, bounds.heightPx, bounds.density)
-                            if (b2 != null) views.setImageViewBitmap(R.id.widget_chart_2, b2)
-                        }
-                        4 -> {
-                            views.setViewVisibility(R.id.widget_chart_row_1, View.VISIBLE)
-                            views.setViewVisibility(R.id.widget_chart_1, View.VISIBLE)
-                            views.setViewVisibility(R.id.widget_chart_2, View.VISIBLE)
-                            views.setViewVisibility(R.id.widget_chart_row_2, View.VISIBLE)
+                        val s2 = listOf(seriesForNamedMetric(context, charts[1], reading, history))
+                        val b2 = WidgetChart.render(context, s2, halfW, bounds.heightPx, bounds.density)
+                        if (b2 != null) views.setImageViewBitmap(R.id.widget_chart_2, b2)
+                    }
+                    4 -> {
+                        views.setViewVisibility(R.id.widget_chart_row_1, View.VISIBLE)
+                        views.setViewVisibility(R.id.widget_chart_1, View.VISIBLE)
+                        views.setViewVisibility(R.id.widget_chart_2, View.VISIBLE)
+                        views.setViewVisibility(R.id.widget_chart_row_2, View.VISIBLE)
 
-                            val halfW = ((bounds.widthPx - 8 * bounds.density) / 2).toInt().coerceAtLeast(1)
-                            val halfH = ((bounds.heightPx - 8 * bounds.density) / 2).toInt().coerceAtLeast(1)
+                        val halfW = ((bounds.widthPx - 8 * bounds.density) / 2).toInt().coerceAtLeast(1)
+                        val halfH = ((bounds.heightPx - 8 * bounds.density) / 2).toInt().coerceAtLeast(1)
 
-                            val s1 = listOf(seriesForNamedMetric(context, charts[0], reading, history))
-                            val b1 = WidgetChart.render(context, s1, halfW, halfH, bounds.density)
-                            if (b1 != null) views.setImageViewBitmap(R.id.widget_chart_1, b1)
+                        val s1 = listOf(seriesForNamedMetric(context, charts[0], reading, history))
+                        val b1 = WidgetChart.render(context, s1, halfW, halfH, bounds.density)
+                        if (b1 != null) views.setImageViewBitmap(R.id.widget_chart_1, b1)
 
-                            val s2 = listOf(seriesForNamedMetric(context, charts[1], reading, history))
-                            val b2 = WidgetChart.render(context, s2, halfW, halfH, bounds.density)
-                            if (b2 != null) views.setImageViewBitmap(R.id.widget_chart_2, b2)
+                        val s2 = listOf(seriesForNamedMetric(context, charts[1], reading, history))
+                        val b2 = WidgetChart.render(context, s2, halfW, halfH, bounds.density)
+                        if (b2 != null) views.setImageViewBitmap(R.id.widget_chart_2, b2)
 
-                            val s3 = listOf(seriesForNamedMetric(context, charts[2], reading, history))
-                            val b3 = WidgetChart.render(context, s3, halfW, halfH, bounds.density)
-                            if (b3 != null) views.setImageViewBitmap(R.id.widget_chart_3, b3)
+                        val s3 = listOf(seriesForNamedMetric(context, charts[2], reading, history))
+                        val b3 = WidgetChart.render(context, s3, halfW, halfH, bounds.density)
+                        if (b3 != null) views.setImageViewBitmap(R.id.widget_chart_3, b3)
 
-                            val s4 = listOf(seriesForNamedMetric(context, charts[3], reading, history))
-                            val b4 = WidgetChart.render(context, s4, halfW, halfH, bounds.density)
-                            if (b4 != null) views.setImageViewBitmap(R.id.widget_chart_4, b4)
-                        }
-                        else -> {
-                            // Default 1 chart fallback
-                            views.setViewVisibility(R.id.widget_chart_row_1, View.VISIBLE)
-                            views.setViewVisibility(R.id.widget_chart_1, View.VISIBLE)
-                            views.setViewVisibility(R.id.widget_chart_2, View.GONE)
-                            views.setViewVisibility(R.id.widget_chart_row_2, View.GONE)
-                            val s = listOf(seriesForNamedMetric(context, charts[0], reading, history))
-                            val b = WidgetChart.render(context, s, bounds.widthPx, bounds.heightPx, bounds.density)
-                            if (b != null) views.setImageViewBitmap(R.id.widget_chart_1, b)
-                        }
+                        val s4 = listOf(seriesForNamedMetric(context, charts[3], reading, history))
+                        val b4 = WidgetChart.render(context, s4, halfW, halfH, bounds.density)
+                        if (b4 != null) views.setImageViewBitmap(R.id.widget_chart_4, b4)
+                    }
+                    else -> {
+                        // Default 1 chart fallback
+                        views.setViewVisibility(R.id.widget_chart_row_1, View.VISIBLE)
+                        views.setViewVisibility(R.id.widget_chart_1, View.VISIBLE)
+                        views.setViewVisibility(R.id.widget_chart_2, View.GONE)
+                        views.setViewVisibility(R.id.widget_chart_row_2, View.GONE)
+                        val s = listOf(seriesForNamedMetric(context, charts[0], reading, history))
+                        val b = WidgetChart.render(context, s, bounds.widthPx, bounds.heightPx, bounds.density)
+                        if (b != null) views.setImageViewBitmap(R.id.widget_chart_1, b)
                     }
                 }
-                MediumMode.READING -> {
-                    views.setViewVisibility(R.id.widget_charts_container, View.GONE)
-                    views.setViewVisibility(R.id.widget_content, View.VISIBLE)
-                    showFieldCapsules(context, views, config.fields.take(WidgetConfig.CAP_MEDIUM_READING_FIELDS), reading)
-                }
-                MediumMode.COMBINED -> {
-                    views.setViewVisibility(R.id.widget_charts_container, View.VISIBLE)
-                    views.setViewVisibility(R.id.widget_chart_row_1, View.VISIBLE)
-                    views.setViewVisibility(R.id.widget_chart_1, View.VISIBLE)
-                    views.setViewVisibility(R.id.widget_chart_2, View.VISIBLE)
-                    views.setViewVisibility(R.id.widget_chart_row_2, View.GONE)
-                    views.setViewVisibility(R.id.widget_content, View.VISIBLE)
+            }
+            MediumMode.READING -> {
+                views.setViewVisibility(R.id.widget_charts_container, View.GONE)
+                views.setViewVisibility(R.id.widget_content, View.VISIBLE)
+                showFieldCapsules(context, views, config.fields.take(WidgetConfig.CAP_MEDIUM_READING_FIELDS), reading)
+            }
+            MediumMode.COMBINED -> {
+                views.setViewVisibility(R.id.widget_charts_container, View.VISIBLE)
+                views.setViewVisibility(R.id.widget_chart_row_1, View.VISIBLE)
+                views.setViewVisibility(R.id.widget_chart_1, View.VISIBLE)
+                views.setViewVisibility(R.id.widget_chart_2, View.VISIBLE)
+                views.setViewVisibility(R.id.widget_chart_row_2, View.GONE)
+                views.setViewVisibility(R.id.widget_content, View.VISIBLE)
 
-                    // Render mini charts side by side
-                    val halfWidth = ((bounds.widthPx - 8 * bounds.density) / 2).toInt().coerceAtLeast(1)
-                    val chartHeight = (bounds.heightPx * 0.48f).roundToInt().coerceAtLeast(1)
+                // Render mini charts side by side
+                val halfWidth = ((bounds.widthPx - 8 * bounds.density) / 2).toInt().coerceAtLeast(1)
+                val chartHeight = (bounds.heightPx * 0.48f).roundToInt().coerceAtLeast(1)
 
-                    val s1 = listOf(seriesForNamedMetric(context, config.chart, reading, history))
-                    val b1 = WidgetChart.render(context, s1, halfWidth, chartHeight, bounds.density)
-                    if (b1 != null) views.setImageViewBitmap(R.id.widget_chart_1, b1)
+                val s1 = listOf(seriesForNamedMetric(context, config.chart, reading, history))
+                val b1 = WidgetChart.render(context, s1, halfWidth, chartHeight, bounds.density)
+                if (b1 != null) views.setImageViewBitmap(R.id.widget_chart_1, b1)
 
-                    val s2 = listOf(seriesForNamedMetric(context, config.chart2, reading, history))
-                    val b2 = WidgetChart.render(context, s2, halfWidth, chartHeight, bounds.density)
-                    if (b2 != null) views.setImageViewBitmap(R.id.widget_chart_2, b2)
+                val s2 = listOf(seriesForNamedMetric(context, config.chart2, reading, history))
+                val b2 = WidgetChart.render(context, s2, halfWidth, chartHeight, bounds.density)
+                if (b2 != null) views.setImageViewBitmap(R.id.widget_chart_2, b2)
 
-                    showFieldCapsules(context, views, config.fields.take(WidgetConfig.CAP_COMBINED_FIELDS), reading)
-                }
+                showFieldCapsules(context, views, config.fields.take(WidgetConfig.CAP_COMBINED_FIELDS), reading)
             }
         }
         manager.updateAppWidget(appWidgetId, views)
     }
+
+    // MARK: - The 2x4 card
+
+    /**
+     * Fills every row of the tall card.
+     *
+     * The rows are fixed by the layout, so this is one pass with no visibility
+     * decisions except the three that carry optional data: the region pill, and
+     * the four bars. A missing number renders `--` rather than disappearing —
+     * a row that vanished would move every row below it, and the reference
+     * design's whole point is that the same reading is always in the same
+     * place.
+     *
+     * [reading] is null before the first fetch has ever landed, which draws the
+     * same card with every value `--`. Passing a zero-filled stand-in instead
+     * would put `↓0 · ↑0 B` and `0.0%` on screen, and a node reporting no
+     * traffic is not the same thing as a widget with nothing to report yet.
+     */
+    private fun showTall(
+        context: Context,
+        views: RemoteViews,
+        name: String,
+        reading: WidgetApi.Reading?,
+        history: List<WidgetApi.HistoryPoint>,
+        expiry: WidgetExpiry,
+        bounds: Bounds,
+    ) {
+        views.setViewVisibility(R.id.widget_error, View.GONE)
+        views.setViewVisibility(R.id.widget_tall_body, View.VISIBLE)
+
+        // Header
+        views.setTextViewText(R.id.widget_name, name)
+        views.setTextColor(R.id.widget_dot, resolveDotColor(reading?.lastUpdated))
+        val region = reading?.region
+        if (region.isNullOrEmpty()) {
+            views.setViewVisibility(R.id.widget_region, View.GONE)
+        } else {
+            views.setTextViewText(R.id.widget_region, region)
+            views.setViewVisibility(R.id.widget_region, View.VISIBLE)
+        }
+
+        // CPU, with the core count when the site reports one.
+        views.setTextViewText(
+            R.id.widget_row_cpu_label,
+            reading?.cpuCores?.let { context.getString(R.string.widget_row_cpu_cores, it) }
+                ?: context.getString(R.string.widget_metric_cpu),
+        )
+        views.setTextViewText(R.id.widget_row_cpu_value, tallPercent(reading?.cpu))
+
+        // Memory and disk: two byte counts under one unit.
+        views.setTextViewText(R.id.widget_row_mem_label, context.getString(R.string.widget_row_memory))
+        views.setTextViewText(
+            R.id.widget_row_mem_value,
+            reading?.let { tallBytes(it.ramUsedBytes, it.ramTotalBytes) } ?: "--",
+        )
+        views.setTextViewText(R.id.widget_row_disk_label, context.getString(R.string.widget_row_disk_tall))
+        views.setTextViewText(
+            R.id.widget_row_disk_value,
+            reading?.let { tallBytes(it.diskUsedBytes, it.diskTotalBytes) } ?: "--",
+        )
+
+        // Load already arrives as "0.00 0.00 0.00", or "--" when absent.
+        views.setTextViewText(R.id.widget_row_load_label, context.getString(R.string.widget_row_load))
+        views.setTextViewText(R.id.widget_row_load_value, tallText(reading?.loadText))
+
+        views.setTextViewText(R.id.widget_row_live_label, context.getString(R.string.widget_row_live))
+        views.setTextViewText(
+            R.id.widget_row_live_value,
+            reading?.let { WidgetApi.formatSharedPair(it.netIn, it.netOut, perSecond = true) } ?: "--",
+        )
+
+        views.setTextViewText(R.id.widget_row_month_label, context.getString(R.string.widget_row_month))
+        views.setTextViewText(
+            R.id.widget_row_month_value,
+            reading?.let { WidgetApi.formatSharedPair(it.netRxMonthly, it.netTxMonthly) } ?: "--",
+        )
+
+        views.setTextViewText(R.id.widget_row_uptime_label, context.getString(R.string.widget_row_uptime))
+        views.setTextViewText(R.id.widget_row_uptime_value, tallText(reading?.uptimeText))
+
+        // The three carriers: name, bar, latency.
+        val barWidth = (bounds.widthPx - TALL_BAR_INSET_DP * bounds.density)
+            .roundToInt().coerceAtLeast(1)
+        val pingBarHeight = (TALL_PING_BAR_DP * bounds.density).roundToInt().coerceAtLeast(1)
+
+        tallPingRow(
+            views,
+            R.id.widget_row_ct_label, R.id.widget_bar_ct, R.id.widget_row_ct_value,
+            context.getString(R.string.widget_row_telecom), reading?.pingCt,
+            barWidth, pingBarHeight, bounds.density,
+        )
+        tallPingRow(
+            views,
+            R.id.widget_row_cu_label, R.id.widget_bar_cu, R.id.widget_row_cu_value,
+            context.getString(R.string.widget_row_unicom), reading?.pingCu,
+            barWidth, pingBarHeight, bounds.density,
+        )
+        tallPingRow(
+            views,
+            R.id.widget_row_cm_label, R.id.widget_bar_cm, R.id.widget_row_cm_value,
+            context.getString(R.string.widget_row_mobile), reading?.pingCm,
+            barWidth, pingBarHeight, bounds.density,
+        )
+
+        // Stability over the window the caller fetched — one hour, which is
+        // what the row's own label claims.
+        val stats = WidgetStability.compute(history)
+        views.setTextViewText(
+            R.id.widget_row_stability_label,
+            context.getString(R.string.widget_stability_title),
+        )
+        views.setTextViewText(R.id.widget_row_stability_value, stats.score?.toString() ?: "--")
+
+        val stabilityBarHeight = (TALL_STABILITY_BAR_DP * bounds.density).roundToInt().coerceAtLeast(1)
+        val stabilityBar = WidgetBars.continuous(
+            stats.score?.let { it / 100.0 },
+            bounds.widthPx,
+            stabilityBarHeight,
+            bounds.density,
+        )
+        if (stabilityBar == null) {
+            views.setViewVisibility(R.id.widget_bar_stability, View.GONE)
+        } else {
+            views.setImageViewBitmap(R.id.widget_bar_stability, stabilityBar)
+            views.setViewVisibility(R.id.widget_bar_stability, View.VISIBLE)
+        }
+
+        views.setTextViewText(
+            R.id.widget_footer_text,
+            context.getString(
+                R.string.widget_stability_footer,
+                stats.lossPct?.let { String.format(java.util.Locale.US, "%.1f%%", it) } ?: "--",
+                stats.jitterMs?.let { String.format(java.util.Locale.US, "%.1fms", it) } ?: "--",
+                if (stats.samples > 0) "${stats.spikes}/${stats.samples}" else "--",
+            ),
+        )
+
+        showTime(context, views, reading?.lastUpdated, expiry)
+    }
+
+    /**
+     * A row's text, with the empty string the parser leaves for a missing value
+     * drawn as `--` rather than as nothing at all — a blank half of a row reads
+     * as a rendering bug, not as "the site did not say".
+     */
+    private fun tallText(value: String?): String =
+        value?.takeIf { it.isNotEmpty() } ?: "--"
+
+    /**
+     * One carrier's row: its label, a segmented bar filled by how good the ping
+     * is, and the latency itself.
+     *
+     * A missing ping leaves the bar's track only, which is what an empty
+     * fraction draws — a bar that filled itself would be claiming a latency
+     * nothing reported.
+     */
+    private fun tallPingRow(
+        views: RemoteViews,
+        labelId: Int,
+        barId: Int,
+        valueId: Int,
+        label: String,
+        pingMs: Double?,
+        barWidth: Int,
+        barHeight: Int,
+        density: Float,
+    ) {
+        views.setTextViewText(labelId, label)
+        views.setTextViewText(valueId, pingMs?.let { "${it.toInt()}ms" } ?: "--")
+        val bar = WidgetBars.segmented(WidgetBars.pingFraction(pingMs), barWidth, barHeight, density)
+        if (bar == null) {
+            views.setViewVisibility(barId, View.GONE)
+        } else {
+            views.setImageViewBitmap(barId, bar)
+            views.setViewVisibility(barId, View.VISIBLE)
+        }
+    }
+
+    /** One decimal, as the reference design writes percentages. */
+    private fun tallPercent(value: Double?): String =
+        value?.let { String.format(java.util.Locale.US, "%.1f%%", it) } ?: "--"
+
+    /**
+     * Used and total under a shared unit, or `--` when the site reported no
+     * total — a `0 / 0 B` row would read as an empty disk rather than an
+     * unknown one.
+     */
+    private fun tallBytes(used: Double, total: Double): String =
+        if (total <= 0.0) "--" else WidgetApi.formatSharedUnit(used, total)
 
     private val cellRowLayoutIds = listOf(
         R.id.widget_cell_row_1,
@@ -814,6 +1083,18 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         name: String? = null,
     ) {
         views.setTextViewText(R.id.widget_name, name ?: context.getString(R.string.app_name))
+        if (kind == WidgetKind.TALL) {
+            // The tall card has no message slot of its own beyond the one it
+            // shares with the other error state, so the body gives way to it
+            // entirely: half a card of stale numbers beside an error is a
+            // worse answer than the error alone.
+            views.setTextViewText(R.id.widget_error, context.getString(messageRes))
+            views.setViewVisibility(R.id.widget_error, View.VISIBLE)
+            views.setViewVisibility(R.id.widget_tall_body, View.GONE)
+            views.setViewVisibility(R.id.widget_time, View.GONE)
+            manager.updateAppWidget(appWidgetId, views)
+            return
+        }
         views.setTextViewText(R.id.error_message, context.getString(messageRes))
         views.setViewVisibility(R.id.error_message, View.VISIBLE)
         views.setViewVisibility(R.id.widget_content, View.GONE)

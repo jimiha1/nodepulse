@@ -116,6 +116,10 @@ object WidgetSnapshot {
         .put("lastUpdated", r.lastUpdated.json())
         .put("cpuCores", r.cpuCores.json())
         .put("region", r.region.json())
+        .put("ramUsedBytes", r.ramUsedBytes)
+        .put("ramTotalBytes", r.ramTotalBytes)
+        .put("diskUsedBytes", r.diskUsedBytes)
+        .put("diskTotalBytes", r.diskTotalBytes)
         .put("netIn", r.netIn)
         .put("netOut", r.netOut)
         .put("netRxMonthly", r.netRxMonthly)
@@ -154,6 +158,10 @@ object WidgetSnapshot {
         // defaults are exactly what those snapshots should read as.
         cpuCores = o.intOrNull("cpuCores"),
         region = o.stringOrNull("region"),
+        ramUsedBytes = o.optDouble("ramUsedBytes", 0.0),
+        ramTotalBytes = o.optDouble("ramTotalBytes", 0.0),
+        diskUsedBytes = o.optDouble("diskUsedBytes", 0.0),
+        diskTotalBytes = o.optDouble("diskTotalBytes", 0.0),
         netIn = o.optDouble("netIn", 0.0),
         netOut = o.optDouble("netOut", 0.0),
         netRxMonthly = o.optDouble("netRxMonthly", 0.0),

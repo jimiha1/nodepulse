@@ -156,6 +156,40 @@ class WidgetSnapshotTest {
     }
 
     @Test
+    fun theTallRowsRawBytesSurviveTheRoundTrip() {
+        // The memory and disk rows put both numbers under one shared unit, so
+        // they need the raw byte pair rather than the pre-formatted string —
+        // and a snapshot that lost it would make those rows read `--` after
+        // every failed refresh.
+        val original = reading().copy(
+            cpuCores = 2,
+            region = "HK",
+            ramUsedBytes = 232.65 * 1048576,
+            ramTotalBytes = 431.0 * 1048576,
+            diskUsedBytes = 412.0 * 1048576,
+            diskTotalBytes = 1021.0 * 1048576,
+            netIn = 14.11 * 1024,
+            netOut = 13.19 * 1024,
+            netRxMonthly = 317.0 * 1048576,
+            netTxMonthly = 313.7 * 1048576,
+            load5 = 0.10,
+            load15 = 0.05,
+            pingCt = 10.0,
+            pingCu = 7.0,
+            pingCm = 16.0,
+            lossCt = 0.0,
+            lossCu = 0.2,
+            lossCm = 0.0,
+        )
+        WidgetSnapshot.saveToPrefs(prefs, 11, WidgetSnapshot.Shown("srv-1", original, emptyList()))
+
+        val loaded = WidgetSnapshot.loadFromPrefs(prefs, 11, "srv-1")!!.reading
+        assertEquals(original, loaded)
+        assertEquals(2, loaded.cpuCores)
+        assertEquals(232.65 * 1048576, loaded.ramUsedBytes, 1.0)
+    }
+
+    @Test
     fun aTenFieldSnapshotStillLoads() {
         // What the previous release wrote: ten numbers, no ping or loss columns.
         val legacy = "1.00,2.00,3.00,4.00,5.00,6.00,7.00,8.00,9.00,0.00"
