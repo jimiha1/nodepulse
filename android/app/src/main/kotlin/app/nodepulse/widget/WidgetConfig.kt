@@ -76,7 +76,7 @@ data class WidgetConfig(
     /** [WidgetStore.WidgetServer.id], or empty when nothing is picked yet. */
     val serverId: String,
     val metric: WidgetMetric = WidgetMetric.CPU,
-    val kind: WidgetKind = WidgetKind.SMALL,
+    val kind: WidgetKind = WidgetKind.TALL,
     val mode: MediumMode = MediumMode.CHART,
     val fields: List<WidgetField> = emptyList(),
     val chartCount: Int = 1,
@@ -89,7 +89,6 @@ data class WidgetConfig(
     companion object {
         private const val PREFS = "sbm_widget_config"
 
-        const val CAP_SMALL_FIELDS = 4
         const val CAP_MEDIUM_READING_FIELDS = 8
         const val CAP_COMBINED_FIELDS = 4
 
@@ -98,19 +97,20 @@ data class WidgetConfig(
         const val DEFAULT_CHART3 = "mem"
         const val DEFAULT_CHART4 = "disk"
 
-        val DEFAULT_SMALL_FIELDS = listOf(
+        /** What a 4x2 in reading mode shows before the user picks anything. */
+        val DEFAULT_READING_FIELDS = listOf(
             WidgetField.CPU,
             WidgetField.MEM,
             WidgetField.DISK,
             WidgetField.NET_SPEED,
         )
 
-        fun load(context: Context, appWidgetId: Int, kind: WidgetKind = WidgetKind.SMALL): WidgetConfig {
+        fun load(context: Context, appWidgetId: Int, kind: WidgetKind = WidgetKind.TALL): WidgetConfig {
             val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             return loadFromPrefs(prefs, appWidgetId, kind)
         }
 
-        fun loadFromPrefs(prefs: SharedPreferences, appWidgetId: Int, kind: WidgetKind = WidgetKind.SMALL): WidgetConfig {
+        fun loadFromPrefs(prefs: SharedPreferences, appWidgetId: Int, kind: WidgetKind = WidgetKind.TALL): WidgetConfig {
             val serverId = prefs.getString(key(appWidgetId, "server"), "") ?: ""
             val metric = WidgetMetric.from(prefs.getString(key(appWidgetId, "metric"), null))
 
@@ -122,25 +122,25 @@ data class WidgetConfig(
             val chart4 = prefs.getString(key(appWidgetId, "chart4"), null) ?: DEFAULT_CHART4
             val expiry = WidgetExpiry.fromKey(prefs.getString(key(appWidgetId, "expiry"), null))
 
-            val rawFields = prefs.getString(key(appWidgetId, "fields"), null)
-            val cap = when {
-                kind == WidgetKind.SMALL -> CAP_SMALL_FIELDS
-                mode == MediumMode.READING -> CAP_MEDIUM_READING_FIELDS
-                mode == MediumMode.COMBINED -> CAP_COMBINED_FIELDS
-                else -> 0
-            }
-
-            val fields = if (rawFields != null) {
-                rawFields.split(",")
-                    .map { it.trim() }
-                    .filter { it.isNotEmpty() }
-                    .mapNotNull { WidgetField.fromKey(it) }
-                    .take(cap)
+            // The 2x4's rows are fixed by its layout, so it never reads a field
+            // list — not even a stale one left behind by an older release.
+            val fields = if (kind == WidgetKind.TALL) {
+                emptyList()
             } else {
-                if (kind == WidgetKind.SMALL) {
-                    DEFAULT_SMALL_FIELDS.take(CAP_SMALL_FIELDS)
+                val rawFields = prefs.getString(key(appWidgetId, "fields"), null)
+                val cap = when (mode) {
+                    MediumMode.READING -> CAP_MEDIUM_READING_FIELDS
+                    MediumMode.COMBINED -> CAP_COMBINED_FIELDS
+                    MediumMode.CHART -> 0
+                }
+                if (rawFields != null) {
+                    rawFields.split(",")
+                        .map { it.trim() }
+                        .filter { it.isNotEmpty() }
+                        .mapNotNull { WidgetField.fromKey(it) }
+                        .take(cap)
                 } else if (mode == MediumMode.READING) {
-                    DEFAULT_SMALL_FIELDS.take(CAP_MEDIUM_READING_FIELDS)
+                    DEFAULT_READING_FIELDS.take(CAP_MEDIUM_READING_FIELDS)
                 } else {
                     emptyList()
                 }
@@ -167,26 +167,28 @@ data class WidgetConfig(
         }
 
         fun saveToPrefs(prefs: SharedPreferences, appWidgetId: Int, config: WidgetConfig) {
-            val cap = when {
-                config.kind == WidgetKind.SMALL -> CAP_SMALL_FIELDS
-                config.mode == MediumMode.READING -> CAP_MEDIUM_READING_FIELDS
-                config.mode == MediumMode.COMBINED -> CAP_COMBINED_FIELDS
-                else -> 0
-            }
-            val fieldKeys = config.fields.take(cap).joinToString(",") { it.key }
-
-            prefs.edit()
+            val editor = prefs.edit()
                 .putString(key(appWidgetId, "server"), config.serverId)
                 .putString(key(appWidgetId, "metric"), config.metric.name)
                 .putString(key(appWidgetId, "mode"), config.mode.key)
-                .putString(key(appWidgetId, "fields"), fieldKeys)
                 .putInt(key(appWidgetId, "chart_count"), config.chartCount)
                 .putString(key(appWidgetId, "chart"), config.chart)
                 .putString(key(appWidgetId, "chart2"), config.chart2)
                 .putString(key(appWidgetId, "chart3"), config.chart3)
                 .putString(key(appWidgetId, "chart4"), config.chart4)
                 .putString(key(appWidgetId, "expiry"), config.expiry.key)
-                .apply()
+
+            // The 2x4 has no field list at all; writing an empty one would only
+            // leave a key that says nothing.
+            if (config.kind != WidgetKind.TALL) {
+                val cap = when (config.mode) {
+                    MediumMode.READING -> CAP_MEDIUM_READING_FIELDS
+                    MediumMode.COMBINED -> CAP_COMBINED_FIELDS
+                    MediumMode.CHART -> 0
+                }
+                editor.putString(key(appWidgetId, "fields"), config.fields.take(cap).joinToString(",") { it.key })
+            }
+            editor.apply()
         }
 
         fun forget(context: Context, appWidgetId: Int) {
@@ -239,15 +241,11 @@ enum class WidgetMetric {
  * Which of the two widgets this is.
  */
 enum class WidgetKind {
-    /** 2x2, readings as text. Custom up to 4 fields. */
-    SMALL,
+    /** 2x4, a fixed set of rows for one server. */
+    TALL,
 
     /** 4x2, chart, reading or combined mode. */
     MEDIUM;
 
     val drawsCharts: Boolean get() = this == MEDIUM
-
-    companion object {
-        const val CHART_COUNT = 4
-    }
 }

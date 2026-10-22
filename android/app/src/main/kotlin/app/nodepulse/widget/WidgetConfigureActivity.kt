@@ -21,7 +21,7 @@ import app.nodepulse.R
 class WidgetConfigureActivity : Activity() {
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
     private var servers: List<WidgetStore.WidgetServer> = emptyList()
-    private var kind: WidgetKind = WidgetKind.SMALL
+    private var kind: WidgetKind = WidgetKind.TALL
 
     companion object {
         val CHART_METRICS = listOf(
@@ -52,7 +52,7 @@ class WidgetConfigureActivity : Activity() {
             return
         }
 
-        kind = HomeWidget.kindOf(applicationContext, appWidgetId) ?: WidgetKind.SMALL
+        kind = HomeWidget.kindOf(applicationContext, appWidgetId) ?: WidgetKind.TALL
         servers = WidgetStore.servers(applicationContext)
 
         val form = findViewById<LinearLayout>(R.id.config_form)
@@ -125,7 +125,7 @@ class WidgetConfigureActivity : Activity() {
         }
 
         fun updateUI() {
-            if (kind == WidgetKind.SMALL) {
+            if (kind == WidgetKind.TALL) {
                 mediumModeContainer.visibility = View.GONE
                 chartCountContainer.visibility = View.GONE
                 chartContainer.visibility = View.GONE
@@ -133,7 +133,7 @@ class WidgetConfigureActivity : Activity() {
                 chart3Container.visibility = View.GONE
                 chart4Container.visibility = View.GONE
                 fieldsContainer.visibility = View.VISIBLE
-                fieldsCapHint.text = "(Max ${WidgetConfig.CAP_SMALL_FIELDS})"
+                fieldsCapHint.text = "(Max ${WidgetConfig.DEFAULT_READING_FIELDS.size})"
                 expiryContainer.visibility = View.GONE
             } else {
                 mediumModeContainer.visibility = View.VISIBLE
@@ -189,8 +189,8 @@ class WidgetConfigureActivity : Activity() {
             for ((field, cb) in checkBoxes) {
                 cb.setOnCheckedChangeListener { _, isChecked ->
                     if (isChecked) {
-                        val cap = if (kind == WidgetKind.SMALL) {
-                            WidgetConfig.CAP_SMALL_FIELDS
+                        val cap = if (kind == WidgetKind.TALL) {
+                            WidgetConfig.DEFAULT_READING_FIELDS.size
                         } else {
                             val selectedMode = when (modeGroup.checkedRadioButtonId) {
                                 R.id.mode_reading -> MediumMode.READING
@@ -235,7 +235,7 @@ class WidgetConfigureActivity : Activity() {
             val index = serverGroup.checkedRadioButtonId
             if (index !in servers.indices) return@setOnClickListener
 
-            val selectedMode = if (kind == WidgetKind.SMALL) {
+            val selectedMode = if (kind == WidgetKind.TALL) {
                 MediumMode.CHART
             } else {
                 when (modeGroup.checkedRadioButtonId) {
@@ -246,7 +246,7 @@ class WidgetConfigureActivity : Activity() {
             }
 
             val cap = when {
-                kind == WidgetKind.SMALL -> WidgetConfig.CAP_SMALL_FIELDS
+                kind == WidgetKind.TALL -> WidgetConfig.DEFAULT_READING_FIELDS.size
                 selectedMode == MediumMode.READING -> WidgetConfig.CAP_MEDIUM_READING_FIELDS
                 selectedMode == MediumMode.COMBINED -> WidgetConfig.CAP_COMBINED_FIELDS
                 else -> 0
@@ -262,7 +262,7 @@ class WidgetConfigureActivity : Activity() {
             val chart4 = CHART_METRICS.getOrNull(chart4Spinner.selectedItemPosition) ?: WidgetConfig.DEFAULT_CHART4
             val count = chartCountOptions.getOrElse(chartCountSpinner.selectedItemPosition) { 1 }
 
-            val selectedExpiry = if (kind == WidgetKind.SMALL) {
+            val selectedExpiry = if (kind == WidgetKind.TALL) {
                 WidgetExpiry.DEFAULT
             } else {
                 when (expiryGroup.checkedRadioButtonId) {

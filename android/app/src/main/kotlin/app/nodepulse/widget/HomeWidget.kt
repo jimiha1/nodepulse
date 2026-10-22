@@ -35,7 +35,7 @@ import kotlin.math.roundToInt
 abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
     companion object {
         /** Both providers, for the callers that mean "every widget". */
-        val providers = listOf(StatusWidgetSmall::class.java, StatusWidgetMedium::class.java)
+        val providers = listOf(StatusWidgetTall::class.java, StatusWidgetMedium::class.java)
 
         /** Asks every placed widget of either size to refresh. */
         fun broadcastUpdate(context: Context) {
@@ -83,7 +83,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             for (provider in providers) {
                 val ids = manager.getAppWidgetIds(ComponentName(context, provider))
                 val widget = when (provider) {
-                    StatusWidgetSmall::class.java -> StatusWidgetSmall()
+                    StatusWidgetTall::class.java -> StatusWidgetTall()
                     else -> StatusWidgetMedium()
                 }
                 for (id in ids) {
@@ -102,7 +102,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
          */
         fun requestUpdate(context: Context, appWidgetId: Int): Boolean {
             val widget = when (kindOf(context, appWidgetId)) {
-                WidgetKind.SMALL -> StatusWidgetSmall()
+                WidgetKind.TALL -> StatusWidgetTall()
                 WidgetKind.MEDIUM -> StatusWidgetMedium()
                 null -> return false
             }
@@ -115,7 +115,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             val provider = AppWidgetManager.getInstance(context)
                 .getAppWidgetInfo(appWidgetId)?.provider?.className ?: return null
             return when (provider) {
-                StatusWidgetSmall::class.java.name -> WidgetKind.SMALL
+                StatusWidgetTall::class.java.name -> WidgetKind.TALL
                 StatusWidgetMedium::class.java.name -> WidgetKind.MEDIUM
                 else -> null
             }
@@ -591,11 +591,11 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         showTime(context, views, reading.lastUpdated, config.expiry)
         views.setViewVisibility(R.id.error_message, View.GONE)
 
-        if (kind == WidgetKind.SMALL) {
-            // SMALL: up to 4 fields
+        if (kind == WidgetKind.TALL) {
+            // TALL: the fixed rows replace this in the render task
             views.setViewVisibility(R.id.widget_charts_container, View.GONE)
             views.setViewVisibility(R.id.widget_content, View.VISIBLE)
-            showFieldCapsules(context, views, config.fields.take(WidgetConfig.CAP_SMALL_FIELDS), reading)
+            showFieldCapsules(context, views, config.fields, reading)
         } else {
             // MEDIUM: 3 modes (CHART, READING, COMBINED)
             when (config.mode) {
@@ -926,8 +926,8 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
     }
 }
 
-/** 2x2, readings as text. */
-class StatusWidgetSmall : HomeWidget(WidgetKind.SMALL)
+/** 2x4, one server's status. */
+class StatusWidgetTall : HomeWidget(WidgetKind.TALL)
 
 /** 4x2, charts. */
 class StatusWidgetMedium : HomeWidget(WidgetKind.MEDIUM)

@@ -2,6 +2,8 @@ package app.nodepulse.widget
 
 import android.content.SharedPreferences
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.lang.reflect.InvocationHandler
@@ -78,19 +80,42 @@ class WidgetConfigTest {
         val appWidgetId = 42
         val config = WidgetConfig(
             serverId = "srv-1",
-            kind = WidgetKind.SMALL,
-            fields = listOf(WidgetField.CPU, WidgetField.MEM, WidgetField.DISK, WidgetField.NET_SPEED),
+            kind = WidgetKind.TALL,
+            expiry = WidgetExpiry.H1,
         )
 
         WidgetConfig.saveToPrefs(mockPrefs, appWidgetId, config)
-        val loaded = WidgetConfig.loadFromPrefs(mockPrefs, appWidgetId, WidgetKind.SMALL)
+        val loaded = WidgetConfig.loadFromPrefs(mockPrefs, appWidgetId, WidgetKind.TALL)
 
         assertEquals("srv-1", loaded.serverId)
-        assertEquals(WidgetKind.SMALL, loaded.kind)
-        assertEquals(
-            listOf(WidgetField.CPU, WidgetField.MEM, WidgetField.DISK, WidgetField.NET_SPEED),
-            loaded.fields,
+        assertEquals(WidgetKind.TALL, loaded.kind)
+        assertEquals(WidgetExpiry.H1, loaded.expiry)
+    }
+
+    @Test
+    fun aTallWidgetKeepsNoFieldList() {
+        val config = WidgetConfig(
+            serverId = "srv-1",
+            kind = WidgetKind.TALL,
+            fields = listOf(WidgetField.CPU, WidgetField.MEM),
+            expiry = WidgetExpiry.H1,
         )
+        WidgetConfig.saveToPrefs(mockPrefs, 77, config)
+        val loaded = WidgetConfig.loadFromPrefs(mockPrefs, 77, WidgetKind.TALL)
+        assertEquals(WidgetKind.TALL, loaded.kind)
+        assertTrue(loaded.fields.isEmpty())
+        assertEquals(WidgetExpiry.H1, loaded.expiry)
+        // The rows are fixed, so nothing about them belongs in preferences.
+        assertNull(memoryStore["widget_77_fields"])
+    }
+
+    @Test
+    fun aMediumReadingStillGetsTheDefaultFields() {
+        // Reading mode is the one 4x2 mode that shows a field list, so it is
+        // the one that has to keep falling back to the defaults.
+        memoryStore["widget_78_mode"] = "reading"
+        val loaded = WidgetConfig.loadFromPrefs(mockPrefs, 78, WidgetKind.MEDIUM)
+        assertEquals(WidgetConfig.DEFAULT_READING_FIELDS, loaded.fields)
     }
 
     @Test
@@ -186,28 +211,6 @@ class WidgetConfigTest {
 
     @Test
     fun fieldSelectionTruncationAtCaps() {
-        val appWidgetIdSmall = 46
-        // Small max is 4 fields
-        val configSmall = WidgetConfig(
-            serverId = "srv-small",
-            kind = WidgetKind.SMALL,
-            fields = listOf(
-                WidgetField.CPU,
-                WidgetField.MEM,
-                WidgetField.DISK,
-                WidgetField.NET_SPEED,
-                WidgetField.PING,
-                WidgetField.UPTIME,
-            ),
-        )
-        WidgetConfig.saveToPrefs(mockPrefs, appWidgetIdSmall, configSmall)
-        val loadedSmall = WidgetConfig.loadFromPrefs(mockPrefs, appWidgetIdSmall, WidgetKind.SMALL)
-        assertEquals(4, loadedSmall.fields.size)
-        assertEquals(
-            listOf(WidgetField.CPU, WidgetField.MEM, WidgetField.DISK, WidgetField.NET_SPEED),
-            loadedSmall.fields,
-        )
-
         // Medium reading max is 8 fields
         val appWidgetIdMedReading = 47
         val configReading = WidgetConfig(
@@ -288,14 +291,11 @@ class WidgetConfigTest {
 
     @Test
     fun fallbackToDefaultsWhenEmptyOrCorrupted() {
-        val appWidgetIdSmall = 49
+        val appWidgetIdTall = 49
         // Nothing stored
-        val emptySmall = WidgetConfig.loadFromPrefs(mockPrefs, appWidgetIdSmall, WidgetKind.SMALL)
-        assertEquals("", emptySmall.serverId)
-        assertEquals(
-            listOf(WidgetField.CPU, WidgetField.MEM, WidgetField.DISK, WidgetField.NET_SPEED),
-            emptySmall.fields,
-        )
+        val emptyTall = WidgetConfig.loadFromPrefs(mockPrefs, appWidgetIdTall, WidgetKind.TALL)
+        assertEquals("", emptyTall.serverId)
+        assertTrue(emptyTall.fields.isEmpty())
 
         val appWidgetIdMed = 50
         val emptyMed = WidgetConfig.loadFromPrefs(mockPrefs, appWidgetIdMed, WidgetKind.MEDIUM)
