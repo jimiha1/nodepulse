@@ -52,6 +52,23 @@ object WidgetApi {
         val avgLoss: Double? = null,
         /** When the node last reported, epoch ms. Null when the site omits it. */
         val lastUpdated: Long? = null,
+        // The raw values the 2x4 widget draws, kept beside the pre-formatted
+        // strings above: its rows share a unit between two numbers, which a
+        // string that has already been formatted cannot do.
+        val cpuCores: Int? = null,
+        val region: String? = null,
+        val netIn: Double = 0.0,
+        val netOut: Double = 0.0,
+        val netRxMonthly: Double = 0.0,
+        val netTxMonthly: Double = 0.0,
+        val load5: Double = 0.0,
+        val load15: Double = 0.0,
+        val pingCt: Double? = null,
+        val pingCu: Double? = null,
+        val pingCm: Double? = null,
+        val lossCt: Double? = null,
+        val lossCu: Double? = null,
+        val lossCm: Double? = null,
     )
 
     /** One bucket of history, oldest first. */
@@ -66,6 +83,9 @@ object WidgetApi {
         val conn: Double = 0.0,
         val proc: Double = 0.0,
         val loss: Double = 0.0,
+        val pingCt: Double? = null,
+        val pingCu: Double? = null,
+        val pingCm: Double? = null,
     )
 
     /**
@@ -297,6 +317,20 @@ object WidgetApi {
             procText = procText,
             avgLoss = avgLoss,
             lastUpdated = lastUpdated,
+            cpuCores = o.optIntOrNull("cpu_cores"),
+            region = o.optString("region").takeIf { it.isNotEmpty() } ?: server.region,
+            netIn = netInSpeed,
+            netOut = netOutSpeed,
+            netRxMonthly = netRxMonthly,
+            netTxMonthly = netTxMonthly,
+            load5 = loads.getOrNull(1) ?: 0.0,
+            load15 = loads.getOrNull(2) ?: 0.0,
+            pingCt = pingCt,
+            pingCu = pingCu,
+            pingCm = pingCm,
+            lossCt = lossCt,
+            lossCu = lossCu,
+            lossCm = lossCm,
         )
     }
 
@@ -336,6 +370,9 @@ object WidgetApi {
                 conn = tcpConn + udpConn,
                 proc = proc,
                 loss = avgL,
+                pingCt = o.optDoubleOrNull("ping_ct"),
+                pingCu = o.optDoubleOrNull("ping_cu"),
+                pingCm = o.optDoubleOrNull("ping_cm"),
             )
         }
     }
@@ -423,6 +460,68 @@ object WidgetApi {
             val formatted = String.format(Locale.US, "%.1f", value)
             val cleanValue = if (formatted.endsWith(".0")) formatted.dropLast(2) else formatted
             "$cleanValue${units[idx]}"
+        }
+    }
+
+    private val SHARED_UNITS = listOf("B", "KiB", "MiB", "GiB", "TiB", "PiB")
+
+    /**
+     * A byte count in the largest unit it fills, and that unit's index.
+     *
+     * Binary units spelled the way the reference design spells them — the
+     * lowercase `formatBytes` above stays as it is, because the 4x2 capsules
+     * have their own look and this is not the place to change it.
+     */
+    private fun scaled(bytes: Double): Pair<Double, Int> {
+        var value = bytes.coerceAtLeast(0.0)
+        var idx = 0
+        while (value >= 1024 && idx < SHARED_UNITS.size - 1) {
+            value /= 1024
+            idx++
+        }
+        return value to idx
+    }
+
+    /**
+     * Three significant-ish digits, so a row's two numbers stay short enough
+     * for two cells: `233`, `14.1`, `2`. Anything at or above 100 has no room
+     * for a decimal; below that one is worth keeping.
+     */
+    private fun compact(value: Double): String =
+        if (value >= 100.0) {
+            String.format(Locale.US, "%.0f", value)
+        } else {
+            String.format(Locale.US, "%.1f", value).removeSuffix(".0")
+        }
+
+    /**
+     * Two byte counts sharing one unit when they scale alike.
+     *
+     * `232.65 MiB / 431.00 MiB` does not fit a two-cell row; `233 / 431 MiB`
+     * says the same thing in half the characters. A pair that lands in
+     * different units keeps each of them, because collapsing those would
+     * misstate one of the numbers.
+     */
+    fun formatSharedUnit(a: Double, b: Double): String {
+        val (av, ai) = scaled(a)
+        val (bv, bi) = scaled(b)
+        return if (ai == bi) {
+            "${compact(av)} / ${compact(bv)} ${SHARED_UNITS[ai]}"
+        } else {
+            "${compact(av)} ${SHARED_UNITS[ai]} / ${compact(bv)} ${SHARED_UNITS[bi]}"
+        }
+    }
+
+    /** [formatSharedUnit] as a down/up pair, each side marked with its direction. */
+    fun formatSharedPair(down: Double, up: Double, perSecond: Boolean = false): String {
+        val (dv, di) = scaled(down)
+        val (uv, ui) = scaled(up)
+        val suffix = if (perSecond) "/s" else ""
+        return if (di == ui) {
+            "↓${compact(dv)} · ↑${compact(uv)} ${SHARED_UNITS[di]}$suffix"
+        } else {
+            "↓${compact(dv)} ${SHARED_UNITS[di]}$suffix · " +
+                "↑${compact(uv)} ${SHARED_UNITS[ui]}$suffix"
         }
     }
 
