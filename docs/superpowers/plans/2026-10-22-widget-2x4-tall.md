@@ -36,7 +36,9 @@
 
 **Interfaces:**
 - Consumes: 现有 `Reading`、`HistoryPoint`、`parseCfMetrics`、`parseCfHistory`
-- Produces: `Reading` 新增 `cpuCores: Int?`、`region: String?`、`netIn: Double`、`netOut: Double`、`netRxMonthly: Double`、`netTxMonthly: Double`、`load5: Double`、`load15: Double`、`pingCt/pingCu/pingCm: Double?`、`lossCt/lossCu/lossCm: Double?`；`HistoryPoint` 新增 `pingCt/pingCu/pingCm: Double?`；`WidgetApi.formatSharedUnit(a: Double, b: Double): String` 与 `WidgetApi.formatSharedPair(down: Double, up: Double, perSecond: Boolean = false): String`
+- Produces: `Reading` 新增 `cpuCores: Int?`、`region: String?`、`ramUsedBytes/ramTotalBytes/diskUsedBytes/diskTotalBytes: Double`、`netIn: Double`、`netOut: Double`、`netRxMonthly: Double`、`netTxMonthly: Double`、`load5: Double`、`load15: Double`、`pingCt/pingCu/pingCm: Double?`、`lossCt/lossCu/lossCm: Double?`；`HistoryPoint` 新增 `pingCt/pingCu/pingCm: Double?`、`lossCt/lossCu/lossCm: Double?`；`WidgetApi.formatSharedUnit(a: Double, b: Double): String` 与 `WidgetApi.formatSharedPair(down: Double, up: Double, perSecond: Boolean = false): String`
+
+  注：`ramUsedBytes` 等四个字节字段是执行中补的 —— §4.2 的内存/磁盘行要 `formatSharedUnit(used, total)`，而计划原文只列了拼好的字符串与百分比，没有可共享单位的原始字节对。
 
 - [ ] **Step 1: 写失败测试**（先给 `rawServersJson` 补 `"cpu_cores": 2,` 与 `"load_avg": "0.04 0.10 0.05",` 两个键，再追加下列用例到 `CfWidgetParseTest`）
 
@@ -263,7 +265,7 @@ git commit -m "feat: score the tall widget's last hour"
 
 **Interfaces:**
 - Consumes: Task 1 的新字段
-- Produces: `WidgetSnapshot.historyTo` 写 13 字段；`historyFrom` 接受 10 或 13 字段
+- Produces: `WidgetSnapshot.historyTo` 写 16 字段；`historyFrom` 接受 10 或 16 字段
 
 - [ ] **Step 1: 写失败测试**
 
@@ -298,7 +300,7 @@ fun aTenFieldSnapshotStillLoads() {
 
 - [ ] **Step 3: 实现**
 
-`historyTo` 追加三个字段，空值写 `-`；`historyFrom` 按 `fields.size` 分支：`>= 13` 读全部，`>= 10` 读前十并把 ping 置 null，否则丢弃该行。`-` 解析为 null。
+`historyTo` 追加六个字段（三个 ping + 三个分网丢包），空值写 `-`；`historyFrom` 读前十个必填字段，其后的附加列按位置可选读取：缺列即 `null`，只有不足十列的行才丢弃。`-` 解析为 `null`。
 
 - [ ] **Step 4: 运行确认通过** — Expected: PASS，且既有快照用例仍绿。
 

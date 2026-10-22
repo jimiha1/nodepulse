@@ -128,14 +128,19 @@ val lossCm: Double? = null,
 
 `region` 优先取 `/api/servers` 载荷里的 `region`，缺失时回落到 `WidgetStore.WidgetServer.region`。
 
-### 5.2 `HistoryPoint` 新增 ping 列
+### 5.2 `HistoryPoint` 新增 ping 与分网丢包列
 
-`/api/history/all` 已经返回 `ping_ct/cu/cm`（Dart 端 `CfHistoryRow` 已在解析），Kotlin 端此前未解析。新增：
+`/api/history/all` 已经返回 `ping_ct/cu/cm` 与 `loss_ct/cu/cm`（Dart 端 `CfHistoryRow` 已在解析），Kotlin 端此前未解析。新增：
 
 ```kotlin
 val pingCt: Double? = null,
 val pingCu: Double? = null,
 val pingCm: Double? = null,
+// 分网丢包，不是上面的 `loss` 均值：均值在没有丢包数据时是 0.0，
+// 稳定性分数无法把它和「真的零丢包」区分开。
+val lossCt: Double? = null,
+val lossCu: Double? = null,
+val lossCm: Double? = null,
 ```
 
 ### 5.3 历史窗口
@@ -144,7 +149,7 @@ val pingCm: Double? = null,
 
 ### 5.4 快照兼容
 
-`WidgetSnapshot` 的 history 序列化从 10 字段扩到 13 字段（`pingCt/pingCu/pingCm`，空值写 `-`）。`historyFrom` 接受 10 或 13 字段：10 字段的旧快照把三个 ping 读成 `null`，不丢行。`readingTo/readingFrom` 同步补新字段，旧快照缺键时取默认值。
+`WidgetSnapshot` 的 history 序列化从 10 字段扩到 16 字段（`pingCt/pingCu/pingCm/lossCt/lossCu/lossCm`，空值写 `-`）。`historyFrom` 接受 10 或 16 字段：10 字段的旧快照把六个新列读成 `null`，不丢行。`readingTo/readingFrom` 同步补新字段，旧快照缺键时取默认值。
 
 ## 6. 稳定性计算
 
@@ -226,9 +231,9 @@ ping 条的填充比例：`clamp(1 − ping / 300, 0, 1)`。
 | key | en | zh-CN |
 |---|---|---|
 | `widget_tall_label` | `Server status` | `服务器状态` |
-| `widget_row_cpu_cores` | `CPU · %d cores` | `CPU · %d 核` |
+| `widget_row_cpu_cores` | `CPU · %1$d cores` | `CPU · %1$d 核` |
 | `widget_row_memory` | `Memory` | `内存` |
-| `widget_row_disk` | `Disk` | `磁盘` |
+| `widget_row_disk_tall` | `Disk` | `磁盘` |
 | `widget_row_load` | `Load` | `负载` |
 | `widget_row_live` | `Live` | `实时` |
 | `widget_row_month` | `This month` | `本月` |
@@ -238,6 +243,7 @@ ping 条的填充比例：`clamp(1 − ping / 300, 0, 1)`。
 | `widget_row_mobile` | `China Mobile` | `移动` |
 | `widget_stability_title` | `Stability last hour` | `近 1 小时稳定性` |
 | `widget_stability_footer` | `loss %1$s · jitter %2$s · spikes %3$s` | `丢包 %1$s · 抖动 %2$s · 尖刺 %3$s` |
+| `widget_bar_desc` | `Signal quality` | `信号质量` |
 
 删除 `widget_small_label`（15 个语言目录）。
 
@@ -248,7 +254,7 @@ ping 条的填充比例：`clamp(1 − ping / 300, 0, 1)`。
 | `WidgetConfigTest` | `TALL` 不读写 `fields`；`TALL` 保留 `expiry`；`MEDIUM` 行为不变 |
 | `WidgetStabilityTest`（新增） | 空历史、单样本、全丢包、ping 全 `null`、尖刺阈值边界、分数上下限 |
 | `CfWidgetParseTest` | `Reading` 新增字段解析；`region` 回落；`load5/15` |
-| `WidgetSnapshotTest` | 13 字段往返；10 字段旧快照读成 `null` 且不丢行 |
+| `WidgetSnapshotTest` | 16 字段往返；10 字段旧快照读成 `null` 且不丢行 |
 
 不新增 instrumentation 测试：仓库现有小组件测试全部是 JVM 单测，`RemoteViews` 渲染无法在无设备环境下断言。
 
