@@ -77,8 +77,8 @@ class CfWidgetParseTest {
         assertEquals(40.657, reading.mem!!, 0.01)
         // 54886 / 100454 * 100 = 54.6379%
         assertEquals(54.638, reading.disk!!, 0.01)
-        assertTrue(reading.memText.contains("4.9g") || reading.memText.contains("4.8g"))
-        assertTrue(reading.netText.contains("12.8k/s") || reading.netText.contains("12.9k/s"))
+        assertTrue(reading.memText.contains("4.9GB") || reading.memText.contains("4.8GB"))
+        assertTrue(reading.netText.contains("12.8KB/s") || reading.netText.contains("12.9KB/s"))
         assertEquals("165/78/310ms", reading.pingText)
         assertEquals("0/5/12%", reading.lossText)
         assertEquals("2027-10-02", reading.expireText)
@@ -297,14 +297,14 @@ class CfWidgetParseTest {
     @Test
     fun formatBytesOmitsTrailingZeroDecimals() {
         val gb = 1024.0 * 1024.0 * 1024.0
-        assertEquals("500g", WidgetApi.formatBytes(500.0 * gb))
-        assertEquals("116.7g", WidgetApi.formatBytes(116.7 * gb))
-        assertEquals("1g", WidgetApi.formatBytes(1.0 * gb))
-        assertEquals("1.5g", WidgetApi.formatBytes(1.5 * gb))
-        assertEquals("0b", WidgetApi.formatBytes(0.0))
-        assertEquals("512b", WidgetApi.formatBytes(512.0))
-        assertEquals("1k", WidgetApi.formatBytes(1024.0))
-        assertEquals("1.2m", WidgetApi.formatBytes(1.2 * 1024.0 * 1024.0))
+        assertEquals("500GB", WidgetApi.formatBytes(500.0 * gb))
+        assertEquals("116.7GB", WidgetApi.formatBytes(116.7 * gb))
+        assertEquals("1GB", WidgetApi.formatBytes(1.0 * gb))
+        assertEquals("1.5GB", WidgetApi.formatBytes(1.5 * gb))
+        assertEquals("0B", WidgetApi.formatBytes(0.0))
+        assertEquals("512B", WidgetApi.formatBytes(512.0))
+        assertEquals("1KB", WidgetApi.formatBytes(1024.0))
+        assertEquals("1.2MB", WidgetApi.formatBytes(1.2 * 1024.0 * 1024.0))
     }
 
     @Test

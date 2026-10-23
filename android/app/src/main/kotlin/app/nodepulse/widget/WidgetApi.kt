@@ -504,35 +504,33 @@ object WidgetApi {
             }
         } else null
 
+    /**
+     * Byte units, shared by both widget kinds so their figures never disagree.
+     *
+     * The step is 1024 — the site reports binary sizes — but the labels are
+     * spelled the short way. `KB` is what a reader parses at a glance; `KiB`
+     * costs an extra glyph in every row that shows a size, on a card that is
+     * 150dp wide.
+     */
+    private val SHARED_UNITS = listOf("B", "KB", "MB", "GB", "TB", "PB")
+
     fun formatBytes(bytes: Double): String {
-        val units = listOf("b", "k", "m", "g", "t", "p")
         var value = bytes.coerceAtLeast(0.0)
         var idx = 0
-        while (value >= 1024 && idx < units.size - 1) {
+        while (value >= 1024 && idx < SHARED_UNITS.size - 1) {
             value /= 1024
             idx++
         }
         return if (idx == 0) {
-            "${value.toInt()}${units[idx]}"
+            "${value.toInt()}${SHARED_UNITS[idx]}"
         } else {
             val formatted = String.format(Locale.US, "%.1f", value)
             val cleanValue = if (formatted.endsWith(".0")) formatted.dropLast(2) else formatted
-            "$cleanValue${units[idx]}"
+            "$cleanValue${SHARED_UNITS[idx]}"
         }
     }
 
-    private val SHARED_UNITS = listOf("B", "KB", "MB", "GB", "TB", "PB")
-
-    /**
-     * A byte count in the largest unit it fills, and that unit's index.
-     *
-     * The step is still 1024 — the site reports binary sizes — but the labels
-     * are spelled the short way. `KB` is what this widget's reader reads at a
-     * glance; `KiB` costs an extra glyph in every one of the four rows that
-     * show a size, on a card that is 150dp wide. The lowercase `formatBytes`
-     * above stays as it is, because the 4x2 capsules have their own look and
-     * this is not the place to change it.
-     */
+    /** A byte count in the largest unit it fills, and that unit's index. */
     private fun scaled(bytes: Double): Pair<Double, Int> {
         var value = bytes.coerceAtLeast(0.0)
         var idx = 0
