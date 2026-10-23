@@ -98,10 +98,9 @@
     <string name="widget_row_memory">Memory</string>
     <string name="widget_row_disk_tall">Disk</string>
     <string name="widget_row_load">Load</string>
-    <string name="widget_row_live">Live</string>
     <string name="widget_row_traffic">Traffic</string>
     <string name="widget_row_month">This month</string>
-    <string name="widget_row_uptime">Uptime</string>
+    <string name="widget_row_expire">Expiry</string>
     <string name="widget_row_telecom">Telecom</string>
     <string name="widget_row_unicom">Unicom</string>
     <string name="widget_row_mobile">China Mobile</string>

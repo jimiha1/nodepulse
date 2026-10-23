@@ -74,10 +74,9 @@
     <string name="widget_row_memory">内存</string>
     <string name="widget_row_disk_tall">磁盘</string>
     <string name="widget_row_load">负载</string>
-    <string name="widget_row_live">实时</string>
     <string name="widget_row_traffic">流量</string>
     <string name="widget_row_month">本月</string>
-    <string name="widget_row_uptime">运行时间</string>
+    <string name="widget_row_expire">到期时间</string>
     <string name="widget_row_telecom">电信</string>
     <string name="widget_row_unicom">联通</string>
     <string name="widget_row_mobile">移动</string>

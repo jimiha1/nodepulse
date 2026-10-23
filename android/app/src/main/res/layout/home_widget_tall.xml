@@ -325,9 +325,9 @@
                 tools:text="↓92 · ↑70 GB" />
         </LinearLayout>
 
-        <!-- Uptime -->
+        <!-- Expiry date -->
         <LinearLayout
-            android:id="@+id/widget_row_uptime"
+            android:id="@+id/widget_row_expire"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
@@ -336,17 +336,17 @@
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/widget_row_uptime_label"
+                android:id="@+id/widget_row_expire_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:singleLine="true"
                 android:textColor="@color/widgetSummaryText"
                 android:textSize="10sp"
-                tools:text="Uptime" />
+                tools:text="到期时间" />
 
             <TextView
-                android:id="@+id/widget_row_uptime_value"
+                android:id="@+id/widget_row_expire_value"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
@@ -358,7 +358,7 @@
                 android:textColor="@color/widgetText"
                 android:textSize="10sp"
                 android:textStyle="bold"
-                tools:text="7h 39m" />
+                tools:text="2027-10-02" />
         </LinearLayout>
 
         <ImageView

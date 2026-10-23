@@ -45,7 +45,7 @@
 │ 负载         0.09 0.20 0.21 │  row 4
 │ 流量          812 / 1000 GB │  row 5
 │ 本月            ↓92 · ↑70 GB│  row 6
-│ 运行时间             53d 1h │  row 7
+│ 到期时间          2027-10-02│  row 7
 │ ─────────────────────────── │  divider
 │ 电信  ▮▮▮▮▮▮▮▮▮▮▮▮     196ms │  row 8
 │ 联通  ▮▮▮▮▮▮▮▮▮▮▮▮      98ms │  row 9
@@ -95,7 +95,7 @@
 
 - 百分比：`0.0%`（1 位小数，与图片一致；4x2 用 0 位，这里不复用）。
 - Load：`0.00 0.00 0.00`（1/5/15 分钟）。
-- Uptime：`7h 39m`（沿用 `WidgetApi.formatUptime`）。
+- 到期时间：`expire_date` 原样（`2027-10-02`）；缺失或空串为 `--`。
 - 流量与本月：`formatSharedPair` 两侧都取整（`↓26 · ↑8 KB/s` 那种小数在 `font_scale` 1.15 下会把行尾挤成省略号）。
 - 流量行展示的是**剩余 / 总量**（`trafficRemainingBytes`），不是瞬时速率：卡片每 30 分钟才刷新一次，速率在它显示的大部分时间里已经过期，而剩余配额到第 29 分钟仍然成立。
 - 缺失值：`--`。
@@ -245,7 +245,7 @@ ping 条的填充比例：`clamp(1 − ping / 300, 0, 1)`。
 | `widget_row_load` | `Load` | `负载` |
 | `widget_row_traffic` | `Traffic` | `流量` |
 | `widget_row_month` | `This month` | `本月` |
-| `widget_row_uptime` | `Uptime` | `运行时间` |
+| `widget_row_expire` | `Expiry` | `到期时间` |
 | `widget_row_telecom` | `Telecom` | `电信` |
 | `widget_row_unicom` | `Unicom` | `联通` |
 | `widget_row_mobile` | `China Mobile` | `移动` |

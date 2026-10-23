@@ -863,8 +863,8 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             reading?.let { WidgetApi.formatSharedPair(it.netRxMonthly, it.netTxMonthly) } ?: "--",
         )
 
-        views.setTextViewText(R.id.widget_row_uptime_label, context.getString(R.string.widget_row_uptime))
-        views.setTextViewText(R.id.widget_row_uptime_value, tallText(reading?.uptimeText))
+        views.setTextViewText(R.id.widget_row_expire_label, context.getString(R.string.widget_row_expire))
+        views.setTextViewText(R.id.widget_row_expire_value, tallText(reading?.expireText))
 
         // The three carriers: name, bar, latency.
         val barWidth = (bounds.widthPx - TALL_BAR_INSET_DP * bounds.density)
