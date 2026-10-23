@@ -179,6 +179,21 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         private const val DOT_UNKNOWN = 0xFF888888.toInt()
 
         /**
+         * One colour per carrier, shared by every panel that draws them.
+         *
+         * Latency and packet loss both show the same three carriers, and a
+         * reader who learns that green is Unicom on one panel must not find it
+         * means Telecom on the next. Declared once so the two cannot drift.
+         *
+         * They have to be distinct, too: the panel dims a line whose colour
+         * has already been drawn, which is how network's two halves stay
+         * apart. Two carriers sharing a colour would silently dim one of them.
+         */
+        internal const val CARRIER_CT = 0xFF0A84FF.toInt()
+        internal const val CARRIER_CU = 0xFF34C759.toInt()
+        internal const val CARRIER_CM = 0xFFFF9F0A.toInt()
+
+        /**
          * The header dot's colour for a reading of this age.
          *
          * A missing timestamp is grey rather than red: nothing was reported, so
@@ -1231,14 +1246,24 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             valueShort = reading.procText,
             color = Color.parseColor("#FFD60A"),
         )
+        // The same three carriers as the latency panel, in the same colours
+        // and the same order, so the two panels read as one thing.
+        //
+        // Unfilled like latency: three translucent areas stacked on top of each
+        // other would muddy the colours that carry the mapping.
         "loss" -> WidgetChart.Series(
             label = context.getString(R.string.widget_metric_loss),
-            values = history.map { it.loss },
-            secondary = emptyList(),
+            lines = listOf(
+                WidgetChart.Line(history.map { it.lossCt }, CARRIER_CT),
+                WidgetChart.Line(history.map { it.lossCu }, CARRIER_CU),
+                WidgetChart.Line(history.map { it.lossCm }, CARRIER_CM),
+            ),
             isPercent = true,
             valueText = reading.lossText,
-            valueShort = reading.avgLoss?.let { String.format(java.util.Locale.US, "%.0f%%", it) } ?: "--",
-            color = Color.parseColor("#FF453A"),
+            // The unit is already on the label's line; three figures plus a
+            // percent sign do not fit a quarter-width panel.
+            valueShort = reading.lossText.removeSuffix("%"),
+            legendColors = listOf(CARRIER_CT, CARRIER_CU, CARRIER_CM),
         )
         // The three carriers on one panel. They share an axis, so a link that
         // is identical on all three draws one line rather than three stacked
@@ -1251,9 +1276,9 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         "ping" -> WidgetChart.Series(
             label = context.getString(R.string.widget_metric_ping),
             lines = listOf(
-                WidgetChart.Line(history.map { it.pingCt }, Color.parseColor("#0A84FF")),
-                WidgetChart.Line(history.map { it.pingCu }, Color.parseColor("#34C759")),
-                WidgetChart.Line(history.map { it.pingCm }, Color.parseColor("#FF9F0A")),
+                WidgetChart.Line(history.map { it.pingCt }, CARRIER_CT),
+                WidgetChart.Line(history.map { it.pingCu }, CARRIER_CU),
+                WidgetChart.Line(history.map { it.pingCm }, CARRIER_CM),
             ),
             isPercent = false,
             valueText = reading.pingText,
@@ -1261,11 +1286,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             // says this is latency, and a four-panel grid cannot fit both the
             // label and `24/31/58ms`.
             valueShort = reading.pingText.removeSuffix("ms"),
-            legendColors = listOf(
-                Color.parseColor("#0A84FF"),
-                Color.parseColor("#34C759"),
-                Color.parseColor("#FF9F0A"),
-            ),
+            legendColors = listOf(CARRIER_CT, CARRIER_CU, CARRIER_CM),
             fitToData = true,
         )
         else -> WidgetChart.Series(

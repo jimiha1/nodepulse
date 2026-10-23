@@ -88,4 +88,14 @@ class WidgetChartScaleTest {
         assertEquals(23.0, scale.lo, 0.0001)
         assertEquals(32.0, scale.hi, 0.0001)
     }
+
+    @Test
+    fun theThreeCarrierColoursAreDistinct() {
+        // The panel dims a line whose colour has already been drawn — that is
+        // how network's upload stays distinguishable from its download. Two
+        // carriers sharing a colour would silently dim one of them, and the
+        // reader would see a faded line with nothing to explain it.
+        val colours = listOf(HomeWidget.CARRIER_CT, HomeWidget.CARRIER_CU, HomeWidget.CARRIER_CM)
+        assertEquals(colours.size, colours.toSet().size)
+    }
 }
