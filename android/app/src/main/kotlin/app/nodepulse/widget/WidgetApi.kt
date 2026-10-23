@@ -514,13 +514,18 @@ object WidgetApi {
      */
     private val SHARED_UNITS = listOf("B", "KB", "MB", "GB", "TB", "PB")
 
+    /**
+     * Where a figure steps up to the next unit.
+     *
+     * The byte step is 1024, but a count landing in 1000..1023 would be drawn
+     * as four digits — `45.3GB / 1000GB` — and the cell ellipsizes it. Stepping
+     * at 1000 keeps every figure at three digits or fewer, rounding that last
+     * sliver up: a quota written as `1000` reads back as `1TB`.
+     */
+    private const val STEP_UP_AT = 1000.0
+
     fun formatBytes(bytes: Double): String {
-        var value = bytes.coerceAtLeast(0.0)
-        var idx = 0
-        while (value >= 1024 && idx < SHARED_UNITS.size - 1) {
-            value /= 1024
-            idx++
-        }
+        val (value, idx) = scaled(bytes)
         return if (idx == 0) {
             "${value.toInt()}${SHARED_UNITS[idx]}"
         } else {
@@ -534,7 +539,7 @@ object WidgetApi {
     private fun scaled(bytes: Double): Pair<Double, Int> {
         var value = bytes.coerceAtLeast(0.0)
         var idx = 0
-        while (value >= 1024 && idx < SHARED_UNITS.size - 1) {
+        while (value >= STEP_UP_AT && idx < SHARED_UNITS.size - 1) {
             value /= 1024
             idx++
         }

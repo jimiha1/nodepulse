@@ -308,6 +308,17 @@ class CfWidgetParseTest {
     }
 
     @Test
+    fun formatBytesStepsUpBeforeTheUnitRunsOutOfWidth() {
+        val gb = 1024.0 * 1024.0 * 1024.0
+        // A quota written as 1000 GB: four digits would be ellipsized in a cell.
+        assertEquals("1TB", WidgetApi.formatBytes(1000.0 * gb))
+        assertEquals("1TB", WidgetApi.formatBytes(1023.0 * gb))
+        // Just below the step, three digits still fit.
+        assertEquals("999GB", WidgetApi.formatBytes(999.0 * gb))
+        assertEquals("999MB", WidgetApi.formatBytes(999.0 * 1024.0 * 1024.0))
+    }
+
+    @Test
     fun parseCfServerKeepsTheRawTallFields() {
         val server = WidgetStore.WidgetServer(
             id = "fd978320-c32c-474d-857a-3412a7526a7b", name = "日本节点", region = "JP",
