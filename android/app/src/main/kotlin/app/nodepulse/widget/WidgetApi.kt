@@ -104,6 +104,11 @@ object WidgetApi {
         val lossCt: Double? = null,
         val lossCu: Double? = null,
         val lossCm: Double? = null,
+        // Epoch ms as the site reports it. Zero when a row carried none — a
+        // snapshot written before this field existed reads back that way too.
+        // The averaging window drops such a row: a row that cannot be placed
+        // in time cannot be placed in "the last thirty minutes".
+        val timestamp: Long = 0L,
     )
 
     /**
@@ -431,6 +436,7 @@ object WidgetApi {
                 lossCt = lCt,
                 lossCu = lCu,
                 lossCm = lCm,
+                timestamp = o.optLongOrNull("timestamp") ?: 0L,
             )
         }
     }
@@ -500,6 +506,16 @@ object WidgetApi {
             when (v) {
                 is Number -> v.toInt()
                 is String -> v.toIntOrNull()
+                else -> null
+            }
+        } else null
+
+    private fun JSONObject.optLongOrNull(key: String): Long? =
+        if (has(key) && !isNull(key)) {
+            val v = opt(key)
+            when (v) {
+                is Number -> v.toLong()
+                is String -> v.toLongOrNull()
                 else -> null
             }
         } else null

@@ -347,7 +347,17 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
                             server,
                             // The tall card's stability section says "last
                             // hour", so it asks for one; the 4x2 keeps its day.
-                            historyHours = if (kind == WidgetKind.TALL) 1.0 else 24.0,
+                            //
+                            // Reading mode is the exception: it draws no chart,
+                            // so the day would be pulled and thrown away — and
+                            // its CPU and memory cells show the half-hour mean,
+                            // which needs the samples of that half hour rather
+                            // than a downsampled day.
+                            historyHours = when {
+                                kind == WidgetKind.TALL -> 1.0
+                                config.mode == MediumMode.READING -> 0.5
+                                else -> 24.0
+                            },
                         )
                         val reading = fetched.reading
                         // A failed history is not a successful refresh: it
@@ -753,7 +763,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             MediumMode.READING -> {
                 views.setViewVisibility(R.id.widget_charts_container, View.GONE)
                 views.setViewVisibility(R.id.widget_content, View.VISIBLE)
-                showFieldCapsules(context, views, config.fields.take(WidgetConfig.CAP_MEDIUM_READING_FIELDS), reading)
+                showFieldCapsules(context, views, config.fields.take(WidgetConfig.CAP_MEDIUM_READING_FIELDS), reading, history)
             }
             MediumMode.COMBINED -> {
                 views.setViewVisibility(R.id.widget_charts_container, View.VISIBLE)
@@ -775,7 +785,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
                 val b2 = WidgetChart.render(context, s2, halfWidth, chartHeight, bounds.density)
                 if (b2 != null) views.setImageViewBitmap(R.id.widget_chart_2, b2)
 
-                showFieldCapsules(context, views, config.fields.take(WidgetConfig.CAP_COMBINED_FIELDS), reading)
+                showFieldCapsules(context, views, config.fields.take(WidgetConfig.CAP_COMBINED_FIELDS), reading, history)
             }
         }
         manager.updateAppWidget(appWidgetId, views)
@@ -1031,6 +1041,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         views: RemoteViews,
         fields: List<WidgetField>,
         reading: WidgetApi.Reading,
+        history: List<WidgetApi.HistoryPoint>,
     ) {
         val totalCells = minOf(fields.size, 8)
         val neededRows = (totalCells + 1) / 2
@@ -1051,7 +1062,7 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             if (i < totalCells) {
                 val field = fields[i]
                 views.setTextViewText(labelId, fieldShortLabel(context, field))
-                views.setTextViewText(valueId, fieldValueText(field, reading))
+                views.setTextViewText(valueId, fieldValueText(field, reading, history))
                 views.setViewVisibility(cellId, View.VISIBLE)
             } else {
                 views.setViewVisibility(cellId, View.GONE)
@@ -1074,9 +1085,25 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
         WidgetField.EXPIRE -> "Expire"
     }
 
-    private fun fieldValueText(field: WidgetField, reading: WidgetApi.Reading): String = when (field) {
-        WidgetField.CPU -> percentText(reading.cpu)
-        WidgetField.MEM -> percentText(reading.mem)
+    /**
+     * One cell's value.
+     *
+     * CPU and memory report the mean of the half hour the card is up for, not
+     * the sample that happened to be current when it refreshed: a card that
+     * changes every thirty minutes should describe those thirty minutes.
+     *
+     * When the history is missing — a failed request, or a site with it turned
+     * off — the cell falls back to the instantaneous reading. It is a
+     * different statistic, but it is a true one about now, and a `--` there
+     * would take away the only number the cell has.
+     */
+    private fun fieldValueText(
+        field: WidgetField,
+        reading: WidgetApi.Reading,
+        history: List<WidgetApi.HistoryPoint>,
+    ): String = when (field) {
+        WidgetField.CPU -> percentText(WidgetAverage.cpu(history) ?: reading.cpu)
+        WidgetField.MEM -> percentText(WidgetAverage.memory(history) ?: reading.mem)
         WidgetField.DISK -> percentText(reading.disk)
         WidgetField.LOAD -> reading.loadText
         WidgetField.NET_SPEED -> shortNet(reading.netText)
@@ -1212,6 +1239,34 @@ abstract class HomeWidget(private val kind: WidgetKind) : AppWidgetProvider() {
             valueText = reading.lossText,
             valueShort = reading.avgLoss?.let { String.format(java.util.Locale.US, "%.0f%%", it) } ?: "--",
             color = Color.parseColor("#FF453A"),
+        )
+        // The three carriers on one panel. They share an axis, so a link that
+        // is identical on all three draws one line rather than three stacked
+        // on top of each other — which is exactly what the reader wants to
+        // know, and what a per-carrier panel would hide.
+        //
+        // None of them is filled: the fill runs down to the bottom of the
+        // panel, and a fitted axis does not start at zero, so the shaded area
+        // would claim a magnitude the chart is not showing.
+        "ping" -> WidgetChart.Series(
+            label = context.getString(R.string.widget_metric_ping),
+            lines = listOf(
+                WidgetChart.Line(history.map { it.pingCt }, Color.parseColor("#0A84FF")),
+                WidgetChart.Line(history.map { it.pingCu }, Color.parseColor("#34C759")),
+                WidgetChart.Line(history.map { it.pingCm }, Color.parseColor("#FF9F0A")),
+            ),
+            isPercent = false,
+            valueText = reading.pingText,
+            // Same three numbers without the unit: the panel's label already
+            // says this is latency, and a four-panel grid cannot fit both the
+            // label and `24/31/58ms`.
+            valueShort = reading.pingText.removeSuffix("ms"),
+            legendColors = listOf(
+                Color.parseColor("#0A84FF"),
+                Color.parseColor("#34C759"),
+                Color.parseColor("#FF9F0A"),
+            ),
+            fitToData = true,
         )
         else -> WidgetChart.Series(
             label = metric.uppercase(),

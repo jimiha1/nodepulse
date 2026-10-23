@@ -146,6 +146,22 @@ class WidgetConfigTest {
     }
 
     @Test
+    fun aLatencyChartSelectionSurvivesTheRoundTrip() {
+        val config = WidgetConfig(
+            serverId = "srv-ping",
+            kind = WidgetKind.MEDIUM,
+            mode = MediumMode.CHART,
+            chartCount = 2,
+            chart = "ping",
+            chart2 = "cpu",
+        )
+        WidgetConfig.saveToPrefs(mockPrefs, 46, config)
+        val loaded = WidgetConfig.loadFromPrefs(mockPrefs, 46, WidgetKind.MEDIUM)
+        assertEquals("ping", loaded.chart)
+        assertEquals("cpu", loaded.chart2)
+    }
+
+    @Test
     fun roundTripMediumReadingConfig() {
         val appWidgetId = 44
         val config = WidgetConfig(

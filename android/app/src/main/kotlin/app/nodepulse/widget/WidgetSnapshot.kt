@@ -225,7 +225,8 @@ object WidgetSnapshot {
                 listOf(p.cpu, p.memory, p.disk, p.netRx, p.netTx, p.load, p.io, p.conn, p.proc, p.loss)
                     .map { String.format(Locale.US, "%.2f", it) } +
                     listOf(p.pingCt, p.pingCu, p.pingCm, p.lossCt, p.lossCu, p.lossCm)
-                        .map { it?.let { v -> String.format(Locale.US, "%.2f", v) } ?: MISSING }
+                        .map { it?.let { v -> String.format(Locale.US, "%.2f", v) } ?: MISSING } +
+                    listOf(p.timestamp.toString())
                 ).joinToString(FIELD_SEP)
         }
 
@@ -256,6 +257,10 @@ object WidgetSnapshot {
                 lossCt = extras.getOrNull(3),
                 lossCu = extras.getOrNull(4),
                 lossCm = extras.getOrNull(5),
+                // Written after the loss columns, and absent from every
+                // snapshot older than this release: a zero there is the same
+                // "no time recorded" the in-memory default uses.
+                timestamp = extras.getOrNull(6)?.toLong() ?: 0L,
             )
         }
     }

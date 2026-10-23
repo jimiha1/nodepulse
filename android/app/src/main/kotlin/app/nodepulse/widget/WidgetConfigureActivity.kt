@@ -34,6 +34,7 @@ class WidgetConfigureActivity : Activity() {
             "conn",
             "proc",
             "loss",
+            "ping",
         )
     }
 
@@ -345,6 +346,7 @@ class WidgetConfigureActivity : Activity() {
         "conn" -> getString(R.string.widget_metric_conn)
         "proc" -> getString(R.string.widget_metric_proc)
         "loss" -> getString(R.string.widget_metric_loss)
+        "ping" -> getString(R.string.widget_metric_ping)
         else -> metric.uppercase()
     }
 

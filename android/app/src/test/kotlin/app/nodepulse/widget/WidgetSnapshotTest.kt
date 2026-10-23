@@ -201,5 +201,36 @@ class WidgetSnapshotTest {
         assertNull(back.lossCt)
         assertNull(back.lossCu)
         assertNull(back.lossCm)
+        // No timestamp either: the mean falls back to the live reading rather
+        // than pretending an undated row belongs to this half hour.
+        assertEquals(0L, back.timestamp)
+    }
+
+    @Test
+    fun historyRoundTripsTheTimestamp() {
+        val points = listOf(
+            WidgetApi.HistoryPoint(
+                cpu = 1.0, memory = 2.0, disk = 3.0, netRx = 4.0, netTx = 5.0,
+                pingCt = 10.0, pingCu = 11.0, pingCm = 12.0,
+                timestamp = 1_790_927_096_022L,
+            ),
+        )
+        val back = WidgetSnapshot.historyFrom(WidgetSnapshot.historyTo(points)).single()
+        assertEquals(1_790_927_096_022L, back.timestamp)
+    }
+
+    @Test
+    fun aSixteenFieldSnapshotFromTheLastReleaseStillLoads() {
+        // Ten numbers plus the six ping/loss columns, no timestamp: the release
+        // right before this one. It must keep its rows, with the timestamp
+        // defaulted rather than shifting the loss columns into its place.
+        val previous = "1.00,2.00,3.00,4.00,5.00,6.00,7.00,8.00,9.00,0.00," +
+            "10.00,-,30.00,0.00,0.20,0.00"
+        val back = WidgetSnapshot.historyFrom(previous).single()
+        assertEquals(10.0, back.pingCt!!, 0.001)
+        assertNull(back.pingCu)
+        assertEquals(30.0, back.pingCm!!, 0.001)
+        assertEquals(0.2, back.lossCu!!, 0.001)
+        assertEquals(0L, back.timestamp)
     }
 }

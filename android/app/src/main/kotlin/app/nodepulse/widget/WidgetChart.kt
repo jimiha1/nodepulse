@@ -8,8 +8,6 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Typeface
 import app.nodepulse.R
-import kotlin.math.max
-import kotlin.math.min
 
 /**
  * Draws every chart panel into one bitmap.
@@ -48,11 +46,29 @@ object WidgetChart {
 
     private const val MAX_PIXELS = MAX_BITMAP_BYTES / BYTES_PER_PIXEL
 
+    /**
+     * One line of a panel.
+     *
+     * [values] holds nulls for a sample that was never taken — a ping probe
+     * that timed out — and the line breaks there rather than diving to zero.
+     * Zero is a real latency reading; a gap is not, and drawing the two the
+     * same way would hide an outage behind a plausible-looking dip.
+     */
+    data class Line(
+        val values: List<Double?>,
+        val color: Int,
+        /**
+         * Whether this line is the panel's primary one: drawn solid, with the
+         * translucent area under it. A secondary line is drawn thinner and
+         * half-transparent, so two lines of one metric stay distinguishable
+         * without a second colour.
+         */
+        val filled: Boolean = false,
+    )
+
     data class Series(
         val label: String,
-        val values: List<Double>,
-        /** Drawn beside [values] with no fill — the outbound half of network. */
-        val secondary: List<Double>,
+        val lines: List<Line>,
         /** Whether the vertical scale is a fixed 0..100. */
         val isPercent: Boolean,
         val valueText: String,
@@ -64,8 +80,53 @@ object WidgetChart {
          * than the panel. Everything else passes its own text through.
          */
         val valueShort: String,
-        val color: Int,
-    )
+        /**
+         * Swatches drawn after the label, one per line, in the order the lines
+         * are listed.
+         *
+         * Latency is the panel that needs this: its three lines are three
+         * carriers, and nothing in a single-colour panel says which is which.
+         * The names do not fit at 150dp, so the dots carry the mapping and the
+         * value text — `24/31/58ms` — lists the carriers in the same order.
+         */
+        val legendColors: List<Int> = emptyList(),
+        /**
+         * Whether the vertical scale hugs the data instead of starting at 0.
+         *
+         * Latency needs it. A link that sits between 24 and 31ms has 7ms of
+         * movement, which against a 0..300 axis is a flat line; fitted, those
+         * 7ms fill the panel and the wobble is the whole point of the chart.
+         * Percentages and byte rates keep their zero baseline — a CPU chart
+         * that started at 40% would make an idle box look busy.
+         */
+        val fitToData: Boolean = false,
+    ) {
+        /**
+         * The two-line form the other metrics are built with.
+         *
+         * [secondary] is the outbound half of network, or empty. Kept as a
+         * constructor so the nine single-metric panels read exactly as they
+         * did before latency needed a third line.
+         */
+        constructor(
+            label: String,
+            values: List<Double>,
+            secondary: List<Double>,
+            isPercent: Boolean,
+            valueText: String,
+            valueShort: String,
+            color: Int,
+        ) : this(
+            label = label,
+            lines = buildList {
+                add(Line(values, color, filled = true))
+                if (secondary.isNotEmpty()) add(Line(secondary, color, filled = false))
+            },
+            isPercent = isPercent,
+            valueText = valueText,
+            valueShort = valueShort,
+        )
+    }
 
     /**
      * [widthPx] x [heightPx] of panels laid out to match [count].
@@ -203,16 +264,32 @@ object WidgetChart {
             return if (needed <= avail || needed <= 0f) full else full * (avail / needed)
         }
 
+        // Swatches sit between the label and the value, so the value has that
+        // much less room. Three dots and their gaps are about one glyph wide,
+        // which is exactly the margin that decides whether a four-panel grid
+        // keeps its label.
+        val dotSize = labelSize * 0.62f
+        val dotGap = 2.5f * px
+        val legendWidth = if (series.legendColors.isEmpty()) {
+            0f
+        } else {
+            series.legendColors.size * dotSize +
+                (series.legendColors.size - 1) * dotGap +
+                LABEL_GAP_DP * px * 0.5f
+        }
+
         // In order of what is worth keeping: the label and the full reading,
         // then the label with a shorter one, then the reading alone. A
         // right-aligned string that does not fit grows leftwards — through the
         // label, and then out of the panel — so something has to give, and it
         // should be the least informative thing first.
         val options = listOf(
-            Triple(true, series.valueText, beside),
-            Triple(true, series.valueShort, beside),
-            Triple(false, series.valueText, width),
-            Triple(false, series.valueShort, width),
+            Triple(true, series.valueText, beside - legendWidth),
+            Triple(true, series.valueShort, beside - legendWidth),
+            // Without a label the swatches still sit at the left edge, so the
+            // reading is fitted beside them rather than over them.
+            Triple(false, series.valueText, width - legendWidth),
+            Triple(false, series.valueShort, width - legendWidth),
         )
         var showLabel = false
         var shown = series.valueShort
@@ -235,14 +312,32 @@ object WidgetChart {
         // value of the left one and the label of the right one share a line,
         // and the gap between the cells is what keeps them apart.
         val baseline = top + maxOf(labelSize, valueSize)
-        if (showLabel) canvas.drawText(series.label, left, baseline, text)
+        if (showLabel) {
+            canvas.drawText(series.label, left, baseline, text)
+        }
+        // The swatches stay even when the label had to go: they are the only
+        // thing that says which line is which, and a panel that dropped its
+        // label is exactly the one with no room for the names instead.
+        drawLegend(
+            canvas = canvas,
+            series = series,
+            x = if (showLabel) {
+                left + text.measureText(series.label) + LABEL_GAP_DP * px * 0.5f
+            } else {
+                left
+            },
+            baseline = baseline,
+            labelSize = labelSize,
+            dotSize = dotSize,
+            dotGap = dotGap,
+        )
         canvas.drawText(shown, left + width, baseline, value)
 
         val plotTop = baseline + valueSize * 0.4f
         val plotHeight = height - (plotTop - top)
         if (plotHeight <= 2f) return
 
-        if (series.values.isEmpty() && series.secondary.isEmpty()) {
+        if (series.lines.all { line -> line.values.all { it == null } }) {
             val hint = Paint(text).apply {
                 textAlign = Paint.Align.CENTER
                 alpha = 140
@@ -256,54 +351,169 @@ object WidgetChart {
             return
         }
 
-        // Both series share one scale so the two lines are comparable. Reading
-        // them against separate maxima would make a quiet upload look like a
-        // busy one.
-        val all = series.values + series.secondary
-        val maxValue = if (series.isPercent) 100.0 else max(all.maxOrNull() ?: 1.0, 1.0)
+        // Every line in a panel shares one scale, so the three carriers are
+        // comparable. Reading them against separate maxima would make the
+        // quietest link look like the busiest one.
+        val scale = scaleFor(series)
+        val seenColors = mutableSetOf<Int>()
+        series.lines.forEach { line ->
+            // A line that repeats a colour already drawn is the second half of
+            // one metric — network's upload — and is dimmed so the pair stays
+            // tellable apart. Three carriers in three colours are all primary,
+            // and dimming them would leave the panel fainter than its
+            // neighbours for no reason.
+            val dimmed = !seenColors.add(line.color)
+            drawLine(canvas, line, left, plotTop, width, plotHeight, scale, dimmed)
+        }
+    }
 
-        drawLine(canvas, series.values, left, plotTop, width, plotHeight, maxValue, series.color, fill = true)
-        drawLine(canvas, series.secondary, left, plotTop, width, plotHeight, maxValue, series.color, fill = false)
+    /**
+     * The vertical span a panel is drawn against.
+     *
+     * Separate from the drawing so the rule can be asserted on a plain JVM:
+     * a percentage is always 0..100, a byte rate or count starts at zero, and
+     * only latency fits itself to the data.
+     */
+    internal data class Scale(val lo: Double, val hi: Double) {
+        /** Where [v] lands between [top] and [top] + [height]. */
+        fun y(v: Double, top: Float, height: Float): Float {
+            val span = hi - lo
+            // A perfectly flat window has no span to divide by; its line sits
+            // in the middle of the panel rather than collapsing onto an edge.
+            val t = if (span <= 0.0) 0.5 else ((v - lo) / span).coerceIn(0.0, 1.0)
+            return top + height - (t * height).toFloat()
+        }
+    }
+
+    /**
+     * How much room [Scale] leaves above and below a fitted window, as a
+     * fraction of the window's own height — with a floor in milliseconds so a
+     * dead-flat link does not get its rounding noise blown up to full height.
+     */
+    private const val FIT_PADDING_RATIO = 0.08
+    private const val FIT_PADDING_FLOOR = 1.0
+
+    internal fun scaleFor(series: Series): Scale {
+        if (series.isPercent) return Scale(0.0, 100.0)
+
+        val all = series.lines.flatMap { line -> line.values.filterNotNull() }
+        if (!series.fitToData) {
+            return Scale(0.0, maxOf(all.maxOrNull() ?: 1.0, 1.0))
+        }
+
+        val lo = all.minOrNull() ?: return Scale(0.0, 1.0)
+        val hi = all.maxOrNull() ?: return Scale(0.0, 1.0)
+        val pad = maxOf((hi - lo) * FIT_PADDING_RATIO, FIT_PADDING_FLOOR)
+        // Never below zero: a fitted latency axis dipping under it would draw
+        // a baseline that cannot happen.
+        return Scale(maxOf(lo - pad, 0.0), hi + pad)
+    }
+
+    /**
+     * The carrier swatches, centred on the label's own line.
+     *
+     * Drawn rather than written because the names do not fit: three of them at
+     * 11dp on a 150dp panel would push the reading out of the card. The value
+     * text lists the carriers in this same order, so the mapping is recoverable
+     * without a word.
+     */
+    private fun drawLegend(
+        canvas: Canvas,
+        series: Series,
+        x: Float,
+        baseline: Float,
+        labelSize: Float,
+        dotSize: Float,
+        dotGap: Float,
+    ) {
+        if (series.legendColors.isEmpty()) return
+        val centerY = baseline - labelSize * 0.32f
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        var left = x
+        for (color in series.legendColors) {
+            paint.color = color
+            canvas.drawCircle(left + dotSize / 2f, centerY, dotSize / 2f, paint)
+            left += dotSize + dotGap
+        }
     }
 
     private fun drawLine(
         canvas: Canvas,
-        values: List<Double>,
+        line: Line,
         left: Float,
         top: Float,
         width: Float,
         height: Float,
-        maxValue: Double,
-        color: Int,
-        fill: Boolean,
+        scale: Scale,
+        dimmed: Boolean,
     ) {
+        val values = line.values
         if (values.size < 2) return
         val stepX = width / (values.size - 1)
-        fun y(v: Double) = top + height - (v.coerceIn(0.0, maxValue) / maxValue * height).toFloat()
 
-        val path = Path().apply {
-            moveTo(left, y(values[0]))
-            values.forEachIndexed { i, v -> if (i > 0) lineTo(left + stepX * i, y(v)) }
+        // Each run of present samples is its own path. A null is a probe that
+        // never answered, and joining across it would draw a straight line
+        // through an outage as if the link had been fine.
+        //
+        // Each run also remembers the x it started at, so its fill closes over
+        // its own span: a run after a gap is a few samples wide, and closing it
+        // to the panel edges would shade a stretch of time it has no data for.
+        class Run(val path: Path, val startX: Float) {
+            var endX = startX
         }
 
-        if (fill) {
-            val area = Path(path).apply {
-                lineTo(left + width, top + height)
-                lineTo(left, top + height)
-                close()
+        val runs = mutableListOf<Run>()
+        var current: Run? = null
+        values.forEachIndexed { i, v ->
+            if (v == null) {
+                current = null
+                return@forEachIndexed
             }
-            canvas.drawPath(area, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            val x = left + stepX * i
+            val y = scale.y(v, top, height)
+            val run = current
+            if (run == null) {
+                val path = Path().apply { moveTo(x, y) }
+                current = Run(path, x).also { runs.add(it) }
+            } else {
+                run.path.lineTo(x, y)
+                run.endX = x
+            }
+        }
+        if (runs.isEmpty()) return
+
+        val color = line.color
+        if (line.filled) {
+            val area = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 style = Paint.Style.FILL
                 this.color = Color.argb(56, Color.red(color), Color.green(color), Color.blue(color))
-            })
+            }
+            runs.forEach { run ->
+                // A lone sample has no line to fill, and closing it would put a
+                // stray wedge on the panel.
+                if (run.startX >= run.endX) return@forEach
+                canvas.drawPath(
+                    Path(run.path).apply {
+                        lineTo(run.endX, top + height)
+                        lineTo(run.startX, top + height)
+                        close()
+                    },
+                    area,
+                )
+            }
         }
 
-        canvas.drawPath(path, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeWidth = (height * 0.035f).coerceIn(1.5f, 4f)
             strokeCap = Paint.Cap.ROUND
             strokeJoin = Paint.Join.ROUND
-            this.color = if (fill) color else Color.argb(150, Color.red(color), Color.green(color), Color.blue(color))
-        })
+            this.color = if (dimmed) {
+                Color.argb(150, Color.red(color), Color.green(color), Color.blue(color))
+            } else {
+                color
+            }
+        }
+        runs.forEach { canvas.drawPath(it.path, stroke) }
     }
 }
